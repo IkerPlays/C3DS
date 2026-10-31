@@ -44,7 +44,7 @@ test('sin imágenes ni sonidos no hay romfs ni ndsp', () => {
   assert.ok(!c.includes('C2D_SpriteSheetLoad'));
   assert.match(c, /#define NUM_SOUNDS 0/);
   const mk = generateMakefile(p);
-  assert.ok(!mk.includes('-lndsp') && !mk.includes('--romfs') && !mk.includes('tex3ds'));
+  assert.ok(!mk.includes('--romfs') && !mk.includes('tex3ds'));
   const names = exportFiles(p).map((f) => f.path);
   assert.ok(!names.some((n) => n.includes('/gfx/') || n.includes('/romfs/')));
   assert.ok(!generateRsf(p, { romfs: false }).includes('RootPath'));
@@ -53,7 +53,9 @@ test('sin imágenes ni sonidos no hay romfs ni ndsp', () => {
 test('Makefile: tabulaciones, tex3ds y objetivo por defecto', () => {
   const mk = generateMakefile(newProject());
   assert.match(mk, /TARGET\s+:= mi-primer-juego/);
-  assert.match(mk, /-lndsp -lctru/);
+  assert.match(mk, /-lcitro2d -lcitro3d -lctru -lm/);
+  assert.ok(!mk.includes('-lndsp'), 'ndsp está dentro de libctru');
+  assert.ok(mk.indexOf('\nall: $(BUILD)') > 0 && mk.indexOf('\nall: $(BUILD)') < mk.indexOf('\n$(SPRITES):'), 'all va antes que la regla de sprites (objetivo por defecto)');
   assert.match(mk, /\n\t@tex3ds -i \$< -o \$@/);
   assert.match(mk, /export _3DSXFLAGS \+= --romfs=/);
   assert.match(mk, /\ncia: \$\(BUILD\)\n\t@bannertool makebanner/);

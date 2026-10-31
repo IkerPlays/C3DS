@@ -359,7 +359,7 @@ CFLAGS   := -g -Wall -O2 -mword-relocations -ffunction-sections $(ARCH)
 CFLAGS   += $(INCLUDE) -D__3DS__ -std=gnu11
 ASFLAGS  := -g $(ARCH)
 LDFLAGS   = -specs=3dsx.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
-LIBS     := -lcitro2d -lcitro3d ${A.hasSounds ? '-lndsp ' : ''}-lctru -lm
+LIBS     := -lcitro2d -lcitro3d -lctru -lm
 LIBDIRS  := $(PORTLIBS) $(CTRULIB)
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
@@ -374,6 +374,9 @@ export INCLUDE := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) $(foreach dir,$(
 export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 export _3DSXDEPS := $(OUTPUT).smdh
 export _3DSXFLAGS += --smdh=$(OUTPUT).smdh${romfs ? '\nexport _3DSXFLAGS += --romfs=$(CURDIR)/$(ROMFS)' : ''}
+.PHONY: $(BUILD) clean all cia
+# La primera regla es el objetivo por defecto: all.
+all: $(BUILD)
 ${A.hasImages ? `
 # Texturas: gfx/sprites.t3s (lista de PNG) -> romfs/gfx/sprites.t3x con tex3ds
 SPRITES := $(ROMFS)/gfx/sprites.t3x
@@ -382,8 +385,6 @@ ${T}@mkdir -p $(dir $@)
 ${T}@tex3ds -i $< -o $@
 ${T}@echo "built ... $@"
 ` : ''}
-.PHONY: $(BUILD) clean all cia
-all: $(BUILD)
 $(BUILD):${A.hasImages ? ' $(SPRITES)' : ''}
 ${T}@mkdir -p $@
 ${T}@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
