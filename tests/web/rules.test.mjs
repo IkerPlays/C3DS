@@ -41,3 +41,9 @@ test('las reglas desactivadas no se ejecutan ni se generan', async () => {
   assert.equal(g.vars.puntos, 0);
   assert.ok(!generateMainC(p).includes('random_pos(3, 0);'));
 });
+
+test('docs/REFERENCIA.md está sincronizado con el código', async () => {
+  const { render } = await import('../../scripts/gen-reference.mjs');
+  const { readFileSync } = await import('node:fs');
+  assert.equal(readFileSync(new URL('../../docs/REFERENCIA.md', import.meta.url), 'utf8'), render(), 'ejecuta: npm run gen:docs');
+});

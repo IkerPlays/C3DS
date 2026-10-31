@@ -7,6 +7,7 @@ import { readZipEntries, extractZipEntry, createZip } from './zip.js';
 import { imageToAsset, audioToWav } from './images.js';
 import { slug, newProject, makeScene, nextId, LIMITS } from './model.js';
 import { parseTscn, parseViewport, sceneFromTscn, sceneNameFromPath } from './godot.js';
+import { parseUnityScene, parseMetaGuid, sceneFromUnity } from './unity.js';
 
 const MAX_FILES = 200000;
 const IMG_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif']);
@@ -101,6 +102,11 @@ export function mountImporter(root, { openInEditor }) {
       const st = h('p', { class: 'muted small' }, `${tscns.length} escena(s) .tscn encontradas. Se convierten sprites, textos, rectángulos de color y botones; la lógica (GDScript) hay que rehacerla con reglas.`);
       out.append(h('div', { class: 'convert' }, h('h4', {}, 'Escenas de Godot'), st, h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', id: 'btn-godot-scenes', onClick: () => importGodotScenes(entries, tscns, st) }, 'Crear proyecto con las escenas de Godot'))));
     }
+    const unityScenes = entries.filter((e) => /\.unity$/i.test(e.path) && e.size < 8 * 1048576);
+    if (det.engine === 'unity' && unityScenes.length) {
+      const st = h('p', { class: 'muted small' }, `${unityScenes.length} escena(s) .unity (YAML de texto). Se convierten los SpriteRenderer 2D con su textura y posición; el resto (3D, UI, scripts C#) hay que rehacerlo.`);
+      out.append(h('div', { class: 'convert' }, h('h4', {}, 'Escenas de Unity (2D)'), st, h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', id: 'btn-unity-scenes', onClick: () => importUnityScenes(entries, unityScenes, st) }, 'Crear proyecto con las escenas de Unity'))));
+    }
     if (det.engine !== 'unknown') out.append(h('button', { class: 'btn', onClick: () => openInEditor(null) }, 'Empezar un proyecto 3DS nuevo en el editor'));
   }
 
@@ -148,6 +154,48 @@ export function mountImporter(root, { openInEditor }) {
     } else {
       download(createZip(files.map((f) => ({ path: `assets-3ds/${f.path}`, content: f.content }))), 'assets-3ds.zip', 'application/zip');
     }
+  }
+
+  async function importUnityScenes(entries, scenes, status) {
+    const p = newProject();
+    p.name = 'Proyecto de Unity'; p.scenes = []; p.variables = []; p.assets = { images: [], sounds: [] }; p.blobs = {}; p.seq = 0;
+    // guid -> imagen, a partir de los .meta de las texturas
+    const metas = entries.filter((e) => /\.(png|jpe?g|webp|bmp)\.meta$/i.test(e.path));
+    const guidToEntry = new Map();
+    for (const m of metas) {
+      const txt = new TextDecoder().decode(await m.read(16384));
+      const guid = parseMetaGuid(txt); if (!guid) continue;
+      const imgPath = m.path.replace(/\.meta$/i, '');
+      const img = entries.find((e) => e.path === imgPath);
+      if (img) guidToEntry.set(guid, { entry: img, ppu: Number(/spritePixelsToUnits:\s*([\d.]+)/.exec(txt)?.[1]) || 100 });
+    }
+    const cache = new Map(); const skipped = []; let done = 0;
+    for (const e of scenes.slice(0, LIMITS.scenes)) {
+      status.textContent = `Convirtiendo escenas… ${++done}/${Math.min(scenes.length, LIMITS.scenes)}`;
+      const text = new TextDecoder().decode(await e.read(8 * 1048576));
+      if (!text.startsWith('%YAML')) { skipped.push(`${e.path} (escena binaria)`); continue; }
+      const sprites = parseUnityScene(text);
+      for (const sp of sprites) {
+        if (!sp.guid || cache.has(sp.guid) || !guidToEntry.has(sp.guid) || p.assets.images.length >= LIMITS.images) continue;
+        const { entry, ppu } = guidToEntry.get(sp.guid);
+        if (entry.size > MAX_ASSET_BYTES) continue;
+        try {
+          const bytes = await entry.read(MAX_ASSET_BYTES);
+          const probe = await createImageBitmap(new Blob([bytes]));
+          const r = await imageToAsset(new Blob([bytes]));
+          const id = nextId(p);
+          p.assets.images.push({ id, name: slug(entry.path.split('/').pop().replace(/\.[^.]+$/, '')).slice(0, 24), w: r.w, h: r.h }); p.blobs[id] = r.dataURL;
+          cache.set(sp.guid, { id, nativeW: probe.width, nativeH: probe.height, ppu });
+        } catch { skipped.push(entry.path); }
+      }
+      const { scene, skipped: sk } = sceneFromUnity(p, e.path.split('/').pop().replace(/\.unity$/i, ''), sprites, cache);
+      skipped.push(...sk.map((x) => `${scene.name}: ${x}`));
+      if (scene.objects.length) p.scenes.push(scene);
+    }
+    if (!p.scenes.length) { status.textContent = 'No se encontraron sprites 2D convertibles (las escenas binarias no se pueden leer: usa “Force Text” en Unity).'; return; }
+    p.startScene = p.scenes[0].id;
+    status.textContent = `Listo: ${p.scenes.length} escena(s), ${p.scenes.reduce((n, s) => n + s.objects.length, 0)} objetos${skipped.length ? `; ${skipped.length} elementos omitidos` : ''}.`;
+    openInEditor(p);
   }
 
   async function importGodotScenes(entries, tscns, status) {

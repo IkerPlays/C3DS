@@ -378,3 +378,38 @@ text = "Jugar"
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('importar escenas de Unity (.unity + .meta) crea sprites en su posición', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('[data-tab=import]');
+  const dir = await mkdtemp(join(tmpdir(), 'c3ds-unity-'));
+  const GUID = 'a1b2c3d4e5f60718293a4b5c6d7e8f90';
+  await mkdir(join(dir, 'Assets')); await mkdir(join(dir, 'ProjectSettings'));
+  await writeFile(join(dir, 'ProjectSettings', 'ProjectVersion.txt'), 'm_EditorVersion: 2022.3.10f1');
+  await writeFile(join(dir, 'Assets', 'hero.png'), tinyPng());
+  await writeFile(join(dir, 'Assets', 'hero.png.meta'), `fileFormatVersion: 2\nguid: ${GUID}\nTextureImporter:\n  spritePixelsToUnits: 8\n`);
+  await writeFile(join(dir, 'Assets', 'Level1.unity'), `%YAML 1.1
+--- !u!1 &100
+GameObject:
+  m_Name: Hero
+--- !u!4 &101
+Transform:
+  m_GameObject: {fileID: 100}
+  m_LocalPosition: {x: 1, y: 2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Father: {fileID: 0}
+--- !u!212 &102
+SpriteRenderer:
+  m_GameObject: {fileID: 100}
+  m_Sprite: {fileID: 21300000, guid: ${GUID}, type: 3}
+`);
+  await page.setInputFiles('#pick-dir', dir);
+  await page.waitForSelector('#btn-unity-scenes');
+  await page.click('#btn-unity-scenes');
+  await page.waitForFunction(() => window.c3ds.editor.getProject().name === 'Proyecto de Unity');
+  const o = await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects[0]);
+  assert.equal(o.type, 'sprite'); assert.equal(o.name, 'Hero');
+  assert.ok(o.x > 200 && o.y < 120, `posición (${o.x}, ${o.y})`);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -34,4 +34,4 @@ npm test          # pruebas unitarias (Node >= 20)
 npm run test:ui   # pruebas de interfaz (Chromium + Playwright)
 npm run serve     # sirve web/ en http://localhost:8080
 ```
-Releases y devbuilds: [docs/RELEASING.md](docs/RELEASING.md).
+Releases y devbuilds: [docs/RELEASING.md](docs/RELEASING.md). Referencia del editor (eventos, acciones, controles): [docs/REFERENCIA.md](docs/REFERENCIA.md).
