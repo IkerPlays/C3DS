@@ -8,6 +8,7 @@ export const SCREENS = { top: { w: 400, h: 240 }, bottom: { w: 320, h: 240 } };
 export const KEYS = ['A', 'B', 'X', 'Y', 'L', 'R', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT'];
 export const KEY_LABEL = { UP: '⬆ Arriba', DOWN: '⬇ Abajo', LEFT: '⬅ Izquierda', RIGHT: '➡ Derecha', START: 'Start', SELECT: 'Select' };
 export const LIMITS = { scenes: 16, objectsPerScene: 64, images: 32, sounds: 16, variables: 32, rules: 64, maxImageSide: 512 };
+export const CONTROL_MODES = { false: 'Ninguno', true: 'D-Pad (4 direcciones)', h: 'Solo horizontal', v: 'Solo vertical' };
 export const OBJECT_TYPES = { rect: 'Rectángulo', text: 'Texto', sprite: 'Sprite', button: 'Botón táctil' };
 
 export const slug = (s) => (String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'juego').slice(0, 40);
@@ -18,7 +19,7 @@ export const isHex = (s) => HEX.test(s);
 export function nextId(p) { p.seq = (p.seq || 0) + 1; return p.seq; }
 
 export function makeObject(p, type, over = {}) {
-  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, visible: true };
+  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, visible: true };
   if (type === 'text') Object.assign(base, { w: 0, h: 0, text: 'Texto' });
   if (type === 'button') Object.assign(base, { screen: 'bottom', w: 120, h: 40, color: '#29adff', text: 'Botón' });
   const o = { ...base, ...over };
@@ -60,7 +61,7 @@ export function newProject() {
   game.objects.push(player, coin, score, hint);
   menu.rules.push({ id: nextId(p), when: { type: 'touch', obj: play.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
   game.rules.push(
-    { id: nextId(p), when: { type: 'collide', a: player.id, b: coin.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: sndId }, { type: 'randomPos', obj: coin.id }] },
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: coin.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: sndId }, { type: 'randomPos', obj: coin.id, axis: 'xy' }] },
     { id: nextId(p), when: { type: 'key', key: 'START' }, then: [{ type: 'goto', scene: menu.id }] },
   );
   p.scenes.push(menu, game);

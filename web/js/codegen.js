@@ -7,6 +7,8 @@ const rgb = (hex) => [1, 3, 5].map((i) => parseInt(/^#[0-9a-f]{6}$/i.test(hex) ?
 // Literal constante (los inicializadores estáticos de C no admiten llamadas): 0xAABBGGRR = C2D_Color32(r, g, b, a).
 const col = (hex) => { const [r, g, b] = rgb(hex); return `0xFF${[b, g, r].map((n) => n.toString(16).padStart(2, '0')).join('').toUpperCase()}`; };
 const int = (v, lo = -100000, hi = 100000) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
+const flt = (v, lim = 50) => `${Math.max(-lim, Math.min(lim, Number(v) || 0)).toFixed(3)}f`;
+const ctl = (c) => (c === true ? 1 : c === 'h' ? 2 : c === 'v' ? 3 : 0);
 
 /** Cadena C en UTF-8 con escapes octales (seguro para cualquier texto). `%` se duplica para printf. */
 export function cString(s, forPrintf = false) {
@@ -63,7 +65,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${o.controls ? 1 : 0}, ${t}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -74,6 +76,7 @@ export function generateMainC(p) {
       case 'collide': return `hit(${A.objIndex.get(w.a) ?? 0}, ${A.objIndex.get(w.b) ?? 0})`;
       case 'touch': return `touch_in(${A.objIndex.get(w.obj) ?? 0}, touched, tx, ty)`;
       case 'var': return `vars[${A.varIndex.get(w.var) ?? 0}] ${OPC[w.op] || '=='} ${int(w.value)}`;
+      case 'edge': return `edge_hit(${A.objIndex.get(w.obj) ?? 0}, ${{ left: 0, right: 1, top: 2, bottom: 3 }[w.edge] ?? 0})`;
       case 'timer': return `(scene_frames > 0 && scene_frames % ${Math.max(1, Math.round((Number(w.seconds) || 1) * 60))} == 0)`;
       default: return '0';
     }
@@ -88,7 +91,8 @@ export function generateMainC(p) {
       case 'sound': return `play_sound(${A.soundIndex.get(a.sound) ?? 0});`;
       case 'setPos': return `objs[${o}].x = ${int(a.x)}.0f; objs[${o}].y = ${int(a.y)}.0f;`;
       case 'move': return `objs[${o}].x += ${int(a.dx)}.0f; objs[${o}].y += ${int(a.dy)}.0f;`;
-      case 'randomPos': return `random_pos(${o});`;
+      case 'randomPos': return `random_pos(${o}, ${{ xy: 0, x: 1, y: 2 }[a.axis || 'xy'] ?? 0});`;
+      case 'setVel': return `objs[${o}].${a.axis === 'y' ? 'vy' : 'vx'} = ${flt(a.value)};`;
       case 'setText': return `objs[${o}].tmpl = ${tplId(a.text)};`;
       case 'show': return `objs[${o}].visible = 1;`;
       case 'hide': return `objs[${o}].visible = 0;`;
@@ -127,7 +131,7 @@ enum { T_RECT, T_TEXT, T_SPRITE, T_BUTTON };
 
 typedef struct {
 	int type, scene, screen, image, controls, tmpl;
-	float x, y, w, h, speed;
+	float x, y, w, h, speed, vx, vy;
 	int visible;
 	u32 color;
 } Obj;
@@ -162,11 +166,23 @@ static int touch_in(int i, int touched, int tx, int ty) {
 	return touched && o->visible && o->screen == 1 && tx >= o->x && tx < o->x + o->w && ty >= o->y && ty < o->y + o->h;
 }
 
-static void random_pos(int i) {
+static int edge_hit(int i, int e) {
+	const Obj* o = &objs[i];
+	if (!o->visible) return 0;
+	switch (e) {
+	case 0: return o->x <= 0;
+	case 1: return o->x + o->w >= screen_w[o->screen];
+	case 2: return o->y <= 0;
+	default: return o->y + o->h >= screen_h[o->screen];
+	}
+}
+
+/* mode: 0 = X e Y, 1 = solo X, 2 = solo Y */
+static void random_pos(int i, int mode) {
 	Obj* o = &objs[i];
 	float mw = screen_w[o->screen] - o->w, mh = screen_h[o->screen] - o->h;
-	o->x = (float)(rand() % (int)(mw > 1 ? mw : 1));
-	o->y = (float)(rand() % (int)(mh > 1 ? mh : 1));
+	if (mode != 2) o->x = (float)(rand() % (int)(mw > 1 ? mw : 1));
+	if (mode != 1) o->y = (float)(rand() % (int)(mh > 1 ? mh : 1));
 }
 
 static void enter_scene(int s) {
@@ -237,11 +253,18 @@ static void free_sounds(void) {}
 static void update(u32 down, u32 held, int touched, int tx, int ty) {
 	for (int i = 0; i < NUM_OBJS; i++) {
 		Obj* o = &objs[i];
-		if (o->scene != cur_scene || !o->controls || !o->visible) continue;
-		if (held & KEY_DLEFT)  o->x -= o->speed;
-		if (held & KEY_DRIGHT) o->x += o->speed;
-		if (held & KEY_DUP)    o->y -= o->speed;
-		if (held & KEY_DDOWN)  o->y += o->speed;
+		if (o->scene != cur_scene || !o->visible) continue;
+		/* controls: 0 ninguno, 1 D-Pad, 2 solo horizontal, 3 solo vertical */
+		if (o->controls && o->controls != 3) {
+			if (held & KEY_DLEFT)  o->x -= o->speed;
+			if (held & KEY_DRIGHT) o->x += o->speed;
+		}
+		if (o->controls && o->controls != 2) {
+			if (held & KEY_DUP)    o->y -= o->speed;
+			if (held & KEY_DDOWN)  o->y += o->speed;
+		}
+		o->x += o->vx;
+		o->y += o->vy;
 		if (o->x < 0) o->x = 0;
 		if (o->y < 0) o->y = 0;
 		if (o->x > screen_w[o->screen] - o->w) o->x = screen_w[o->screen] - o->w;

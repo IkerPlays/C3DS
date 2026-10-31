@@ -1,18 +1,19 @@
 // Editor visual: escenas, objetos, recursos, variables, lógica, vista previa, guardado y exportación.
 import { h, $, toast, dialog, download, debounce } from './ui.js';
 import {
-  SCREENS, KEYS, KEY_LABEL, LIMITS, OBJECT_TYPES, newProject, migrate, makeObject, makeScene, nextId, validate,
+  SCREENS, KEYS, KEY_LABEL, LIMITS, OBJECT_TYPES, CONTROL_MODES, newProject, migrate, makeObject, makeScene, nextId, validate,
   findScene, slug, isVarName,
 } from './model.js';
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases } from './runtime.js';
-import { EVENTS, ACTIONS, OPS, OP_LABEL, defaultWhen, defaultAction } from './rules.js';
+import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction } from './rules.js';
 import { imageToAsset, audioToWav } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
 import { startBuild, buildStatus, buildDownload, STATUS_LABEL } from './cloud.js';
+import { TEMPLATES } from './templates.js';
 
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
@@ -110,7 +111,9 @@ function bindStage() {
       selectObject(hit?.id ?? null);
       if (hit) { drag = { mode: 'move', dx: p.x - hit.x, dy: p.y - hit.y }; c.setPointerCapture(ev.pointerId); }
     });
+    c.addEventListener('pointerleave', () => { if (refs.coords) refs.coords.textContent = ''; });
     c.addEventListener('pointermove', (ev) => {
+      if (refs.coords && !runner) { const q = pointer(key, ev); refs.coords.textContent = `x ${Math.round(q.x)}  y ${Math.round(q.y)}`; }
       const o = selected();
       if (!drag || !o) { const p = pointer(key, ev); c.style.cursor = scene().objects.some((q) => q.screen === key && (() => { const b = objBox(c.getContext('2d'), q); return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; })()) ? 'move' : 'default'; return; }
       const p = pointer(key, ev);
@@ -152,6 +155,40 @@ function duplicateSelected() {
   const o = selected(); if (!o) return;
   const c = { ...o, id: nextId(project), name: `${o.name} copia`, x: o.x + 10, y: o.y + 10 };
   scene().objects.push(c); selectedId = c.id; changed({ structure: true });
+}
+
+function moveSelected(where) {
+  const sc = scene(); const o = selected(); if (!o) return;
+  const i = sc.objects.indexOf(o);
+  const j = { front: sc.objects.length - 1, back: 0, up: Math.min(sc.objects.length - 1, i + 1), down: Math.max(0, i - 1) }[where];
+  if (j === i) return;
+  sc.objects.splice(i, 1); sc.objects.splice(j, 0, o);
+  changed({ structure: true });
+}
+
+function centerSelected(axis) {
+  const o = selected(); if (!o) return;
+  const b = objBox(cv[o.screen].getContext('2d'), o);
+  const s = SCREENS[o.screen];
+  if (axis === 'x') o.x = Math.round((s.w - b.w) / 2); else o.y = Math.round((s.h - b.h) / 2);
+  syncInspector(); changed();
+}
+
+function duplicateScene(id) {
+  if (project.scenes.length >= LIMITS.scenes) return toast(`Máximo ${LIMITS.scenes} escenas.`, 'error');
+  const src = findScene(project, id);
+  const copy = JSON.parse(JSON.stringify(src));
+  const map = new Map();
+  copy.id = nextId(project); copy.name = `${src.name} copia`.slice(0, 24);
+  for (const o of copy.objects) { const n = nextId(project); map.set(o.id, n); o.id = n; }
+  const re = (v) => (map.has(v) ? map.get(v) : v);
+  for (const r of copy.rules) {
+    r.id = nextId(project);
+    for (const k of ['a', 'b', 'obj']) if (k in r.when) r.when[k] = re(r.when[k]);
+    for (const a of r.then) if ('obj' in a) a.obj = re(a.obj);
+  }
+  project.scenes.splice(project.scenes.indexOf(src) + 1, 0, copy);
+  sceneId = copy.id; selectedId = null; changed({ structure: true });
 }
 
 function addScene() {
@@ -230,6 +267,7 @@ function renderLeft() {
     h('ul', { class: 'list' }, project.scenes.map((s) => h('li', { class: s.id === sceneId ? 'active' : '' },
       h('button', { class: 'row', onClick: () => { sceneId = s.id; selectedId = null; refreshAll(); } }, project.startScene === s.id ? '★ ' : '', s.name),
       h('button', { class: 'mini ghost', title: 'Marcar como escena inicial', onClick: () => { project.startScene = s.id; changed({ structure: true }); } }, '★'),
+      h('button', { class: 'mini ghost', title: 'Duplicar escena', onClick: () => duplicateScene(s.id) }, '⧉'),
       h('button', { class: 'mini ghost', title: 'Eliminar escena', onClick: () => deleteScene(s.id) }, '🗑'))))));
   // Objetos
   const sc = scene();
@@ -288,14 +326,18 @@ function renderRight() {
     h('p', { class: 'muted small' }, `Tipo: ${OBJECT_TYPES[o.type]}`),
     f('screen', 'Pantalla', selectInput([['top', 'Superior 400×240'], ['bottom', 'Inferior 320×240 (táctil)']], o.screen, (v) => { o.screen = v; changed(); })),
     h('div', { class: 'grid2' }, f('x', 'X', numInput(() => o.x, (v) => { o.x = v; })), f('y', 'Y', numInput(() => o.y, (v) => { o.y = v; }))),
+    h('div', { class: 'row-btns tight', 'aria-label': 'Alinear' }, h('button', { class: 'btn small', title: 'Centrar horizontalmente', onClick: () => centerSelected('x') }, '↔ Centrar X'), h('button', { class: 'btn small', title: 'Centrar verticalmente', onClick: () => centerSelected('y') }, '↕ Centrar Y')),
     o.type !== 'text' ? h('div', { class: 'grid2' }, f('w', 'Ancho', numInput(() => o.w, (v) => { o.w = Math.max(1, v); }, { min: 1 })), f('h', 'Alto', numInput(() => o.h, (v) => { o.h = Math.max(1, v); }, { min: 1 }))) : null,
     o.type !== 'sprite' ? f('color', 'Color', colorInput(() => o.color, (v) => { o.color = v; })) : null,
     o.type === 'text' || o.type === 'button' ? f('text', 'Texto', textInput(() => o.text, (v) => { o.text = v; })) : null,
     o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”.') : null,
     o.type === 'sprite' ? f('image', 'Imagen', selectInput(project.assets.images.map((a) => [a.id, a.name]), o.image, (v) => { o.image = Number(v); changed(); })) : null,
-    o.type === 'rect' || o.type === 'sprite' ? h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.controls, onChange: (e) => { o.controls = e.target.checked; changed({ structure: true }); } }), 'Se mueve con el D-Pad') : null,
-    o.controls ? f('speed', 'Velocidad', numInput(() => o.speed, (v) => { o.speed = Math.max(0, Math.min(20, v)); }, { min: 0, max: 20 })) : null,
+    o.type === 'rect' || o.type === 'sprite' ? f('controls', 'Control', selectInput(Object.entries(CONTROL_MODES), String(o.controls), (v) => { o.controls = v === 'true' ? true : v === 'false' ? false : v; changed({ structure: true }); })) : null,
+    o.controls ? f('speed', 'Vel. D-Pad', numInput(() => o.speed, (v) => { o.speed = Math.max(0, Math.min(20, v)); }, { min: 0, max: 20 })) : null,
+    o.type === 'rect' || o.type === 'sprite' ? h('div', { class: 'grid2' }, f('vx', 'Vel X', numInput(() => o.vx || 0, (v) => { o.vx = v; }, { step: 0.5 })), f('vy', 'Vel Y', numInput(() => o.vy || 0, (v) => { o.vy = v; }, { step: 0.5 }))) : null,
+    o.type === 'rect' || o.type === 'sprite' ? h('p', { class: 'muted small' }, 'Vel X/Y mueven el objeto solo (px por frame). Úsalo con la regla “toca el borde”.') : null,
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.visible, onChange: (e) => { o.visible = e.target.checked; changed(); } }), 'Visible al empezar'),
+    h('div', { class: 'row-btns tight', 'aria-label': 'Orden de capas' }, h('button', { class: 'btn small', title: 'Traer al frente', onClick: () => moveSelected('front') }, '⤒ Frente'), h('button', { class: 'btn small', title: 'Subir una capa', onClick: () => moveSelected('up') }, '↑'), h('button', { class: 'btn small', title: 'Bajar una capa', onClick: () => moveSelected('down') }, '↓'), h('button', { class: 'btn small', title: 'Enviar al fondo', onClick: () => moveSelected('back') }, '⤓ Fondo')),
     h('div', { class: 'row-btns' }, h('button', { class: 'btn', onClick: duplicateSelected }, 'Duplicar'), h('button', { class: 'btn danger', onClick: deleteSelected }, 'Eliminar')),
   );
 }
@@ -326,6 +368,9 @@ function fieldEditor(f, obj, ctx) {
     case 'op': return selectInput(OPS.map((o) => [o, OP_LABEL[o]]), obj[f.k], set);
     case 'scene': return selectInput(project.scenes.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
     case 'sound': return selectInput(project.assets.sounds.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
+    case 'edge': return selectInput(Object.entries(EDGES), obj[f.k], set);
+    case 'axis': return selectInput(Object.entries(AXES), obj[f.k], set);
+    case 'randAxis': return selectInput(Object.entries(RAND_AXES), obj[f.k] || 'xy', set);
     case 'number': return h('input', { type: 'number', value: obj[f.k], min: f.min, step: f.step || 1, onInput: (e) => { obj[f.k] = Number(e.target.value) || 0; live(); } });
     default: return h('input', { type: 'text', value: obj[f.k] ?? '', maxlength: 80, onInput: (e) => { obj[f.k] = e.target.value; live(); } });
   }
@@ -414,18 +459,25 @@ function openProjects() {
   const body = h('div', {});
   const draw = () => {
     body.replaceChildren(
+      h('h4', {}, 'Nuevo proyecto desde una plantilla'),
+      h('div', { class: 'tpl-grid' }, TEMPLATES.map((t) => h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
       h('div', { class: 'row-btns' },
-        h('button', { class: 'btn primary', onClick: () => { setProject(newProject(), { fresh: true }); d.close(); } }, '+ Proyecto de ejemplo'),
-        h('button', { class: 'btn', onClick: () => { const p = newProject(); p.name = 'Proyecto nuevo'; p.scenes = [makeScene(p, 'Escena 1')]; p.assets = { images: [], sounds: [] }; p.blobs = {}; p.variables = []; p.startScene = p.scenes[0].id; setProject(p, { fresh: true }); d.close(); } }, '+ En blanco'),
-        h('label', { class: 'btn' }, 'Abrir archivo…', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onChange: async (e) => { const f = e.target.files[0]; if (!f) return; try { const p = migrate(JSON.parse(await f.text())); p.localId = newLocalId(); if (validate(p).some((x) => /^Falta/.test(x.text))) toast('El archivo no contiene todos los recursos.', 'error'); setProject(p, { fresh: true }); d.close(); } catch (err) { toast(`Archivo no válido: ${err.message}`, 'error'); } } }))),
+        h('label', { class: 'btn' }, 'Abrir archivo .c3ds.json…', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onChange: async (e) => { const f = e.target.files[0]; if (!f) return; try { const p = migrate(JSON.parse(await f.text())); p.localId = newLocalId(); if (validate(p).some((x) => /^Falta/.test(x.text))) toast('El archivo no contiene todos los recursos.', 'error'); setProject(p, { fresh: true }); d.close(); } catch (err) { toast(`Archivo no válido: ${err.message}`, 'error'); } } }))),
       h('h4', {}, 'Guardados en este navegador'),
       h('ul', { class: 'list proj' }, listProjects().length ? listProjects().map((x) => h('li', { class: x.id === project.localId ? 'active' : '' },
         h('button', { class: 'row', onClick: () => { const p = loadProject(x.id); if (p) { setProject(migrate(p)); d.close(); } else toast('No se pudo abrir.', 'error'); } }, x.name, h('small', {}, `${new Date(x.updated).toLocaleString()} · ${(x.bytes / 1024).toFixed(0)} KB`)),
         h('button', { class: 'mini ghost', title: 'Borrar', onClick: () => { if (confirm(`¿Borrar "${x.name}"?`)) { deleteProject(x.id); draw(); } } }, '🗑'))) : h('li', { class: 'empty' }, 'Todavía no hay proyectos guardados.')),
     );
   };
-  const d = dialog('Proyectos', body);
+  const d = dialog('Proyectos y plantillas', body);
   draw();
+}
+
+/* ---------- Ayuda ---------- */
+function showShortcuts() {
+  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
+    ['Flechas', 'En la vista previa: D-Pad'], ['Z X S A', 'A B X Y'], ['Enter / Shift', 'Start / Select'], ['Ratón', 'Pantalla táctil (inferior)']];
+  dialog('Atajos y controles', h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])));
 }
 
 /* ---------- Exportar ---------- */
@@ -491,6 +543,7 @@ export function mountEditor(root) {
   refs.redo = h('button', { class: 'icon-btn', title: 'Rehacer (Ctrl+Y)', onClick: redo }, '↷');
   refs.play = h('button', { class: 'btn primary', id: 'btn-play', onClick: () => (runner ? stopPlay() : startPlay()) }, '▶ Probar');
   refs.hud = h('div', { class: 'hud', 'aria-live': 'off' });
+  refs.coords = h('span', { class: 'coords', 'aria-hidden': 'true' });
   refs.warnings = h('ul', { class: 'warnings', 'aria-live': 'polite' });
   refs.warnBadge = h('button', { class: 'badge', onClick: () => refs.warnPanel.toggleAttribute('hidden') });
   refs.warnPanel = h('div', { class: 'warn-panel', hidden: true }, refs.warnings);
@@ -506,7 +559,7 @@ export function mountEditor(root) {
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),
       h('label', { class: 'check' }, 'Zoom', selectInput([[1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoom, (v) => { zoom = Number(v); root.style.setProperty('--zoom', zoom); })),
-      refs.hud),
+      refs.coords, refs.hud),
     h('div', { class: 'screens' },
       h('figure', {}, h('figcaption', {}, 'Superior 400×240'), cv.top),
       h('figure', {}, h('figcaption', {}, 'Inferior 320×240 · táctil'), cv.bottom)),
@@ -516,6 +569,7 @@ export function mountEditor(root) {
   root.append(
     h('div', { class: 'ed-toolbar' },
       refs.name, refs.undo, refs.redo, refs.status, h('span', { class: 'spacer' }), refs.warnBadge,
+      h('button', { class: 'icon-btn', id: 'btn-help', title: 'Atajos de teclado (?)', 'aria-label': 'Atajos de teclado', onClick: showShortcuts }, '⌨'),
       h('button', { class: 'btn', id: 'btn-projects', onClick: openProjects }, '📁 Proyectos'), refs.play, menu),
     refs.warnPanel,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));
@@ -527,6 +581,7 @@ export function mountEditor(root) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { if (inField) return; e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { if (inField) return; e.preventDefault(); redo(); }
     else if (e.key === 'Escape' && runner) stopPlay();
+    else if (e.key === '?' && !inField) showShortcuts();
     else if (!runner && !inField && selected()) {
       const o = selected(); const step = e.shiftKey ? 10 : 1;
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }

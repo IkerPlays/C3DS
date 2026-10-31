@@ -4,6 +4,11 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+### Añadido
+- **Web**: nueva página de **Inicio** (qué es C3DS, demo en vivo, funciones, cómo funciona, plantillas, estado y honestidad sobre las limitaciones) y pestaña de **Descargas** que lee las releases de GitHub, recomienda el archivo de tu sistema, muestra las novedades, el checksum y los devbuilds.
+- **Web**: tema claro/oscuro/auto, diseño renovado, instalable como **PWA** (editor sin conexión).
+- **Editor**: plantillas (Recoger monedas, **Pong**, **Esquivar**, en blanco), velocidad automática de objetos, evento “toca el borde”, acción “cambiar velocidad”, control solo horizontal/vertical, colocar al azar por eje, centrar, orden de capas, duplicar escena, coordenadas del cursor y ayuda de atajos (`?`).
+- Tests: 63 unitarios y 17 de interfaz.
 
 ## [0.1.0] - 2026-10-31
 Primera versión pública (alfa).

@@ -159,3 +159,90 @@ test('el menú Exportar ofrece Windows .exe y no hay descarga de la web', async 
   assert.equal(await page.locator('#btn-cloud-win').isVisible(), true);
   await ctx.close();
 });
+
+const WIN_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36';
+
+test('inicio: hero, demo en vivo, plantillas y descarga recomendada', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#home', userAgent: WIN_UA });
+  assert.match(await page.textContent('h1'), /Nintendo\s*3DS/);
+  await page.waitForSelector('#hero-download[href*="Windows-Setup"]');
+  assert.match(await page.textContent('#hero-download'), /Windows/);
+  await page.waitForTimeout(600);
+  const painted = await page.locator('#demo-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 77) n++; return n; });
+  assert.ok(painted > 500, 'la demo dibuja al jugador');
+  assert.equal(await page.locator('#tpl-cards .tpl').count(), 3);
+  await page.click('#tpl-cards [data-tpl=pong]');
+  await page.waitForSelector('#cv-top');
+  assert.equal(await page.inputValue('.proj-name'), 'Pong');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('descargas: tarjetas por sistema, recomendada, checksums y devbuild', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#downloads', userAgent: WIN_UA });
+  await page.waitForSelector('#dl-stable .card.os');
+  assert.equal(await page.locator('#dl-stable .card.os').count(), 5);
+  assert.equal(await page.locator('#dl-stable .card.os').first().getAttribute('data-os'), 'windows', 'el sistema del usuario va primero');
+  assert.match(await page.textContent('#dl-stable .card.mine'), /Recomendado/);
+  assert.equal(await page.locator('#dl-stable a[href$="SHA256SUMS.txt"]').count(), 1);
+  assert.equal(await page.locator('#dl-stable a.btn[href*="Windows-Setup"]').count(), 1);
+  assert.equal(await page.locator('#dl-stable a[href*="/v0.1.0/"]').count() > 5, true);
+  assert.match(await page.textContent('#dl-dev'), /Devbuild 0\.1\.0-dev\.9/);
+  await page.click('#dl-notes summary');
+  assert.match(await page.textContent('#dl-notes .notes'), /Sprites/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('descargas: si GitHub falla se explica y se enlaza a las releases', async () => {
+  const { page, ctx } = await openPage(browser, server.url, { hash: '#downloads' });
+  await ctx.route('https://api.github.com/**', (r) => r.fulfill({ status: 500, body: '{}' }));
+  await page.evaluate(() => sessionStorage.clear());
+  await page.reload(); await page.waitForSelector('#dl-stable .finding');
+  assert.match(await page.textContent('#dl-stable'), /releases en GitHub/);
+  await ctx.close();
+});
+
+test('tema: alterna y se recuerda; navegación por pestañas y enlaces', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#home' });
+  await page.click('#theme-btn'); await page.click('#theme-btn');
+  assert.equal(await page.getAttribute('html', 'data-theme'), 'dark');
+  await page.reload(); await page.waitForSelector('#theme-btn');
+  assert.equal(await page.getAttribute('html', 'data-theme'), 'dark');
+  await page.click('#cta-editor');
+  await page.waitForSelector('#cv-top');
+  assert.equal(await page.locator('#tab-editor').isVisible(), true);
+  await page.click('[data-tab=limits]');
+  assert.match(await page.textContent('#limits-table'), /VRAM/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('editor: alinear, capas, duplicar escena y atajos', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li .row', { hasText: 'Título' }).click();
+  await page.click('button:has-text("Centrar X")');
+  const x = await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects[0].x);
+  assert.ok(x > 100 && x < 200, `centrado (${x})`);
+  await page.click('button:has-text("Frente")');
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects.at(-1).name), 'Título');
+  await page.click('[title="Duplicar escena"] >> nth=1');
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().scenes.length), 3);
+  const copy = await page.evaluate(() => { const p = window.c3ds.editor.getProject(); const s = p.scenes[2]; return { name: s.name, ids: s.objects.map((o) => o.id), rule: s.rules[0].when.a }; });
+  assert.match(copy.name, /copia/); assert.ok(copy.ids.includes(copy.rule), 'las reglas apuntan a los objetos de la copia');
+  await page.click('#btn-help'); assert.match(await page.textContent('.dlg'), /Deshacer/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('plantilla Pong: se puede jugar en la vista previa', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=pong]');
+  await page.click('#btn-play');
+  await page.waitForFunction(() => /Partida/.test(document.querySelector('.hud').textContent));
+  await page.waitForTimeout(500);
+  const found = await page.locator('#cv-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 236 && d[i + 2] === 39) n++; return n; });
+  assert.ok(found > 50, 'se ve la pelota amarilla');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

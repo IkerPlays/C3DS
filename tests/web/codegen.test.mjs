@@ -29,7 +29,7 @@ test('main.c del proyecto de ejemplo', () => {
   assert.match(c, /hit\(2, 3\)/);
   assert.match(c, /next_scene = 1;/);
   assert.match(c, /play_sound\(0\);/);
-  assert.match(c, /random_pos\(3\);/);
+  assert.match(c, /random_pos\(3, 0\);/);
   assert.match(c, /\(down & KEY_START\)/);
   assert.ok(!/C2D_Color32\(\d+, \d+, \d+, 255\) \}/.test(c.split('static Obj objs')[0]), 'sin llamadas en inicializadores estáticos');
   assert.match(c, /0xFF4D00FF/); // rojo #ff004d -> AABBGGRR

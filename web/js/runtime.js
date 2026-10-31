@@ -36,12 +36,17 @@ export class Game {
     const { down = new Set(), held = new Set(), touch = null, touchDown = false } = input;
     const touched = touchDown && touch;
     for (const o of this.objs) {
-      if (!o.controls || !o.visible) continue;
+      if (!o.visible) continue;
       const s = SCREENS[o.screen];
-      const dx = (held.has('RIGHT') ? 1 : 0) - (held.has('LEFT') ? 1 : 0);
-      const dy = (held.has('DOWN') ? 1 : 0) - (held.has('UP') ? 1 : 0);
-      o.x = Math.max(0, Math.min(s.w - o.w, o.x + dx * o.speed));
-      o.y = Math.max(0, Math.min(s.h - o.h, o.y + dy * o.speed));
+      let mx = 0; let my = 0;
+      if (o.controls) {
+        if (o.controls !== 'v') mx = ((held.has('RIGHT') ? 1 : 0) - (held.has('LEFT') ? 1 : 0)) * o.speed;
+        if (o.controls !== 'h') my = ((held.has('DOWN') ? 1 : 0) - (held.has('UP') ? 1 : 0)) * o.speed;
+      }
+      mx += num(o.vx); my += num(o.vy);
+      if (!mx && !my) continue;
+      o.x = Math.max(0, Math.min(s.w - o.w, o.x + mx));
+      o.y = Math.max(0, Math.min(s.h - o.h, o.y + my));
     }
     let next = null;
     for (const r of this.scene.rules) {
@@ -66,6 +71,11 @@ export class Game {
         const v = this.vars[w.var]; const k = num(w.value);
         return { '==': v === k, '!=': v !== k, '>': v > k, '>=': v >= k, '<': v < k, '<=': v <= k }[w.op] ?? false;
       }
+      case 'edge': {
+        const o = this.obj(w.obj); if (!o || !o.visible) return false;
+        const sc = SCREENS[o.screen];
+        return { left: o.x <= 0, right: o.x + o.w >= sc.w, top: o.y <= 0, bottom: o.y + o.h >= sc.h }[w.edge] ?? false;
+      }
       case 'timer': { const f = Math.max(1, Math.round(num(w.seconds) * 60)); return this.frames > 0 && this.frames % f === 0; }
       default: return false;
     }
@@ -81,7 +91,12 @@ export class Game {
       case 'sound': this.onSound(a.sound); break;
       case 'setPos': if (o) { o.x = num(a.x); o.y = num(a.y); } break;
       case 'move': if (o) { o.x += num(a.dx); o.y += num(a.dy); } break;
-      case 'randomPos': if (o) { const s = SCREENS[o.screen]; o.x = Math.floor(this.rng() * Math.max(1, s.w - o.w)); o.y = Math.floor(this.rng() * Math.max(1, s.h - o.h)); } break;
+      case 'randomPos': if (o) {
+        const s = SCREENS[o.screen]; const ax = a.axis || 'xy';
+        if (ax !== 'y') o.x = Math.floor(this.rng() * Math.max(1, s.w - o.w));
+        if (ax !== 'x') o.y = Math.floor(this.rng() * Math.max(1, s.h - o.h));
+      } break;
+      case 'setVel': if (o) { if (a.axis === 'y') o.vy = num(a.value); else o.vx = num(a.value); } break;
       case 'setText': if (o) o.tpl = a.text; break;
       case 'show': if (o) o.visible = true; break;
       case 'hide': if (o) o.visible = false; break;

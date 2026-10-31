@@ -3,31 +3,128 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>C3DS - Crea juegos para 3DS homebrew</title>
-  <meta name="description" content="Editor visual para crear juegos de Nintendo 3DS homebrew (.3dsx y .cia), con vista previa, sprites, sonido y lógica. Analiza también proyectos de Unity, Godot y Unreal.">
+  <title>C3DS - Crea juegos para Nintendo 3DS</title>
+  <meta name="description" content="Editor visual gratuito para crear juegos de Nintendo 3DS homebrew (.3dsx y .cia): sprites, sonido, escenas y lógica sin escribir código. Todo en tu navegador.">
+  <meta name="theme-color" content="#0e1020">
+  <meta property="og:title" content="C3DS - Crea juegos para Nintendo 3DS">
+  <meta property="og:description" content="Editor visual, vista previa al instante y exportación a .3dsx / .cia. Gratis y de código abierto.">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+<a class="skip" href="#main">Saltar al contenido</a>
 <div id="update-bar" class="update-bar" hidden></div>
 <header class="app-header">
-  <a class="brand" href="#editor"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg> C3DS <small id="app-version"></small></a>
+  <a class="brand" href="#home"><svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg><span>C3DS</span> <small id="app-version"></small></a>
   <nav id="tabs" role="tablist" aria-label="Secciones">
-    <button role="tab" data-tab="editor" aria-selected="true">Editor</button>
+    <button role="tab" data-tab="home" aria-selected="true">Inicio</button>
+    <button role="tab" data-tab="editor" aria-selected="false">Editor</button>
     <button role="tab" data-tab="import" aria-selected="false">Importar</button>
+    <button role="tab" data-tab="downloads" aria-selected="false">Descargas</button>
     <button role="tab" data-tab="limits" aria-selected="false">Límites 3DS</button>
-    <button role="tab" data-tab="about" aria-selected="false">Estado</button>
   </nav>
+  <div class="header-tools">
+    <button id="theme-btn" class="btn small ghost" type="button"></button>
+    <a class="btn small ghost" href="https://github.com/IkerPlays/C3DS" target="_blank" rel="noopener">GitHub</a>
+  </div>
 </header>
 
-<main>
-  <section id="tab-editor" class="panel wide"><div id="editor-root"></div></section>
+<main id="main">
+  <!-- ========== INICIO ========== -->
+  <section id="tab-home" class="panel home">
+    <div class="hero">
+      <div class="hero-copy">
+        <span class="badge-pill">v<span id="hero-version">0.1</span> · alfa · gratis y de código abierto</span>
+        <h1>Crea juegos para <span class="grad">Nintendo&nbsp;3DS</span> sin escribir una línea</h1>
+        <p class="lead">Diseña escenas, añade sprites y sonido, programa con reglas sencillas, pruébalo al instante y exporta a <code>.3dsx</code> y <code>.cia</code> listos para tu consola. Todo en tu navegador.</p>
+        <div class="cta">
+          <a class="btn primary big" href="#editor" id="cta-editor">✏️ Abrir el editor<small>sin instalar nada</small></a>
+          <span id="hero-dl" data-web-only></span>
+        </div>
+        <ul class="trust">
+          <li>🔒 Tus archivos no se suben a ningún servidor</li>
+          <li>💾 Guardado automático en el navegador</li>
+          <li>🎮 Homebrew: necesitas una 3DS con custom firmware</li>
+        </ul>
+      </div>
+      <div class="hero-demo" aria-label="Demostración: el juego de ejemplo jugando solo">
+        <div class="console">
+          <div class="screen top"><canvas id="demo-top" width="400" height="240"></canvas></div>
+          <div class="hinge"></div>
+          <div class="screen bottom"><canvas id="demo-bottom" width="320" height="240"></canvas></div>
+        </div>
+        <p class="muted small center">Demo en vivo del juego de ejemplo “Recoger monedas”</p>
+      </div>
+    </div>
 
+    <h2 class="section-title">Todo lo que necesitas para tu primer juego</h2>
+    <div class="cards features">
+      <div class="card"><span class="card-icon">🧩</span><strong>Editor visual</strong><span class="muted">Escenas, objetos, cuadrícula, zoom, deshacer y rehacer. Arrastra y redimensiona en las dos pantallas.</span></div>
+      <div class="card"><span class="card-icon">▶️</span><strong>Vista previa al instante</strong><span class="muted">Juega mientras editas con teclado, ratón o los botones en pantalla. Mismo motor que el juego exportado.</span></div>
+      <div class="card"><span class="card-icon">🖼️</span><strong>Sprites y sonido</strong><span class="muted">Importa PNG, JPG, WebP, WAV, OGG o MP3. Se convierten solos a los formatos de la 3DS.</span></div>
+      <div class="card"><span class="card-icon">🧠</span><strong>Lógica sin código</strong><span class="muted">Reglas “cuando pase esto → haz esto”: botones, colisiones, toques, bordes, variables y temporizadores.</span></div>
+      <div class="card"><span class="card-icon">📦</span><strong>.3dsx y .cia reales</strong><span class="muted">Exporta un proyecto C listo para compilar, o compílalo en la nube y descarga los archivos.</span></div>
+      <div class="card"><span class="card-icon">🔄</span><strong>Importa Unity, Godot y Unreal</strong><span class="muted">Analiza tu proyecto, mide los límites de la 3DS y convierte texturas y audio para reutilizarlos.</span></div>
+    </div>
+
+    <h2 class="section-title">Cómo funciona</h2>
+    <ol class="steps">
+      <li><span class="num">1</span><div><strong>Crea</strong><p class="muted">Elige una plantilla o empieza en blanco. Coloca objetos, sprites y textos en la pantalla superior e inferior.</p></div></li>
+      <li><span class="num">2</span><div><strong>Prueba</strong><p class="muted">Pulsa ▶ Probar: tu juego corre en el navegador con los mismos controles de la consola.</p></div></li>
+      <li><span class="num">3</span><div><strong>Exporta</strong><p class="muted">Descarga el proyecto 3DS (<code>make</code> → <code>.3dsx</code>, <code>make cia</code> → <code>.cia</code>), un HTML5 o un .exe de Windows.</p></div></li>
+      <li><span class="num">4</span><div><strong>Juega</strong><p class="muted">Copia el <code>.3dsx</code> a la SD o instala el <code>.cia</code> con FBI. También funciona en el emulador Azahar.</p></div></li>
+    </ol>
+
+    <h2 class="section-title">Empieza con una plantilla</h2>
+    <div class="cards" id="tpl-cards"></div>
+
+    <div class="band" data-web-only>
+      <div><h2>Descarga la app</h2><p class="muted">Windows, macOS, Linux, Android e iOS. La misma experiencia, con tus proyectos en tu equipo.</p></div>
+      <a class="btn primary big" href="#downloads">Ver todas las descargas</a>
+    </div>
+    <div class="band" data-app-only hidden>
+      <div><h2>Estás usando la app de C3DS</h2><p class="muted">Cuando haya una versión nueva te avisaremos arriba.</p></div>
+      <a class="btn big" href="#downloads">Ver versiones</a>
+    </div>
+
+    <h2 class="section-title">Sobre el proyecto</h2>
+    <div class="about">
+      <div>
+        <p>C3DS nace para que hacer un juego de 3DS no requiera montar un toolchain ni saber C. El editor genera un proyecto de <strong>devkitARM + libctru + citro2d</strong> y lo compila con herramientas abiertas (<code>tex3ds</code>, <code>makerom</code>, <code>bannertool</code>).</p>
+        <p class="muted">Es una versión <strong>alfa</strong>: lo que ves funciona y está probado en el CI, pero aún hay mucho por hacer.</p>
+        <p class="links"><a href="https://github.com/IkerPlays/C3DS" target="_blank" rel="noopener">Código en GitHub</a> · <a href="https://github.com/IkerPlays/C3DS/releases" target="_blank" rel="noopener">Releases</a> · <a href="https://github.com/IkerPlays/C3DS/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changelog</a> · <a href="https://github.com/IkerPlays/C3DS/tree/main/docs" target="_blank" rel="noopener">Documentación</a> · <a href="https://github.com/IkerPlays/C3DS/issues" target="_blank" rel="noopener">Reportar un problema</a></p>
+      </div>
+      <div class="roadmap">
+        <h3>Estado</h3>
+        <ul class="status-list">
+          <li class="ok">Editor, vista previa, guardado local, plantillas</li>
+          <li class="ok">Exportar .3dsx / .cia, HTML5 y Windows .exe</li>
+          <li class="ok">Compilación en la nube (con token en Netlify)</li>
+          <li class="ok">Apps para Windows, macOS, Linux, Android e iOS</li>
+          <li class="soon">Actualizaciones automáticas dentro de las apps</li>
+          <li class="soon">Más plantillas, tilemaps y animaciones</li>
+        </ul>
+        <h3>Honestidad por delante</h3>
+        <ul class="plain">
+          <li>Unity, Godot y Unreal <strong>no</strong> se convierten tal cual (no existe runtime para la 3DS): se reutilizan los assets y se rehace la lógica.</li>
+          <li>Un <code>.exe</code> de Windows no se puede pasar a 3DS: solo se analiza.</li>
+          <li>El <code>.cia</code> compila en el CI pero aún no se ha probado en consola real.</li>
+        </ul>
+      </div>
+    </div>
+    <footer class="foot">C3DS · hecho con cariño · <a href="#limits">Límites de la 3DS</a> · <a href="https://github.com/IkerPlays/C3DS/blob/main/docs/CLOUD-BUILD.md" target="_blank" rel="noopener">Compilación en la nube</a></footer>
+  </section>
+
+  <!-- ========== EDITOR ========== -->
+  <section id="tab-editor" class="panel wide" hidden><div id="editor-root"></div></section>
+
+  <!-- ========== IMPORTAR ========== -->
   <section id="tab-import" class="panel" hidden>
     <h2>Importar y analizar un proyecto</h2>
     <p class="muted">Unity, Godot o Unreal (carpeta o .zip) y ejecutables .exe. Todo ocurre en tu navegador: no se sube nada.</p>
     <div id="drop" class="drop" tabindex="0">
-      <p><strong>Arrastra aquí</strong> una carpeta, un .zip o un .exe</p>
+      <p class="drop-title"><strong>Arrastra aquí</strong> una carpeta, un .zip o un .exe</p>
       <div class="row">
         <label class="btn">Elegir carpeta <input id="pick-dir" type="file" webkitdirectory hidden></label>
         <label class="btn">Elegir .zip / .exe <input id="pick-file" type="file" accept=".zip,.exe" hidden></label>
@@ -36,26 +133,31 @@
     <div id="report" hidden aria-live="polite"></div>
   </section>
 
+  <!-- ========== DESCARGAS ========== -->
+  <section id="tab-downloads" class="panel" hidden>
+    <h2>Descargas</h2>
+    <p class="muted">Las apps son la misma web empaquetada, con tus proyectos guardados en el equipo. El editor también funciona directamente en el navegador.</p>
+    <div id="dl-stable" aria-live="polite"><p class="muted">Cargando versiones…</p></div>
+    <div id="dl-notes"></div>
+    <h3>Verificar la descarga</h3>
+    <p class="muted small">Cada release incluye <code>SHA256SUMS.txt</code>. Comprueba el archivo con <code>sha256sum -c SHA256SUMS.txt</code> (Linux/macOS) o <code>Get-FileHash archivo.exe</code> (Windows).</p>
+    <h3>Versiones de desarrollo</h3>
+    <div id="dl-dev"><p class="muted">Cargando…</p></div>
+    <h3>Notas de instalación</h3>
+    <ul class="plain small">
+      <li><strong>Windows:</strong> si SmartScreen avisa, “Más información → Ejecutar de todas formas” (el instalador no está firmado).</li>
+      <li><strong>macOS:</strong> la app no está notarizada: clic derecho → Abrir la primera vez.</li>
+      <li><strong>Android:</strong> permite instalar apps de este origen. Es un APK de depuración.</li>
+      <li><strong>iOS:</strong> el IPA no está firmado; instálalo con AltStore, Sideloadly o Xcode.</li>
+      <li><strong>Linux:</strong> <code>chmod +x *.AppImage</code> y ejecútalo, o instala el <code>.deb</code>.</li>
+    </ul>
+  </section>
+
+  <!-- ========== LÍMITES ========== -->
   <section id="tab-limits" class="panel" hidden>
     <h2>Límites de la Nintendo 3DS</h2>
     <p class="muted">Valores orientativos. El analizador y el editor los usan para avisarte.</p>
     <table id="limits-table"></table>
-  </section>
-
-  <section id="tab-about" class="panel" hidden>
-    <h2>Estado del proyecto</h2>
-    <ul class="status-list">
-      <li class="ok">Editor visual: escenas, sprites, sonido, variables, reglas, botones táctiles</li>
-      <li class="ok">Vista previa con el mismo motor que el exportador HTML5</li>
-      <li class="ok">Guardado automático en el navegador, deshacer y rehacer</li>
-      <li class="ok">Exportar proyecto 3DS (.zip) → <code>.3dsx</code> y <code>.cia</code> con devkitARM</li>
-      <li class="ok">Compilación en la nube (si el sitio tiene el token configurado)</li>
-      <li class="ok">Exportar juego HTML5; analizador y conversor de assets de Unity/Godot/Unreal</li>
-      <li class="ok">Apps: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor)</li>
-      <li class="ok">Exportar tu juego como Windows .exe (en la nube)</li>
-      <li class="soon">Actualizaciones automáticas dentro de las apps (hoy: aviso de nueva versión)</li>
-    </ul>
-    <p class="muted">Ningún motor (Unity, Godot, Unreal) puede exportarse tal cual a 3DS, y un .exe x86/x64 no puede convertirse a ARM11. C3DS analiza qué assets sirven, los convierte, y te da una base compilable.</p>
   </section>
 </main>
 <div id="toasts" aria-live="polite"></div>

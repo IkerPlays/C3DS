@@ -1,0 +1,17 @@
+{
+  "name": "C3DS - Crea juegos para 3DS",
+  "short_name": "C3DS",
+  "description": "Editor visual para crear juegos de Nintendo 3DS homebrew (.3dsx y .cia).",
+  "start_url": "./#editor",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0e1020",
+  "theme_color": "#0e1020",
+  "lang": "es",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
