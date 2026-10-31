@@ -6,7 +6,8 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: ci-${{ github.ref }}
+  # En main cada commit tiene su propio grupo (GitHub cancelaría las ejecuciones pendientes intermedias si compartieran grupo).
+  group: ${{ github.ref == 'refs/heads/main' && format('ci-main-{0}', github.sha) || format('ci-{0}', github.ref) }}
   # En main no se cancelan los runs: cada commit se valida entero (macOS, Linux, Windows tardan varios minutos).
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
