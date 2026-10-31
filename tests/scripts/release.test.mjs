@@ -4,7 +4,7 @@ import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseTag, resolve, loadPlatforms } from '../../scripts/release-info.mjs';
-import { platformsForChanges, buildMatrix } from '../../scripts/plan-devbuild.mjs';
+import { buildMatrix } from '../../scripts/plan-devbuild.mjs';
 import { packagePlatform } from '../../scripts/package.mjs';
 import { readZipEntries } from '../../web/js/zip.js';
 
@@ -34,13 +34,10 @@ test('cada plataforma tiene carpeta, VERSION, CHANGELOG y release válidos', () 
   }
 });
 
-test('plan devbuild', () => {
-  const names = Object.keys(P);
-  assert.deepEqual(platformsForChanges(['android/a.txt', 'README.md'], names), ['android']);
-  assert.deepEqual(platformsForChanges(['docs/x.md'], names), []);
-  assert.equal(platformsForChanges(['scripts/package.mjs'], names).length, 6);
-  const m = buildMatrix(['web'], P, { run: '7', sha: 'abcdef123456', root: ROOT });
-  assert.equal(m.include[0].version, `${readFileSync(join(ROOT, 'web/VERSION'), 'utf8').trim()}-dev.7.abcdef1`);
+test('plan devbuild: todas las plataformas en una sola versión', () => {
+  const { version, matrix } = buildMatrix(P, { run: '7', sha: 'abcdef123456', root: ROOT });
+  assert.equal(version, `${readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()}-dev.7.abcdef1`);
+  assert.deepEqual(matrix.include.map((m) => m.platform).sort(), Object.keys(P).sort());
 });
 
 test('package: zip con prefijo y sin carpetas de build', () => {

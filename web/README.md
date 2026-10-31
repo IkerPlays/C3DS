@@ -4,7 +4,7 @@ Sitio web (Netlify): analizador de proyectos, editor y exportador. Código en `w
 
 ## Versionado y releases
 - Versión actual: ver `VERSION`. Notas: `CHANGELOG.md`.
-- Release individual: tag `web-vX.Y.Z`. Devbuild: automático al hacer push a `main` con cambios en esta carpeta.
+- Release individual: tag `web-vX.Y.Z`. Devbuild: automático al hacer push a `main`; incluye todas las plataformas en una sola pre-release `dev-<n>`.
 - Ver [docs/RELEASING.md](../docs/RELEASING.md).
 
 ## Cómo añadir una build real
