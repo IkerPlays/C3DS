@@ -51,7 +51,7 @@ jobs:
         with:
           pattern: c3ds-*
           merge-multiple: true
-          path: assets
+          path: release-files
       - uses: actions/download-artifact@v4
         with:
           name: release-notes
@@ -64,10 +64,10 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          (cd assets && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
+          (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
           flags=()
           [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
           # Las releases individuales no deben quedar como "Latest" por encima de la global.
-          gh release create "$TAG" assets/* \
+          gh release create "$TAG" release-files/* \
             --repo "$REPO" --verify-tag --latest=false --title "C3DS $PLATFORM ${TAG#${PLATFORM}-}" \
             --notes-file release-notes.md "${flags[@]}"

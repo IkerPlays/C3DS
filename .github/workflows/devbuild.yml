@@ -62,7 +62,7 @@ jobs:
         with:
           pattern: c3ds-*
           merge-multiple: true
-          path: assets
+          path: release-files
       - name: Publicar pre-release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -83,8 +83,8 @@ jobs:
             echo; echo "Commit: $GITHUB_SHA"; echo; echo "### Cambios"
             git log --no-merges --pretty='- %s (%h)' $range | head -30
           } > notes.md
-          (cd assets && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
-          gh release create "$tag" assets/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+          (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
+          gh release create "$tag" release-files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
             --prerelease --latest=false --title "Devbuild #$GITHUB_RUN_NUMBER ($VERSION)" --notes-file notes.md
           # Conserva solo las KEEP más recientes.
           gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName,createdAt \
