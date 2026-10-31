@@ -153,10 +153,12 @@ test('compilación en la nube: sin servicio configurado se explica y no rompe', 
   await ctx.close();
 });
 
-test('el menú Exportar ofrece Windows .exe y no hay descarga de la web', async () => {
+test('el menú Exportar ofrece Windows, macOS y Linux', async () => {
   const { page, ctx } = await openPage(browser, server.url);
   await page.click('#btn-export');
   assert.equal(await page.locator('#btn-cloud-win').isVisible(), true);
+  assert.equal(await page.locator('#btn-cloud-mac').isVisible(), true);
+  assert.equal(await page.locator('#btn-cloud-linux').isVisible(), true);
   await ctx.close();
 });
 

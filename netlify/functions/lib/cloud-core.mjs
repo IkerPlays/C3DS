@@ -12,7 +12,7 @@ export const WORKFLOW = 'cloud-build.yml';
 export const MAX_BODY_BYTES = 4.5 * 1024 * 1024; // las Functions de Netlify aceptan ~6 MB
 export const MAX_ACTIVE = 3;
 const ID_RE = /^[a-f0-9]{16}$/;
-export const TARGETS = ['3ds', 'windows'];
+export const TARGETS = ['3ds', 'windows', 'macos', 'linux'];
 
 const json = (status, body) => ({ status, body });
 const randomId = () => [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -64,8 +64,8 @@ export async function startBuild(gh, raw, target = '3ds') {
   const active = (await listRuns(gh, 'status=in_progress&per_page=30')).length + (await listRuns(gh, 'status=queued&per_page=30')).length;
   if (active >= MAX_ACTIVE) return json(429, { error: 'Hay muchas compilaciones en curso. Inténtalo en unos minutos.' });
 
-  // 3ds: proyecto C regenerado en el servidor. windows: el juego HTML5 que el workflow empaqueta en un .exe (Tauri).
-  const files = target === 'windows'
+  // 3ds: proyecto C regenerado en el servidor. windows/macos/linux: el juego HTML5 que el workflow empaqueta con Tauri.
+  const files = target !== '3ds'
     ? [{ path: `${slug(project.name)}/index.html`, content: buildHtml5(project) }]
     : exportFiles(project).filter((f) => !f.path.includes('/.github/'));
   const zip = createZip(files);

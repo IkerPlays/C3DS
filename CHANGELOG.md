@@ -5,6 +5,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 
 ## [Unreleased]
 ### Añadido
+- **Exportar tu juego a macOS (`.dmg`) y Linux (`.AppImage` + `.deb`)** desde el editor, además de Windows, con la compilación en la nube (Tauri).
 - **Web**: nueva página de **Inicio** (qué es C3DS, demo en vivo, funciones, cómo funciona, plantillas, estado y honestidad sobre las limitaciones) y pestaña de **Descargas** que lee las releases de GitHub, recomienda el archivo de tu sistema, muestra las novedades, el checksum y los devbuilds.
 - **Web**: tema claro/oscuro/auto, diseño renovado, instalable como **PWA** (editor sin conexión).
 - **Editor**: plantillas (Recoger monedas, **Pong**, **Esquivar**, en blanco), velocidad automática de objetos, evento “toca el borde”, acción “cambiar velocidad”, control solo horizontal/vertical, colocar al azar por eje, centrar, orden de capas, duplicar escena, coordenadas del cursor y ayuda de atajos (`?`).

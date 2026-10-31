@@ -7,7 +7,7 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 ## Qué hace hoy
 - **Inicio y Descargas**: la web presenta el proyecto y descarga las apps desde las releases de GitHub (recomienda tu sistema). Instalable como PWA.
 - **Editor visual** (pestaña *Editor*): plantillas (monedas, Pong, esquivar), escenas, sprites, sonido, variables, reglas “cuando → entonces” (colisiones, bordes, velocidad, toques), botones táctiles, **vista previa** al instante, guardado automático en el navegador y deshacer/rehacer.
-- **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego para **Windows `.exe`** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
+- **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego de escritorio para **Windows, macOS y Linux** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
 - **Importar y analizar** (en el navegador, sin subir nada): Unity, Godot, Unreal y `.exe`; mide límites de la 3DS, **convierte texturas y audio** (PNG en potencia de 2 ≤1024, WAV) y crea un proyecto del editor con ellos.
 - **Apps**: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor). Aviso de nueva versión.
 

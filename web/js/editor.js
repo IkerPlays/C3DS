@@ -503,12 +503,14 @@ function exportJson() {
   download(JSON.stringify(project, null, 2), `${slug(project.name)}.c3ds.json`, 'application/json');
 }
 
+const TARGET_NAME = { windows: 'Windows', macos: 'macOS', linux: 'Linux' };
+
 async function cloudBuild(target = '3ds') {
   if (exportBlockers()) return;
   const status = h('p', { class: 'build-status' }, 'Enviando proyecto…');
   const bar = h('div', { class: 'bar' }, h('i', {}));
   const link = h('div', {});
-  const d = dialog('Compilar en la nube', h('div', {}, h('p', { class: 'muted small' }, target === 'windows' ? 'Se empaqueta tu juego como .exe de Windows (Tauri) con GitHub Actions. Tarda unos 5 minutos. No se crea ninguna release.' : 'Se compila con GitHub Actions (devkitARM + tex3ds + makerom). No se crea ninguna release: solo recibes los archivos.'), bar, status, link), [{ label: 'Cerrar' }]);
+  const d = dialog('Compilar en la nube', h('div', {}, h('p', { class: 'muted small' }, target !== '3ds' ? `Se empaqueta tu juego como app de ${TARGET_NAME[target]} (Tauri) con GitHub Actions. Tarda unos 5 minutos. No se crea ninguna release.` : 'Se compila con GitHub Actions (devkitARM + tex3ds + makerom). No se crea ninguna release: solo recibes los archivos.'), bar, status, link), [{ label: 'Cerrar' }]);
   try {
     const { id } = await startBuild(project, target);
     for (let i = 0; i < 120; i++) {
@@ -519,7 +521,7 @@ async function cloudBuild(target = '3ds') {
       bar.firstChild.style.width = { queued: '15%', running: '60%', success: '100%', failed: '100%' }[s.status] || '10%';
       if (s.status === 'success') {
         const dl = await buildDownload(id);
-        link.append(h('a', { class: 'btn primary', href: dl.url }, target === 'windows' ? `Descargar ${slug(project.name)}.exe (zip)` : `Descargar ${slug(project.name)}.3dsx + .cia (zip)`), h('p', { class: 'muted small' }, 'El enlace caduca en unos minutos.'));
+        link.append(h('a', { class: 'btn primary', href: dl.url }, target !== '3ds' ? `Descargar la app de ${TARGET_NAME[target]} (zip)` : `Descargar ${slug(project.name)}.3dsx + .cia (zip)`), h('p', { class: 'muted small' }, 'El enlace caduca en unos minutos.'));
         return;
       }
       if (s.status === 'failed') { link.append(h('p', { class: 'err' }, 'La compilación falló. Revisa el proyecto o usa “Exportar .zip” y compila en local.'), s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'Ver registro en GitHub') : null); return; }
@@ -554,7 +556,9 @@ export function mountEditor(root) {
       h('button', { role: 'menuitem', id: 'btn-cloud', onClick: () => cloudBuild('3ds') }, '☁ Compilar en la nube (.3dsx + .cia)'),
       h('button', { role: 'menuitem', id: 'btn-html5', onClick: exportHtml5 }, '🌐 Juego HTML5 (jugable en navegador)'),
       h('button', { role: 'menuitem', onClick: exportJson }, '💾 Copia del proyecto (.c3ds.json)'),
-      h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, '🪟 Juego para Windows (.exe, en la nube)')));
+      h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, '🪟 Juego para Windows (.exe, en la nube)'),
+      h('button', { role: 'menuitem', id: 'btn-cloud-mac', onClick: () => cloudBuild('macos') }, '🍎 Juego para macOS (.dmg, en la nube)'),
+      h('button', { role: 'menuitem', id: 'btn-cloud-linux', onClick: () => cloudBuild('linux') }, '🐧 Juego para Linux (.AppImage / .deb, en la nube)')));
   refs.stageWrap = h('div', { class: 'stage-wrap' },
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),

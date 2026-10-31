@@ -102,3 +102,24 @@ jobs:
         run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result
       - shell: bash
         run: ls -la result/*.exe
+
+  # Valida los destinos macOS y Linux del editor: el juego HTML5 de ejemplo empaquetado con Tauri.
+  desktop-game-sample:
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: macos, runner: macos-latest }
+          - { target: linux, runner: ubuntu-latest }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generar juego HTML5 de ejemplo
+        run: node scripts/gen-sample.mjs sample-html --html5
+      - name: Empaquetar
+        run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result ${{ matrix.target }}
+      - run: ls -la result

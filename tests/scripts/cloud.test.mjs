@@ -102,6 +102,10 @@ test('destino Windows: sube el juego HTML5 (no código C) y lo indica al workflo
   const names = readZipEntries(new Uint8Array(Buffer.from(put.body.content, 'base64'))).map((e) => e.path);
   assert.deepEqual(names, ['mi-primer-juego/index.html']);
   assert.deepEqual(g.calls.find((c) => c.path.includes('/dispatches')).body.inputs, { job_id: r.body.id, target: 'windows' });
+  for (const target of ['macos', 'linux']) {
+    const r2 = await route({ method: 'POST', pathname: '/api/build', search: `?target=${target}`, body: JSON.stringify(newProject()), env, fetchImpl: fakeGithub().fetchImpl });
+    assert.equal(r2.status, 202); assert.equal(r2.body.target, target);
+  }
   const bad = await route({ method: 'POST', pathname: '/api/build', search: '?target=rm', body: JSON.stringify(newProject()), env, fetchImpl: g.fetchImpl });
   assert.equal(bad.status, 400);
 });

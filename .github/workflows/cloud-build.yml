@@ -9,9 +9,9 @@ on:
         description: Id del trabajo (16 caracteres hexadecimales)
         required: true
       target:
-        description: Destino (3ds o windows)
+        description: Destino (3ds, windows, macos o linux)
         type: choice
-        options: [3ds, windows]
+        options: [3ds, windows, macos, linux]
         default: 3ds
 permissions:
   contents: read
@@ -75,12 +75,12 @@ jobs:
           retention-days: 1
           if-no-files-found: error
 
-  # Juego HTML5 empaquetado como .exe de Windows (Tauri). Usa la plantilla del propio repo (rama principal).
+  # Juego HTML5 empaquetado para Windows (Tauri). Usa la plantilla del propio repo (rama principal).
   build-windows:
     needs: prepare
     if: inputs.target == 'windows'
     runs-on: windows-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     env:
       JOB_ID: ${{ inputs.job_id }}
     steps:
@@ -97,12 +97,82 @@ jobs:
         run: |
           mkdir work && unzip -q job/project.zip -d work
           ls work/*/
-      - name: Compilar el .exe
+      - name: Compilar la app
         shell: bash
         run: |
           dir=$(echo work/*/)
           slug=$(basename "$dir")
-          bash scripts/build-tauri-game.sh "$dir" "$slug" result
+          bash scripts/build-tauri-game.sh "$dir" "$slug" result windows
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.job_id }}
+          path: result/*
+          retention-days: 1
+          if-no-files-found: error
+
+  # Juego HTML5 empaquetado para macOS (Tauri). Usa la plantilla del propio repo (rama principal).
+  build-macos:
+    needs: prepare
+    if: inputs.target == 'macos'
+    runs-on: macos-latest
+    timeout-minutes: 30
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: job-${{ inputs.job_id }}
+          path: job
+      - name: Desempaquetar
+        shell: bash
+        run: |
+          mkdir work && unzip -q job/project.zip -d work
+          ls work/*/
+      - name: Compilar la app
+        shell: bash
+        run: |
+          dir=$(echo work/*/)
+          slug=$(basename "$dir")
+          bash scripts/build-tauri-game.sh "$dir" "$slug" result macos
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.job_id }}
+          path: result/*
+          retention-days: 1
+          if-no-files-found: error
+
+  # Juego HTML5 empaquetado para Linux (Tauri). Usa la plantilla del propio repo (rama principal).
+  build-linux:
+    needs: prepare
+    if: inputs.target == 'linux'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: job-${{ inputs.job_id }}
+          path: job
+      - name: Desempaquetar
+        shell: bash
+        run: |
+          mkdir work && unzip -q job/project.zip -d work
+          ls work/*/
+      - name: Compilar la app
+        shell: bash
+        run: |
+          dir=$(echo work/*/)
+          slug=$(basename "$dir")
+          bash scripts/build-tauri-game.sh "$dir" "$slug" result linux
       - uses: actions/upload-artifact@v4
         with:
           name: build-${{ inputs.job_id }}
@@ -111,7 +181,7 @@ jobs:
           if-no-files-found: error
 
   cleanup:
-    needs: [prepare, build, build-windows]
+    needs: [prepare, build, build-windows, build-macos, build-linux]
     if: always() && needs.prepare.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
