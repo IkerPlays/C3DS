@@ -144,10 +144,24 @@ export function validate(p) {
       if (refs.some((id) => !objIds.has(id))) warn('error', `Regla en "${s.name}": hace referencia a un objeto que ya no existe.`);
     }
   }
+  const mem = estimateMemory(p);
+  if (mem.textureBytes > VRAM_BYTES) warn('warn', `Las texturas ocuparían ≈${(mem.textureBytes / 1048576).toFixed(1)} MB en memoria gráfica (la 3DS tiene ${VRAM_BYTES / 1048576} MB de VRAM): reduce o quita imágenes.`);
+  if (mem.audioBytes > 24 * 1048576) warn('warn', `El audio ocuparía ≈${(mem.audioBytes / 1048576).toFixed(0)} MB en RAM: acorta o quita sonidos.`);
   const bytes = Object.values(p.blobs).reduce((n, d) => n + d.length * 0.75, 0);
   if (bytes > 3 * 1048576) warn('warn', `Los recursos pesan ${(bytes / 1048576).toFixed(1)} MB: el guardado local y la compilación en la nube pueden fallar.`);
   return out;
 }
+
+/** Estimación de memoria que usará el juego en la 3DS (orientativa). Texturas en RGBA8 (4 bytes/píxel, potencia de 2). */
+export function estimateMemory(p) {
+  const pow2 = (n) => 2 ** Math.ceil(Math.log2(Math.max(8, n)));
+  const textureBytes = p.assets.images.reduce((n, a) => n + pow2(a.w) * pow2(a.h) * 4, 0);
+  const audioBytes = p.assets.sounds.reduce((n, a) => n + Math.round((a.seconds || 0) * 22050 * 2), 0);
+  const objects = p.scenes.reduce((n, s) => n + s.objects.length, 0);
+  return { textureBytes, audioBytes, objects };
+}
+
+export const VRAM_BYTES = 6 * 1048576;
 
 export function checkSound(p, id) {
   const { bytes } = fromDataURL(p.blobs[id]);

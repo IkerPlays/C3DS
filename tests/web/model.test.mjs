@@ -64,3 +64,16 @@ test('wav y bytes', () => {
   assert.deepEqual([...fromDataURL(toDataURL(b, 'x/y')).bytes], [...b]);
   assert.throws(() => fromDataURL('nope'));
 });
+
+import { estimateMemory, VRAM_BYTES } from '../../web/js/model.js';
+test('estimación de memoria y aviso de VRAM', () => {
+  const p = newProject();
+  const m = estimateMemory(p);
+  assert.equal(m.textureBytes, 4 * 32 * 32 * 4);
+  assert.ok(m.audioBytes > 0 && m.objects === 6);
+  assert.ok(!validate(p).some((x) => /VRAM/.test(x.text)));
+  for (let i = 0; i < 6; i++) p.assets.images.push({ id: 9000 + i, name: `g${i}`, w: 512, h: 512 });
+  for (let i = 0; i < 6; i++) p.blobs[9000 + i] = p.blobs[Object.keys(p.blobs)[0]];
+  assert.ok(estimateMemory(p).textureBytes > VRAM_BYTES);
+  assert.ok(validate(p).some((x) => x.level === 'warn' && /VRAM/.test(x.text)));
+});

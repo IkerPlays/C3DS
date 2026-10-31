@@ -2,7 +2,7 @@
 import { h, $, toast, dialog, download, debounce } from './ui.js';
 import {
   SCREENS, KEYS, KEY_LABEL, LIMITS, OBJECT_TYPES, CONTROL_MODES, newProject, migrate, makeObject, makeScene, nextId, validate,
-  findScene, slug, isVarName, animFrames,
+  findScene, slug, isVarName, animFrames, estimateMemory, VRAM_BYTES,
 } from './model.js';
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
@@ -458,6 +458,8 @@ function refreshHistoryButtons() { if (refs.undo) { refs.undo.disabled = !histor
 function renderWarnings() {
   const list = validate(project);
   refs.warnings.replaceChildren(...list.map((w) => h('li', { class: w.level }, w.text)));
+  const mem = estimateMemory(project);
+  refs.memInfo.textContent = `Memoria estimada: texturas ${(mem.textureBytes / 1048576).toFixed(2)} / ${VRAM_BYTES / 1048576} MB VRAM · audio ${(mem.audioBytes / 1048576).toFixed(2)} MB · ${mem.objects} objetos`;
   refs.warnBadge.textContent = list.length ? `${list.filter((x) => x.level === 'error').length} errores · ${list.filter((x) => x.level === 'warn').length} avisos` : 'Sin problemas';
   refs.warnBadge.className = `badge ${list.some((x) => x.level === 'error') ? 'err' : list.length ? 'warn' : 'ok'}`;
 }
@@ -495,6 +497,14 @@ function buildLiveVars() {
 function syncLiveVars(g) {
   for (const inp of refs.varsLive.querySelectorAll('input')) if (inp !== document.activeElement && g.vars[inp.dataset.var] !== undefined) inp.value = g.vars[inp.dataset.var];
 }
+function takeScreenshot() {
+  const c = document.createElement('canvas'); c.width = 400; c.height = 480;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#10131f'; ctx.fillRect(0, 0, 400, 480);
+  ctx.drawImage(cv.top, 0, 0); ctx.drawImage(cv.bottom, 40, 240);
+  c.toBlob((b) => { if (b) download(b, `${slug(project.name)}-captura.png`, 'image/png'); });
+}
+
 function togglePause() {
   if (!runner) return;
   runner.pause(!runner.paused);
@@ -615,13 +625,15 @@ export function mountEditor(root) {
   refs.debugBar = h('div', { class: 'debug-bar' },
     refs.pauseBtn,
     h('button', { class: 'btn small', id: 'btn-step', title: 'Avanzar un frame', onClick: () => { if (runner) { runner.step(); refs.pauseBtn.textContent = '▶ Seguir'; } } }, '⏭ Frame'),
+    h('button', { class: 'btn small', id: 'btn-shot', title: 'Guardar una captura de las dos pantallas', onClick: takeScreenshot }, '📸 Captura'),
     h('button', { class: 'btn small', id: 'btn-restart', title: 'Reiniciar el juego', onClick: () => { if (runner) { runner.restart(); runner.pause(false); refs.pauseBtn.textContent = '⏸ Pausa'; buildLiveVars(); } } }, '↺ Reiniciar'),
     h('label', { class: 'check small' }, 'Velocidad', selectInput([[0.5, '0.5×'], [1, '1×'], [2, '2×'], [4, '4×']], 1, (v) => runner?.setSpeed(v))),
     h('label', { class: 'check small' }, h('input', { type: 'checkbox', id: 'chk-boxes', onChange: (e) => runner?.showBoxes(e.target.checked) }), 'Cajas de colisión'));
   refs.varsLive = h('div', { class: 'vars-live', 'aria-label': 'Variables en vivo' });
   refs.warnings = h('ul', { class: 'warnings', 'aria-live': 'polite' });
   refs.warnBadge = h('button', { class: 'badge', onClick: () => refs.warnPanel.toggleAttribute('hidden') });
-  refs.warnPanel = h('div', { class: 'warn-panel', hidden: true }, refs.warnings);
+  refs.memInfo = h('p', { class: 'muted small', id: 'mem-info' });
+  refs.warnPanel = h('div', { class: 'warn-panel', hidden: true }, refs.memInfo, refs.warnings);
   let guideSeen = false;
   try { guideSeen = localStorage.getItem('c3ds:guide') === '1'; } catch { /* sin almacenamiento */ }
   refs.guide = h('div', { class: 'guide', hidden: guideSeen, id: 'guide' },
