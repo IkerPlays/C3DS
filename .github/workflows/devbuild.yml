@@ -84,8 +84,20 @@ jobs:
             git log --no-merges --pretty='- %s (%h)' $range | head -30
           } > notes.md
           (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
-          gh release create "$tag" release-files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
-            --prerelease --latest=false --title "Devbuild #$GITHUB_RUN_NUMBER ($VERSION)" --notes-file notes.md
+          # A veces GitHub responde 403 "Resource not accessible by integration" al crear la release cuando hay
+          # varios devbuilds seguidos: se reintenta y, si persiste, se muestran datos para diagnosticar (sin secretos).
+          ok=0
+          for attempt in 1 2 3 4; do
+            if gh release create "$tag" release-files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+                 --prerelease --latest=false --title "Devbuild #$GITHUB_RUN_NUMBER ($VERSION)" --notes-file notes.md; then ok=1; break; fi
+            echo "::warning::Intento $attempt de crear $tag falló"
+            gh api "repos/$GITHUB_REPOSITORY" --jq '{permissions: .permissions, archived: .archived}' || true
+            gh api rate_limit --jq '.resources.core' || true
+            # Si la release llegó a crearse a pesar del error, se da por buena.
+            gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && { ok=1; break; }
+            sleep $((attempt * 20))
+          done
+          [ "$ok" = 1 ] || { echo "::error::No se pudo crear la release $tag"; exit 1; }
           # Conserva solo las KEEP más recientes.
           gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName,createdAt \
             --jq "[.[] | select(.tagName | test(\"^dev-[0-9]+\$\"))] | sort_by(.createdAt) | reverse | .[$KEEP:] | .[].tagName" |

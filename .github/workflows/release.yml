@@ -60,5 +60,10 @@ jobs:
           (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
           flags=()
           [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
-          gh release create "$TAG" release-files/* \
-            --repo "$REPO" --verify-tag --title "C3DS $TAG" --notes-file release-notes.md "${flags[@]}"
+          for attempt in 1 2 3 4; do
+            if gh release create "$TAG" release-files/* \
+               --repo "$REPO" --verify-tag --title "C3DS $TAG" --notes-file release-notes.md "${flags[@]}"; then break; fi
+            [ "$attempt" = 4 ] && { echo "::error::No se pudo crear la release"; exit 1; }
+            gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && break
+            sleep $((attempt * 20))
+          done
