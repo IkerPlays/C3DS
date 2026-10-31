@@ -29,6 +29,6 @@ jobs:
         run: node scripts/package.mjs "$PLATFORM" "$VERSION" dist
       - uses: actions/upload-artifact@v4
         with:
-          name: c3ds-${{ inputs.platform }}-${{ inputs.version }}
+          name: C3DS-${{ inputs.version }}-${{ inputs.platform }}
           path: dist/*
           if-no-files-found: error

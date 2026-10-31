@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          pattern: c3ds-*
+          pattern: C3DS-*
           merge-multiple: true
           path: release-files
       - uses: actions/download-artifact@v4

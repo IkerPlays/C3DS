@@ -8,4 +8,4 @@ App Android con [Capacitor](https://capacitorjs.com) (open source), que envuelve
 - Ver [docs/RELEASING.md](../docs/RELEASING.md).
 
 ## Build
-`build.sh` (en esta carpeta) se ejecuta en el CI con `C3DS_VERSION` y deja los binarios en `dist/`, con nombre `c3ds-android-<versión>*`. Lógica compartida en `scripts/build-capacitor.sh`; plantilla del proyecto nativo en `shared/capacitor/`. Local: `C3DS_VERSION=0.1.0 bash build.sh`.
+`build.sh` (en esta carpeta) se ejecuta en el CI con `C3DS_VERSION` y deja los binarios en `dist/`, con nombre `C3DS-<versión>-<Plataforma>*`. Lógica compartida en `scripts/build-capacitor.sh`; plantilla del proyecto nativo en `shared/capacitor/`. Local: `C3DS_VERSION=0.1.0 bash build.sh`.

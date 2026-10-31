@@ -1,6 +1,7 @@
 // Recursos necesarios para empaquetar un .cia: app.rsf, icono, banner y audio de banner.
 // Herramientas open source usadas en el build: makerom (3DSGuy/Project_CTR) y bannertool (diasurgical/bannertool).
 import { encodePNG } from './png.js';
+import { silentWav } from './wav.js';
 
 export const MAKEROM_URL = 'https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18/makerom-v0.18-ubuntu_x86_64.zip';
 export const MAKEROM_SHA256 = 'c6f8aafba8f1cdb403929719c95173cada707cd9ceacfa2bec5118f8f96c6f8a';
@@ -15,14 +16,17 @@ export function uniqueId(name) { return 0xf0000 + (fnv(name) % 0xf000); }
 
 const alnum = (s, n, fallback) => (String(s).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, n) || fallback);
 
-export function generateRsf(p) {
+export function generateRsf(p, { romfs = false } = {}) {
   const id = uniqueId(p.name);
   return `# Generado por C3DS. Basado en el RSF de ejemplo de jakcron (autor de makerom).
 BasicInfo:
   Title                   : ${alnum(p.name, 8, 'C3DSAPP')}
   ProductCode             : CTR-P-${alnum(p.name, 4, 'C3DS').padEnd(4, 'X')}
   Logo                    : Nintendo
-
+${romfs ? `
+RomFs:
+  RootPath                : romfs
+` : ''}
 TitleInfo:
   Category                : Application
   UniqueId                : 0x${id.toString(16)}
@@ -121,6 +125,7 @@ AccessControlInfo:
     Backdoor: 123
   ServiceAccessControl:
    - cfg:u
+   - dsp::DSP
    - fs:USER
    - gsp::Gpu
    - hid:USER
@@ -204,24 +209,11 @@ export function gradientPNG(w, h, hexColor) {
   return encodePNG(w, h, px);
 }
 
-/** WAV PCM 16-bit mono de silencio (audio del banner). */
-export function silentWav(seconds = 1, rate = 22050) {
-  const n = seconds * rate * 2;
-  const b = new Uint8Array(44 + n);
-  const dv = new DataView(b.buffer);
-  const tag = (o, s) => { for (let i = 0; i < 4; i++) b[o + i] = s.charCodeAt(i); };
-  tag(0, 'RIFF'); dv.setUint32(4, 36 + n, true); tag(8, 'WAVE'); tag(12, 'fmt ');
-  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
-  dv.setUint32(24, rate, true); dv.setUint32(28, rate * 2, true); dv.setUint16(32, 2, true); dv.setUint16(34, 16, true);
-  tag(36, 'data'); dv.setUint32(40, n, true);
-  return b;
-}
-
-export function ciaAssets(p) {
+export function ciaAssets(p, opts = {}) {
   return [
-    { path: 'cia/app.rsf', content: generateRsf(p) },
-    { path: 'cia/banner.png', content: gradientPNG(256, 128, p.bg.top) },
-    { path: 'cia/icon.png', content: gradientPNG(48, 48, p.entities.find((e) => e.type === 'rect')?.color || '#ff004d') },
+    { path: 'cia/app.rsf', content: generateRsf(p, opts) },
+    { path: 'cia/banner.png', content: gradientPNG(256, 128, p.scenes[0]?.bg.top) },
+    { path: 'cia/icon.png', content: gradientPNG(48, 48, '#ff004d') },
     { path: 'cia/audio.wav', content: silentWav() },
   ];
 }

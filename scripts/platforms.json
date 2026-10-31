@@ -1,8 +1,32 @@
 {
-  "web":     { "runner": "ubuntu-latest",  "exclude": [] },
-  "android": { "runner": "ubuntu-latest",  "exclude": [] },
-  "ios":     { "runner": "macos-latest",   "exclude": [] },
-  "windows": { "runner": "windows-latest", "exclude": [] },
-  "macos":   { "runner": "macos-latest",   "exclude": [] },
-  "linux":   { "runner": "ubuntu-latest",  "exclude": [] }
+  "web": {
+    "label": "Web",
+    "runner": "ubuntu-latest",
+    "exclude": []
+  },
+  "android": {
+    "label": "Android",
+    "runner": "ubuntu-latest",
+    "exclude": []
+  },
+  "ios": {
+    "label": "iOS",
+    "runner": "macos-latest",
+    "exclude": []
+  },
+  "windows": {
+    "label": "Windows",
+    "runner": "windows-latest",
+    "exclude": []
+  },
+  "macos": {
+    "label": "macOS",
+    "runner": "macos-latest",
+    "exclude": []
+  },
+  "linux": {
+    "label": "Linux",
+    "runner": "ubuntu-latest",
+    "exclude": []
+  }
 }

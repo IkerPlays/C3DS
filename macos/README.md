@@ -8,4 +8,4 @@ App de escritorio para macOS con [Tauri v2](https://tauri.app) (open source). Sa
 - Ver [docs/RELEASING.md](../docs/RELEASING.md).
 
 ## Build
-`build.sh` (en esta carpeta) se ejecuta en el CI con `C3DS_VERSION` y deja los binarios en `dist/`, con nombre `c3ds-macos-<versión>*`. Lógica compartida en `scripts/build-tauri.sh`; plantilla del proyecto nativo en `shared/tauri/`. Local: `C3DS_VERSION=0.1.0 bash build.sh`.
+`build.sh` (en esta carpeta) se ejecuta en el CI con `C3DS_VERSION` y deja los binarios en `dist/`, con nombre `C3DS-<versión>-<Plataforma>*`. Lógica compartida en `scripts/build-tauri.sh`; plantilla del proyecto nativo en `shared/tauri/`. Local: `C3DS_VERSION=0.1.0 bash build.sh`.

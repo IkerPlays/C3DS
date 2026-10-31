@@ -3,6 +3,10 @@
   publish = "web"
   command = "echo 'sitio estático, sin build'"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -10,4 +14,4 @@
     Referrer-Policy = "strict-origin-when-cross-origin"
     X-Frame-Options = "DENY"
     # Todo el procesamiento ocurre en el navegador: los archivos del usuario no se suben a ningún servidor.
-    Content-Security-Policy = "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'none'; form-action 'none'"
+    Content-Security-Policy = "default-src 'self'; connect-src 'self' https://api.github.com; img-src 'self' data: blob:; media-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'none'; form-action 'none'"

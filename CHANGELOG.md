@@ -4,17 +4,33 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
-### Añadido
-- **.cia**: el proyecto 3DS exportado compila también a `.cia` (`make cia`) con makerom y bannertool (versiones fijadas y verificadas por SHA-256). CI valida el generador compilando un proyecto de ejemplo con devkitARM.
-- **Apps nativas con build real**: Windows (`-setup.exe` y portable), macOS (`.dmg`), Linux (`.deb`, `.AppImage`) con Tauri v2; Android (`.apk`) e iOS (`.ipa` sin firmar) con Capacitor. Las releases publican los binarios directamente, no zips.
 
 ## [0.1.0] - 2026-10-31
-### Añadido
-- **Web**: analizador de proyectos Unity, Godot y Unreal (carpeta o .zip) y de ejecutables .exe, con informe de compatibilidad con los límites de la 3DS.
-- **Web**: editor visual básico (pantalla superior e inferior) que exporta un proyecto C + citro2d con `Makefile` y workflow para compilar `.3dsx`.
-- Estructura de carpetas `web/`, `android/`, `ios/`, `windows/`, `macos/`, `linux/` (las apps nativas son por ahora esqueletos).
-- Workflows: CI, release global, release por plataforma y devbuilds.
+Primera versión pública (alfa).
+
+### Editor
+- Rediseño completo de la interfaz: escenas, objetos, recursos y variables a la izquierda; propiedades, lógica y escena a la derecha; cuadrícula, zoom y arrastrar/redimensionar en el escenario.
+- **Sprites e imágenes** (PNG/JPG/WebP…, se reducen a ≤512 px) → `tex3ds` → `.t3x`; **sonido** (WAV/OGG/MP3 → WAV mono 22 kHz) con ndsp.
+- **Escenas y lógica**: varias escenas, variables, reglas “cuando → entonces” (botones, colisiones, toques, variables, temporizadores), botones táctiles en la pantalla inferior, texto con `{variable}`.
+- **Vista previa** dentro del editor con el mismo motor que el exportador HTML5 (teclado, ratón/táctil y mando en pantalla).
+- **Guardado automático** en el navegador (varios proyectos), deshacer/rehacer (Ctrl+Z / Ctrl+Y), copia en archivo `.c3ds.json`.
+- **Exportar**: proyecto 3DS (`.zip` con `make` y `make cia`), juego HTML5 (un solo archivo) y compilación en la nube.
+
+### Compilación
+- `.3dsx` y **`.cia`** (makerom 0.18 + bannertool 1.2.0, fijados por SHA-256). El CI compila un proyecto de ejemplo con sprites y sonido.
+- **Compilación en la nube** (Netlify Function + GitHub Actions): devuelve los archivos como artifact, sin crear releases. Ver `docs/CLOUD-BUILD.md`.
+
+### Importador
+- Análisis de Unity, Godot, Unreal y `.exe`; **conversión de assets** (texturas a PNG ≤1024 en potencia de 2, audio a WAV) y creación de un proyecto del editor con ellos; guía de portado.
+- Aviso dentro de la app cuando hay una versión nueva.
+
+### Apps y releases
+- Apps nativas: Windows, macOS, Linux (Tauri v2), Android, iOS (Capacitor).
+- Archivos con nombres claros: `C3DS-<versión>-<Plataforma>…` (p. ej. `C3DS-0.1.0-Windows-Setup.exe`).
+- Workflows: CI (tests + interfaz con Playwright), release global, release por plataforma, devbuilds (`dev-<n>`) y cloud build.
 
 ### Limitaciones conocidas
-- La generación de `.cia` y la compilación en la nube aún no están implementadas.
-- Un `.exe` nativo no se puede convertir a 3DS; solo se analiza.
+- Windows `.exe` desde el editor (hoy: HTML5 o app de escritorio) y actualizaciones automáticas dentro de las apps están pendientes.
+- Unity/Godot/Unreal no se convierten automáticamente: se reutilizan los assets y se rehace la lógica. Un `.exe` solo se analiza.
+- macOS sin notarizar, iOS sin firmar y Android con clave de depuración.
+- El `.cia` no se ha probado en consola real.

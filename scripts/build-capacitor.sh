@@ -6,6 +6,7 @@
 set -euo pipefail
 platform="${1:?uso: build-capacitor.sh <android|ios>}"
 V="${C3DS_VERSION:?define C3DS_VERSION}"
+P="${C3DS_ASSET_PREFIX:?define C3DS_ASSET_PREFIX}"   # p. ej. C3DS-0.1.0-Android
 base="${V%%-*}"   # versión numérica X.Y.Z (las stores no admiten sufijos)
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 work="$root/$platform/.build"
@@ -24,7 +25,7 @@ case "$platform" in
   android)
     sed -i.bak "s/versionName \".*\"/versionName \"$V\"/" android/app/build.gradle
     (cd android && ./gradlew --no-daemon assembleDebug)
-    cp android/app/build/outputs/apk/debug/app-debug.apk "$out/c3ds-android-$V.apk" ;;
+    cp android/app/build/outputs/apk/debug/app-debug.apk "$out/$P.apk" ;;
   ios)
     sed -i.bak "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $base;/" ios/App/App.xcodeproj/project.pbxproj
     xcodebuild -workspace ios/App/App.xcworkspace -scheme App -configuration Release \
@@ -32,7 +33,7 @@ case "$platform" in
       CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build
     app="$(find "$work/derived/Build/Products/Release-iphoneos" -maxdepth 1 -name '*.app' | head -1)"
     mkdir -p "$work/ipa/Payload" && cp -R "$app" "$work/ipa/Payload/"
-    (cd "$work/ipa" && zip -qry "$out/c3ds-ios-$V-unsigned.ipa" Payload) ;;
+    (cd "$work/ipa" && zip -qry "$out/$P-unsigned.ipa" Payload) ;;
   *) echo "plataforma no soportada: $platform" >&2; exit 1 ;;
 esac
 ls -la "$out"

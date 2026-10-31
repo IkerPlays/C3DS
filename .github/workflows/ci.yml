@@ -17,6 +17,18 @@ jobs:
           node-version: 22
       - run: npm test
 
+  # Tests de interfaz con Chromium (Playwright): editor, vista previa, guardado, exportación, importador.
+  ui:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui
+
   sample:
     runs-on: ubuntu-latest
     steps:
@@ -59,10 +71,10 @@ jobs:
       - name: make cia (.cia)
         working-directory: sample
         run: make cia
-      - run: ls -la sample/game.3dsx sample/game.cia
+      - run: ls -la sample/*.3dsx sample/*.cia
       - uses: actions/upload-artifact@v4
         with:
           name: sample-3ds-build
           path: |
-            sample/game.3dsx
-            sample/game.cia
+            sample/*.3dsx
+            sample/*.cia

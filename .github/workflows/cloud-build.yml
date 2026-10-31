@@ -1,0 +1,90 @@
+# Compilación en la nube desde la web de C3DS. La lanza la Netlify Function (workflow_dispatch).
+# NO publica ninguna release: el resultado es un artifact (1 día) que la web ofrece para descargar.
+name: Cloud build
+run-name: Cloud build ${{ inputs.job_id }}
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: Id del trabajo (16 caracteres hexadecimales)
+        required: true
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+    steps:
+      - name: Validar id
+        run: echo "$JOB_ID" | grep -Eq '^[a-f0-9]{16}$'
+      - uses: actions/checkout@v4
+        with:
+          ref: cloud-builds
+      - name: Preparar proyecto
+        run: |
+          test -f "jobs/$JOB_ID.zip"
+          mkdir out && cp "jobs/$JOB_ID.zip" out/project.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: job-${{ inputs.job_id }}
+          path: out/project.zip
+          retention-days: 1
+
+  build:
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container: devkitpro/devkitarm:latest
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: job-${{ inputs.job_id }}
+      - name: Instalar makerom y bannertool
+        run: |
+          set -e
+          (command -v wget && command -v unzip) >/dev/null || (apt-get update && apt-get install -y wget unzip)
+          wget -q https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18/makerom-v0.18-ubuntu_x86_64.zip
+          wget -q https://github.com/diasurgical/bannertool/releases/download/1.2.0/bannertool.zip
+          echo "c6f8aafba8f1cdb403929719c95173cada707cd9ceacfa2bec5118f8f96c6f8a  makerom-v0.18-ubuntu_x86_64.zip" | sha256sum -c -
+          echo "69768596f836acb3e3aeaa66e47c6ba560dde813c6dfcd33c8afc25fe29b7524  bannertool.zip" | sha256sum -c -
+          unzip -o makerom-v0.18-ubuntu_x86_64.zip makerom -d /usr/local/bin
+          unzip -oj bannertool.zip linux-x86_64/bannertool -d /usr/local/bin
+          chmod +x /usr/local/bin/makerom /usr/local/bin/bannertool
+      - name: Desempaquetar
+        run: mkdir work && unzip -q project.zip -d work && ls work/*/
+      - name: make (.3dsx)
+        run: cd work/*/ && make
+      - name: make cia (.cia)
+        run: cd work/*/ && make cia
+      - name: Reunir resultado
+        run: mkdir result && cp work/*/*.3dsx work/*/*.cia result/ && ls -la result
+      - uses: actions/upload-artifact@v4
+        with:
+          name: build-${{ inputs.job_id }}
+          path: result/*
+          retention-days: 1
+          if-no-files-found: error
+
+  cleanup:
+    needs: [prepare, build]
+    if: always() && needs.prepare.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    env:
+      JOB_ID: ${{ inputs.job_id }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: cloud-builds
+      - name: Borrar el proyecto de la rama
+        run: |
+          echo "$JOB_ID" | grep -Eq '^[a-f0-9]{16}$'
+          git rm -q "jobs/$JOB_ID.zip"
+          git -c user.name=c3ds-cloud -c user.email=cloud@c3ds.invalid commit -qm "cloud build $JOB_ID: limpiar"
+          git push origin HEAD:cloud-builds

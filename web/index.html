@@ -3,77 +3,37 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>C3DS - Importa y crea para 3DS homebrew</title>
-  <meta name="description" content="Analiza proyectos de Unity, Godot o Unreal para 3DS homebrew y crea juegos .3dsx desde cero con un editor visual.">
+  <title>C3DS - Crea juegos para 3DS homebrew</title>
+  <meta name="description" content="Editor visual para crear juegos de Nintendo 3DS homebrew (.3dsx y .cia), con vista previa, sprites, sonido y lógica. Analiza también proyectos de Unity, Godot y Unreal.">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<header class="top">
-  <h1>C3DS <small>v0.1 · alfa</small></h1>
-  <nav id="tabs" role="tablist">
-    <button role="tab" data-tab="import" aria-selected="true">Importar</button>
-    <button role="tab" data-tab="editor" aria-selected="false">Editor</button>
+<div id="update-bar" class="update-bar" hidden></div>
+<header class="app-header">
+  <a class="brand" href="#editor"><svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg> C3DS <small id="app-version"></small></a>
+  <nav id="tabs" role="tablist" aria-label="Secciones">
+    <button role="tab" data-tab="editor" aria-selected="true">Editor</button>
+    <button role="tab" data-tab="import" aria-selected="false">Importar</button>
     <button role="tab" data-tab="limits" aria-selected="false">Límites 3DS</button>
     <button role="tab" data-tab="about" aria-selected="false">Estado</button>
   </nav>
 </header>
 
 <main>
-  <section id="tab-import" class="panel">
-    <h2>Importar proyecto</h2>
-    <p class="muted">Unity, Godot, Unreal (carpeta o .zip) o un .exe. El análisis ocurre en tu navegador: nada se sube a ningún servidor.</p>
+  <section id="tab-editor" class="panel wide"><div id="editor-root"></div></section>
+
+  <section id="tab-import" class="panel" hidden>
+    <h2>Importar y analizar un proyecto</h2>
+    <p class="muted">Unity, Godot o Unreal (carpeta o .zip) y ejecutables .exe. Todo ocurre en tu navegador: no se sube nada.</p>
     <div id="drop" class="drop" tabindex="0">
       <p><strong>Arrastra aquí</strong> una carpeta, un .zip o un .exe</p>
       <div class="row">
-        <label class="btn">Carpeta <input id="pick-dir" type="file" webkitdirectory hidden></label>
-        <label class="btn">.zip / .exe <input id="pick-file" type="file" accept=".zip,.exe" hidden></label>
+        <label class="btn">Elegir carpeta <input id="pick-dir" type="file" webkitdirectory hidden></label>
+        <label class="btn">Elegir .zip / .exe <input id="pick-file" type="file" accept=".zip,.exe" hidden></label>
       </div>
     </div>
     <div id="report" hidden aria-live="polite"></div>
-  </section>
-
-  <section id="tab-editor" class="panel" hidden>
-    <h2>Editor</h2>
-    <p class="muted">Crea una app/juego desde cero y expórtalo como proyecto homebrew de 3DS (C + citro2d) listo para compilar a <code>.3dsx</code> y <code>.cia</code>.</p>
-    <div class="editor">
-      <div class="stage">
-        <div class="toolbar">
-          <button id="add-rect" class="btn">+ Rectángulo</button>
-          <button id="add-text" class="btn">+ Texto</button>
-          <button id="del" class="btn danger">Borrar</button>
-          <span class="spacer"></span>
-          <label>Destino
-            <select id="target"><option value="3ds">Nintendo 3DS (.3dsx)</option><option disabled>Windows .exe (próximamente)</option><option disabled>Android / iOS / macOS / Linux (próximamente)</option></select>
-          </label>
-          <button id="export" class="btn primary">Exportar .zip</button>
-        </div>
-        <p class="screen-label">Pantalla superior 400×240</p>
-        <canvas id="cv-top" width="400" height="240"></canvas>
-        <p class="screen-label">Pantalla inferior 320×240 (táctil)</p>
-        <canvas id="cv-bottom" width="320" height="240"></canvas>
-        <ul id="warnings" class="warnings" aria-live="polite"></ul>
-      </div>
-      <aside class="props">
-        <h3>Proyecto</h3>
-        <label>Nombre <input id="p-name" maxlength="40"></label>
-        <label>Autor <input id="p-author" maxlength="40"></label>
-        <label>Fondo superior <input id="p-bg-top" type="color"></label>
-        <label>Fondo inferior <input id="p-bg-bottom" type="color"></label>
-        <h3>Objeto</h3>
-        <div id="props-empty" class="muted">Selecciona un objeto en el lienzo.</div>
-        <form id="props-form" hidden>
-          <label>Pantalla <select id="e-screen"><option value="top">Superior</option><option value="bottom">Inferior</option></select></label>
-          <label>X <input id="e-x" type="number"></label>
-          <label>Y <input id="e-y" type="number"></label>
-          <label class="rect-only">Ancho <input id="e-w" type="number" min="1" max="400"></label>
-          <label class="rect-only">Alto <input id="e-h" type="number" min="1" max="240"></label>
-          <label>Color <input id="e-color" type="color"></label>
-          <label class="text-only">Texto <input id="e-text" maxlength="80"></label>
-          <label class="rect-only"><span><input id="e-player" type="checkbox"> Se mueve con el D-Pad</span></label>
-          <label class="rect-only">Velocidad <input id="e-speed" type="number" min="0" max="20"></label>
-        </form>
-      </aside>
-    </div>
   </section>
 
   <section id="tab-limits" class="panel" hidden>
@@ -84,17 +44,21 @@
 
   <section id="tab-about" class="panel" hidden>
     <h2>Estado del proyecto</h2>
-    <ul class="status">
-      <li class="ok">Analizador de proyectos Unity / Godot / Unreal / .exe (en el navegador)</li>
-      <li class="ok">Editor básico → proyecto C para 3DS (.3dsx vía devkitPro)</li>
-      <li class="ok">Proyecto exportado compila a .3dsx y .cia (devkitARM + makerom + bannertool)</li>
-      <li class="soon">Compilación en la nube desde la propia web (hoy: workflow de GitHub incluido)</li>
-      <li class="soon">Conversión automática de assets (texturas .t3x, audio, modelos)</li>
-      <li class="ok">Apps nativas: Windows, macOS, Linux (Tauri), Android, iOS (Capacitor)</li>
+    <ul class="status-list">
+      <li class="ok">Editor visual: escenas, sprites, sonido, variables, reglas, botones táctiles</li>
+      <li class="ok">Vista previa con el mismo motor que el exportador HTML5</li>
+      <li class="ok">Guardado automático en el navegador, deshacer y rehacer</li>
+      <li class="ok">Exportar proyecto 3DS (.zip) → <code>.3dsx</code> y <code>.cia</code> con devkitARM</li>
+      <li class="ok">Compilación en la nube (si el sitio tiene el token configurado)</li>
+      <li class="ok">Exportar juego HTML5; analizador y conversor de assets de Unity/Godot/Unreal</li>
+      <li class="ok">Apps: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor)</li>
+      <li class="soon">Exportar a Windows .exe desde el editor</li>
+      <li class="soon">Actualizaciones automáticas dentro de las apps (hoy: aviso de nueva versión)</li>
     </ul>
-    <p class="muted">Importante: ningún motor (Unity, Godot, Unreal) puede exportarse tal cual a 3DS y un .exe x86/x64 no puede convertirse a ARM11. C3DS analiza qué es reutilizable (assets) y qué hay que portar (código), y te da una base compilable.</p>
+    <p class="muted">Ningún motor (Unity, Godot, Unreal) puede exportarse tal cual a 3DS, y un .exe x86/x64 no puede convertirse a ARM11. C3DS analiza qué assets sirven, los convierte, y te da una base compilable.</p>
   </section>
 </main>
+<div id="toasts" aria-live="polite"></div>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

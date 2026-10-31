@@ -35,8 +35,8 @@ test('cada plataforma tiene carpeta, VERSION, CHANGELOG y release válidos', () 
 });
 
 test('plan devbuild: todas las plataformas en una sola versión', () => {
-  const { version, matrix } = buildMatrix(P, { run: '7', sha: 'abcdef123456', root: ROOT });
-  assert.equal(version, `${readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()}-dev.7.abcdef1`);
+  const { version, matrix } = buildMatrix(P, { run: '7', root: ROOT });
+  assert.equal(version, `${readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()}-dev.7`);
   assert.deepEqual(matrix.include.map((m) => m.platform).sort(), Object.keys(P).sort());
 });
 
@@ -45,8 +45,8 @@ test('package: zip con prefijo y sin carpetas de build', () => {
   try {
     const r = packagePlatform('web', '0.0.0-test', out);
     const names = readZipEntries(new Uint8Array(readFileSync(r.target[0]))).map((e) => e.path);
-    assert.ok(names.includes('c3ds-web-0.0.0-test/index.html'));
-    assert.ok(names.every((n) => n.startsWith('c3ds-web-0.0.0-test/') && !n.includes('node_modules')));
+    assert.ok(names.includes('C3DS-0.0.0-test-Web/index.html'));
+    assert.ok(names.every((n) => n.startsWith('C3DS-0.0.0-test-Web/') && !n.includes('node_modules')));
     assert.throws(() => packagePlatform('ps5', '1.0.0', out), /desconocida/);
   } finally { rmSync(out, { recursive: true, force: true }); }
 });
@@ -56,12 +56,12 @@ test('package: plataforma con build.sh publica binarios tal cual y valida nombre
   const out = join(root, 'out');
   try {
     mkdirSync(join(root, 'scripts'), { recursive: true });
-    writeFileSync(join(root, 'scripts/platforms.json'), JSON.stringify({ fake: { runner: 'x', exclude: [] } }));
+    writeFileSync(join(root, 'scripts/platforms.json'), JSON.stringify({ fake: { label: 'Fake', runner: 'x', exclude: [] } }));
     mkdirSync(join(root, 'fake'));
-    writeFileSync(join(root, 'fake/build.sh'), 'mkdir -p dist && echo hi > "dist/c3ds-fake-$C3DS_VERSION.apk"\n');
+    writeFileSync(join(root, 'fake/build.sh'), 'mkdir -p dist && echo hi > "dist/$C3DS_ASSET_PREFIX.apk"\n');
     const r = packagePlatform('fake', '1.0.0', out, root);
     assert.equal(r.kind, 'build');
-    assert.deepEqual(readdirSync(out), ['c3ds-fake-1.0.0.apk']);
+    assert.deepEqual(readdirSync(out), ['C3DS-1.0.0-Fake.apk']);
     writeFileSync(join(root, 'fake/build.sh'), 'rm -rf dist; mkdir -p dist && echo hi > dist/otro.apk\n');
     assert.throws(() => packagePlatform('fake', '1.0.0', out, root), /Nombres inválidos/);
     writeFileSync(join(root, 'fake/build.sh'), 'exit 3\n');

@@ -3,7 +3,8 @@
 //   node scripts/gen-sample.mjs <dir>
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { newProject, exportFiles } from '../web/js/project.js';
+import { newProject } from '../web/js/model.js';
+import { exportFiles } from '../web/js/codegen.js';
 
 const out = process.argv[2];
 if (!out) { console.error('uso: gen-sample.mjs <dir>'); process.exit(2); }
