@@ -3,6 +3,11 @@ name: Release (global)
 on:
   push:
     tags: ['v[0-9]*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag a publicar, p. ej. v0.1.0 (se crea sobre main si no existe)'
+        required: true
 permissions:
   contents: read
 jobs:
@@ -18,7 +23,12 @@ jobs:
         with:
           node-version: 22
       - id: i
-        run: node scripts/release-info.mjs "$GITHUB_REF_NAME" --notes release-notes.md
+        env:
+          TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+        run: |
+          # Con workflow_dispatch solo se publica desde main.
+          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ] && [ "$GITHUB_REF" != "refs/heads/main" ]; then echo "::error::Lanza el workflow desde la rama main"; exit 1; fi
+          node scripts/release-info.mjs "$TAG" --notes release-notes.md
       - uses: actions/upload-artifact@v4
         with:
           name: release-notes
@@ -52,17 +62,20 @@ jobs:
       - name: Crear release
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.tag }}
+          EVENT: ${{ github.event_name }}
           PRERELEASE: ${{ needs.info.outputs.prerelease }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
+          tagflag=(--verify-tag)
+          [ "$EVENT" = workflow_dispatch ] && tagflag=(--target "$GITHUB_SHA")
           flags=()
           [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
           for attempt in 1 2 3 4; do
             if gh release create "$TAG" release-files/* \
-               --repo "$REPO" --verify-tag --title "C3DS $TAG" --notes-file release-notes.md "${flags[@]}"; then break; fi
+               --repo "$REPO" "${tagflag[@]}" --title "C3DS $TAG" --notes-file release-notes.md "${flags[@]}"; then break; fi
             [ "$attempt" = 4 ] && { echo "::error::No se pudo crear la release"; exit 1; }
             gh release view "$TAG" --repo "$REPO" >/dev/null 2>&1 && break
             sleep $((attempt * 20))
