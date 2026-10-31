@@ -101,7 +101,7 @@ export function generateMainC(p) {
     }
   };
   const sceneRules = p.scenes.map((s, i) => {
-    const body = s.rules.map((r) => `\t\tif (${cond(r.when)}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
+    const body = s.rules.filter((r) => r.enabled !== false).map((r) => `\t\tif (${cond(r.when)}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
     return `\tcase ${i}: // ${s.name.replace(/[^\w ]/g, '_')}\n${body}\n\t\tbreak;`;
   }).join('\n');
 

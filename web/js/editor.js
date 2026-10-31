@@ -7,7 +7,7 @@ import {
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases } from './runtime.js';
-import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction } from './rules.js';
+import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction, describeRule } from './rules.js';
 import { imageToAsset, audioToWav } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
@@ -150,6 +150,18 @@ function deleteSelected() {
   selectedId = null; changed({ structure: true });
 }
 function refsObject(r, id) { return r.when.a === id || r.when.b === id || r.when.obj === id || r.then.some((a) => a.obj === id); }
+
+let clipboard = null;
+function copySelected() { const o = selected(); if (!o) return false; clipboard = JSON.parse(JSON.stringify(o)); toast(`“${o.name}” copiado (Ctrl+V para pegar).`, 'info', 1800); return true; }
+function pasteObject() {
+  if (!clipboard) return;
+  const sc = scene();
+  if (sc.objects.length >= LIMITS.objectsPerScene) return toast(`Máximo ${LIMITS.objectsPerScene} objetos por escena.`, 'error');
+  const o = { ...JSON.parse(JSON.stringify(clipboard)), id: nextId(project) };
+  o.x += 10; o.y += 10; clipboard.x += 10; clipboard.y += 10;
+  if (o.type === 'sprite' && !project.assets.images.some((a) => a.id === o.image)) return toast('La imagen de este objeto no existe en este proyecto.', 'error');
+  sc.objects.push(o); selectedId = o.id; changed({ structure: true });
+}
 
 function duplicateSelected() {
   const o = selected(); if (!o) return;
@@ -382,7 +394,12 @@ function renderLogic(body) {
   body.append(h('p', { class: 'muted small' }, 'Reglas: “Cuando pase esto → haz esto”. Se evalúan 60 veces por segundo.'));
   for (const [ri, r] of sc.rules.entries()) {
     const when = EVENTS[r.when.type];
-    body.append(h('div', { class: 'rule' },
+    body.append(h('div', { class: `rule ${r.enabled === false ? 'off' : ''}` },
+      h('div', { class: 'rule-top' },
+        h('label', { class: 'check', title: 'Activar o desactivar la regla' }, h('input', { type: 'checkbox', checked: r.enabled !== false, onChange: (e) => { r.enabled = e.target.checked; changed({ structure: true }); } })),
+        h('span', { class: 'rule-summary' }, describeRule(r, project, sc)),
+        h('button', { class: 'mini ghost', title: 'Subir regla', disabled: ri === 0, onClick: () => { [sc.rules[ri - 1], sc.rules[ri]] = [sc.rules[ri], sc.rules[ri - 1]]; changed({ structure: true }); } }, '↑'),
+        h('button', { class: 'mini ghost', title: 'Bajar regla', disabled: ri === sc.rules.length - 1, onClick: () => { [sc.rules[ri + 1], sc.rules[ri]] = [sc.rules[ri], sc.rules[ri + 1]]; changed({ structure: true }); } }, '↓')),
       h('div', { class: 'rule-head' }, h('b', {}, 'CUANDO'),
         selectInput(Object.entries(EVENTS).map(([k, e]) => [k, e.label]), r.when.type, (v) => { r.when = defaultWhen(v, ctx); changed({ structure: true }); }),
         h('button', { class: 'mini ghost', title: 'Eliminar regla', onClick: () => { sc.rules.splice(ri, 1); changed({ structure: true }); } }, '🗑')),
@@ -435,12 +452,26 @@ function startPlay() {
   refs.stageWrap.classList.add('playing');
   refs.play.textContent = '⏹ Detener'; refs.play.classList.add('danger');
   runner = runInCanvases(copy, { top: cv.top, bottom: cv.bottom }, images, sounds, {
-    onFrame: (g) => { refs.hud.textContent = `${g.scene.name} · ${Object.entries(g.vars).map(([k, v]) => `${k}=${v}`).join('  ')}`; },
+    onFrame: (g) => { refs.hud.textContent = `${g.scene.name}${runner?.paused ? ' · en pausa' : ''}`; syncLiveVars(g); },
     onQuit: () => stopPlay(),
   });
+  buildLiveVars();
+  refs.pauseBtn.textContent = '⏸ Pausa';
   cv.bottom.focus?.();
   refreshHistoryButtons();
 }
+function buildLiveVars() {
+  refs.varsLive.replaceChildren(...project.variables.map((v) => h('label', { class: 'live-var' }, h('span', {}, v.name), h('input', { type: 'number', 'data-var': v.name, value: v.value, onChange: (e) => { if (runner) runner.game.vars[v.name] = Number(e.target.value) || 0; } }))));
+}
+function syncLiveVars(g) {
+  for (const inp of refs.varsLive.querySelectorAll('input')) if (inp !== document.activeElement && g.vars[inp.dataset.var] !== undefined) inp.value = g.vars[inp.dataset.var];
+}
+function togglePause() {
+  if (!runner) return;
+  runner.pause(!runner.paused);
+  refs.pauseBtn.textContent = runner.paused ? '▶ Seguir' : '⏸ Pausa';
+}
+
 function stopPlay() {
   if (!runner) return;
   runner.stop(); runner = null;
@@ -475,9 +506,14 @@ function openProjects() {
 
 /* ---------- Ayuda ---------- */
 function showShortcuts() {
-  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
+  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
     ['Flechas', 'En la vista previa: D-Pad'], ['Z X S A', 'A B X Y'], ['Enter / Shift', 'Start / Select'], ['Ratón', 'Pantalla táctil (inferior)']];
   dialog('Atajos y controles', h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])));
+}
+
+function showGuide() {
+  const steps = [['1', 'Crea', 'Elige una plantilla en 📁 Proyectos o empieza en blanco. Añade rectángulos, textos, sprites y botones táctiles.'], ['2', 'Coloca', 'Arrastra en el escenario; el cuadro rojo redimensiona. Las flechas mueven 1 px; Mayús, 10.'], ['3', 'Programa', 'En Lógica: “Cuando pase esto → haz esto”. Colisiones, bordes, toques, variables y temporizadores.'], ['4', 'Prueba', '▶ Probar: pausa, paso a paso, velocidad y cajas de colisión para depurar.'], ['5', 'Exporta', 'Proyecto 3DS (.zip → .3dsx/.cia), HTML5, o app para Windows, macOS y Linux.']];
+  dialog('Guía rápida', h('ol', { class: 'guide-steps' }, steps.map(([n, t, d]) => h('li', {}, h('span', { class: 'num' }, n), h('div', {}, h('strong', {}, t), h('p', { class: 'muted' }, d))))));
 }
 
 /* ---------- Exportar ---------- */
@@ -546,9 +582,23 @@ export function mountEditor(root) {
   refs.play = h('button', { class: 'btn primary', id: 'btn-play', onClick: () => (runner ? stopPlay() : startPlay()) }, '▶ Probar');
   refs.hud = h('div', { class: 'hud', 'aria-live': 'off' });
   refs.coords = h('span', { class: 'coords', 'aria-hidden': 'true' });
+  refs.pauseBtn = h('button', { class: 'btn small', id: 'btn-pause', title: 'Pausar o seguir', onClick: togglePause }, '⏸ Pausa');
+  refs.debugBar = h('div', { class: 'debug-bar' },
+    refs.pauseBtn,
+    h('button', { class: 'btn small', id: 'btn-step', title: 'Avanzar un frame', onClick: () => { if (runner) { runner.step(); refs.pauseBtn.textContent = '▶ Seguir'; } } }, '⏭ Frame'),
+    h('button', { class: 'btn small', id: 'btn-restart', title: 'Reiniciar el juego', onClick: () => { if (runner) { runner.restart(); runner.pause(false); refs.pauseBtn.textContent = '⏸ Pausa'; buildLiveVars(); } } }, '↺ Reiniciar'),
+    h('label', { class: 'check small' }, 'Velocidad', selectInput([[0.5, '0.5×'], [1, '1×'], [2, '2×'], [4, '4×']], 1, (v) => runner?.setSpeed(v))),
+    h('label', { class: 'check small' }, h('input', { type: 'checkbox', id: 'chk-boxes', onChange: (e) => runner?.showBoxes(e.target.checked) }), 'Cajas de colisión'));
+  refs.varsLive = h('div', { class: 'vars-live', 'aria-label': 'Variables en vivo' });
   refs.warnings = h('ul', { class: 'warnings', 'aria-live': 'polite' });
   refs.warnBadge = h('button', { class: 'badge', onClick: () => refs.warnPanel.toggleAttribute('hidden') });
   refs.warnPanel = h('div', { class: 'warn-panel', hidden: true }, refs.warnings);
+  let guideSeen = false;
+  try { guideSeen = localStorage.getItem('c3ds:guide') === '1'; } catch { /* sin almacenamiento */ }
+  refs.guide = h('div', { class: 'guide', hidden: guideSeen, id: 'guide' },
+    h('span', {}, '👋 ¿Primera vez? Añade objetos con los botones ▭ T 🖼 ⏺, arrástralos, crea reglas en la pestaña Lógica y pulsa ▶ Probar.'),
+    h('button', { class: 'btn small', onClick: showGuide }, 'Ver guía rápida'),
+    h('button', { class: 'btn small ghost', id: 'btn-guide-close', onClick: () => { refs.guide.hidden = true; try { localStorage.setItem('c3ds:guide', '1'); } catch { /* ok */ } } }, 'Entendido'));
   const menu = h('div', { class: 'menu', onClick: (e) => { if (e.target.closest('[role=menuitem]')) menu.classList.remove('open'); } },
     h('button', { class: 'btn', id: 'btn-export', 'aria-haspopup': 'menu', 'aria-expanded': 'false', onClick: (e) => { const m = e.currentTarget.parentElement; const open = m.classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); } }, 'Exportar ▾'),
     h('div', { class: 'menu-items', role: 'menu' },
@@ -567,6 +617,7 @@ export function mountEditor(root) {
     h('div', { class: 'screens' },
       h('figure', {}, h('figcaption', {}, 'Superior 400×240'), cv.top),
       h('figure', {}, h('figcaption', {}, 'Inferior 320×240 · táctil'), cv.bottom)),
+    refs.debugBar, refs.varsLive,
     h('div', { class: 'pad', 'aria-label': 'Controles táctiles de la vista previa' },
       h('div', { class: 'dpad' }, ['UP', 'LEFT', 'RIGHT', 'DOWN'].map((k) => padBtn(k, { UP: '▲', DOWN: '▼', LEFT: '◀', RIGHT: '▶' }[k]))),
       h('div', { class: 'abxy' }, ['A', 'B', 'X', 'Y', 'START'].map((k) => padBtn(k, k === 'START' ? 'Start' : k)))));
@@ -576,6 +627,7 @@ export function mountEditor(root) {
       h('button', { class: 'icon-btn', id: 'btn-help', title: 'Atajos de teclado (?)', 'aria-label': 'Atajos de teclado', onClick: showShortcuts }, '⌨'),
       h('button', { class: 'btn', id: 'btn-projects', onClick: openProjects }, '📁 Proyectos'), refs.play, menu),
     refs.warnPanel,
+    refs.guide,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));
   root.style.setProperty('--zoom', zoom);
   bindStage();
@@ -585,12 +637,14 @@ export function mountEditor(root) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { if (inField) return; e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { if (inField) return; e.preventDefault(); redo(); }
     else if (e.key === 'Escape' && runner) stopPlay();
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && !inField && !runner) { e.preventDefault(); pasteObject(); }
     else if (e.key === '?' && !inField) showShortcuts();
     else if (!runner && !inField && selected()) {
       const o = selected(); const step = e.shiftKey ? 10 : 1;
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
       else if (e.key.startsWith('Arrow')) { e.preventDefault(); o.x += { ArrowLeft: -step, ArrowRight: step }[e.key] || 0; o.y += { ArrowUp: -step, ArrowDown: step }[e.key] || 0; syncInspector(); live(); }
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelected(); }
+      else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); copySelected(); }
     }
   });
   window.addEventListener('beforeunload', () => { if (saveState === 'dirty') saveProject(project); });

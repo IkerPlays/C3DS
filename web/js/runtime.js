@@ -50,6 +50,7 @@ export class Game {
     }
     let next = null;
     for (const r of this.scene.rules) {
+      if (r.enabled === false) continue;
       if (!this.test(r.when, down, held, touched, touch)) continue;
       for (const a of r.then) {
         const n = this.act(a);
@@ -130,12 +131,14 @@ export function render(game, ctxs, images) {
 
 export const KEY_MAP = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', z: 'A', x: 'B', s: 'X', a: 'Y', q: 'L', w: 'R', Enter: 'START', Shift: 'SELECT' };
 
-/** Ejecuta el juego en 2 canvas a 60 pasos/s. Devuelve { stop(), game }. */
+/** Ejecuta el juego en 2 canvas a 60 pasos/s. Devuelve el control del simulador (pausa, paso, reinicio, velocidad…). */
 export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   const ctxs = { top: canvases.top.getContext('2d'), bottom: canvases.bottom.getContext('2d') };
-  const game = new Game(project, { onSound: (id) => { try { const a = sounds.get(id); if (a) { a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } } });
+  const mkGame = () => new Game(project, { onSound: (id) => { try { const a = sounds.get(id); if (a) { a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } } });
+  let game = mkGame();
   const held = new Set(); let down = new Set(); let touch = null; let touchDown = false; let lastTouch = null;
-  const kd = (e) => { const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (!k) return; e.preventDefault(); if (!held.has(k)) down.add(k); held.add(k); };
+  let paused = false; let speed = 1; let stepOnce = false; let boxes = false;
+  const kd = (e) => { if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (!k) return; e.preventDefault(); if (!held.has(k)) down.add(k); held.add(k); };
   const ku = (e) => { const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (k) held.delete(k); };
   const bc = canvases.bottom;
   const pos = (e) => { const r = bc.getBoundingClientRect(); return { x: ((e.clientX - r.left) * SCREENS.bottom.w) / r.width, y: ((e.clientY - r.top) * SCREENS.bottom.h) / r.height }; };
@@ -145,23 +148,38 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
   bc.addEventListener('pointerdown', pd); bc.addEventListener('pointermove', pm); bc.addEventListener('pointerup', pu); bc.addEventListener('pointercancel', pu);
   let raf = 0; let last = performance.now(); let acc = 0; let alive = true;
+  const tick = () => { game.step({ down, held, touch: touch || (touchDown ? lastTouch : null), touchDown }); down = new Set(); touchDown = false; };
+  const drawBoxes = () => {
+    for (const key of ['top', 'bottom']) {
+      const ctx = ctxs[key]; ctx.strokeStyle = '#00e436'; ctx.lineWidth = 1;
+      for (const o of game.objs) if (o.visible && o.screen === key && o.type !== 'text') ctx.strokeRect(o.x + 0.5, o.y + 0.5, o.w - 1, o.h - 1);
+    }
+  };
   const loop = (now) => {
     if (!alive) return;
-    acc += Math.min(100, now - last); last = now;
+    acc += Math.min(100, now - last) * speed; last = now;
     while (acc >= 1000 / 60) {
-      game.step({ down, held, touch: touch || (touchDown ? lastTouch : null), touchDown });
-      down = new Set(); touchDown = false; acc -= 1000 / 60;
+      acc -= 1000 / 60;
+      if (!paused || stepOnce) { tick(); stepOnce = false; }
+      else acc = 0;
     }
     render(game, ctxs, images);
+    if (boxes) drawBoxes();
     opts.onFrame?.(game);
     if (game.quit) { alive = false; opts.onQuit?.(); return; }
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
   return {
-    game,
+    get game() { return game; },
+    get paused() { return paused; },
     press: (k) => { down.add(k); held.add(k); setTimeout(() => held.delete(k), 120); },
     hold: (k, on) => { if (on) { if (!held.has(k)) down.add(k); held.add(k); } else held.delete(k); },
+    pause: (v = true) => { paused = v; },
+    step: () => { paused = true; stepOnce = true; },
+    restart: () => { game = mkGame(); },
+    setSpeed: (v) => { speed = Math.max(0.1, Math.min(4, Number(v) || 1)); },
+    showBoxes: (v) => { boxes = !!v; },
     stop() {
       alive = false; cancelAnimationFrame(raf);
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);

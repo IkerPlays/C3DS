@@ -59,3 +59,24 @@ function build(schema, type, ctx) {
 }
 export const defaultWhen = (type, ctx) => build(EVENTS, type, ctx);
 export const defaultAction = (type, ctx) => build(ACTIONS, type, ctx);
+
+/** Resumen en lenguaje natural de una regla (para la cabecera de la tarjeta). */
+export function describeRule(r, p, scene) {
+  const obj = (id) => scene.objects.find((o) => o.id === id)?.name ?? '¿?';
+  const sc = (id) => p.scenes.find((x) => x.id === id)?.name ?? '¿?';
+  const snd = (id) => p.assets.sounds.find((x) => x.id === id)?.name ?? '¿?';
+  const w = r.when;
+  const when = {
+    start: () => 'al empezar la escena', key: () => `al pulsar ${w.key}`, keyHeld: () => `mientras se mantiene ${w.key}`,
+    collide: () => `si ${obj(w.a)} choca con ${obj(w.b)}`, touch: () => `al tocar ${obj(w.obj)}`,
+    var: () => `si ${w.var} ${OP_LABEL[w.op] || w.op} ${w.value}`, edge: () => `si ${obj(w.obj)} toca el borde ${EDGES[w.edge]?.toLowerCase() || ''}`,
+    timer: () => `cada ${w.seconds} s`,
+  }[w.type]?.() ?? '…';
+  const act = (a) => ({
+    goto: () => `ir a “${sc(a.scene)}”`, setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
+    sound: () => `sonar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
+    randomPos: () => `${obj(a.obj)} al azar`, setVel: () => `vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`,
+    setText: () => `texto de ${obj(a.obj)}`, show: () => `mostrar ${obj(a.obj)}`, hide: () => `ocultar ${obj(a.obj)}`, quit: () => 'salir',
+  }[a.type]?.() ?? '…');
+  return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || 'nada'}`;
+}

@@ -248,3 +248,44 @@ test('plantilla Pong: se puede jugar en la vista previa', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('vista previa: pausa, paso, reinicio, velocidad, cajas y variables en vivo', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=pong]');
+  await page.click('#btn-play');
+  await page.waitForSelector('.vars-live input[data-var=puntos]');
+  await page.click('#btn-pause');
+  const x1 = await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects[1].x);
+  const px = async () => page.evaluate(() => document.querySelector('#cv-top').getContext('2d').getImageData(0, 0, 400, 240).data.join('').length);
+  await page.waitForTimeout(300);
+  assert.match(await page.textContent('#btn-pause'), /Seguir/);
+  assert.match(await page.textContent('.hud'), /pausa/);
+  await page.click('#btn-step'); await page.click('#btn-step');
+  await page.check('#chk-boxes');
+  const green = await page.locator('#cv-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 0 && d[i + 1] === 228 && d[i + 2] === 54) n++; return n; });
+  assert.ok(green > 20, 'se dibujan las cajas de colisión');
+  await page.fill('.vars-live input[data-var=puntos]', '7'); await page.press('.vars-live input[data-var=puntos]', 'Tab');
+  await page.click('#btn-restart');
+  await page.waitForTimeout(200);
+  assert.equal(await page.inputValue('.vars-live input[data-var=puntos]'), '0');
+  assert.ok(x1 >= 0 && (await px()) > 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('copiar y pegar objetos, reglas activables y guía de bienvenida', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  assert.equal(await page.locator('#guide').isVisible(), true);
+  await page.click('#btn-guide-close');
+  await page.reload(); await page.waitForSelector('#cv-top');
+  assert.equal(await page.locator('#guide').isVisible(), false, 'la guía no vuelve a salir');
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li .row', { hasText: 'Título' }).click();
+  await page.keyboard.press('Control+c'); await page.keyboard.press('Control+v');
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects.length), 3);
+  await page.click('.tabs.small button:has-text("Lógica")');
+  assert.match(await page.textContent('.rule-summary'), /Al tocar Botón jugar/);
+  await page.locator('.rule .rule-top input[type=checkbox]').first().uncheck();
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].rules[0].enabled), false);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
