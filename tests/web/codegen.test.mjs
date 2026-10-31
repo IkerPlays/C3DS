@@ -102,3 +102,10 @@ test('el Makefile no admite inyección de comandos desde nombre/autor/descripci�
   assert.ok(!/[$`"\\#{]/.test(vars.replace(/:=/g, '')), vars);
   assert.equal(makeSafe('a$(b)`c`'), 'a(b)c');
 });
+
+test('tamaño de texto en el C generado', () => {
+  const p = newProject(); p.scenes[0].objects[0].size = 2;
+  const c = generateMainC(p);
+  assert.match(c, /2\.000f, 1, C2D|2\.000f, 1, 0xFF/);
+  assert.match(c, /0\.55f \* size/); assert.match(c, /o->tsize/);
+});

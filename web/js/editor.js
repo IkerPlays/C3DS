@@ -70,7 +70,7 @@ function stageGame() {
 }
 
 function objBox(ctx, o) {
-  if (o.type === 'text') { ctx.font = '14px "DejaVu Sans Mono", monospace'; return { x: o.x, y: o.y, w: ctx.measureText(o.text).width || 8, h: 16 }; }
+  if (o.type === 'text') { ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; const w = ctx.measureText(o.text).width || 8; ctx.font = '14px "DejaVu Sans Mono", monospace'; return { x: o.x, y: o.y, w, h: 16 * (o.size || 1) }; }
   return { x: o.x, y: o.y, w: o.w, h: o.h };
 }
 
@@ -368,6 +368,7 @@ function renderRight() {
     o.type !== 'text' ? h('div', { class: 'grid2' }, f('w', 'Ancho', numInput(() => o.w, (v) => { o.w = Math.max(1, v); }, { min: 1 })), f('h', 'Alto', numInput(() => o.h, (v) => { o.h = Math.max(1, v); }, { min: 1 }))) : null,
     o.type !== 'sprite' ? f('color', 'Color', colorInput(() => o.color, (v) => { o.color = v; })) : null,
     o.type === 'text' || o.type === 'button' ? f('text', 'Texto', textInput(() => o.text, (v) => { o.text = v; })) : null,
+    o.type === 'text' || o.type === 'button' ? f('size', 'Tamaño texto', numInput(() => o.size || 1, (v) => { o.size = Math.max(0.4, Math.min(3, v)); }, { min: 0.4, max: 3, step: 0.1 })) : null,
     o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”.') : null,
     o.type === 'sprite' ? f('animGroup', 'Animación', selectInput([['', 'Sin animación'], ...[...new Set(project.assets.images.map((a) => a.group).filter(Boolean))].map((g) => [g, `${g} (${animFrames(project, g).length} fotogramas)`])], o.animGroup || '', (v) => { o.animGroup = v || null; changed({ structure: true }); })) : null,
     o.type === 'sprite' && o.animGroup ? f('animFps', 'Fotogramas/s', numInput(() => o.animFps || 8, (v) => { o.animFps = Math.max(1, Math.min(60, v)); }, { min: 1, max: 60 })) : null,

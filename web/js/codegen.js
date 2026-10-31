@@ -72,7 +72,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -143,7 +143,7 @@ enum { T_RECT, T_TEXT, T_SPRITE, T_BUTTON };
 
 typedef struct {
 	int type, scene, screen, image, controls, tmpl, anim_off, anim_n, anim_fps;
-	float x, y, w, h, speed, vx, vy, gravity;
+	float x, y, w, h, speed, vx, vy, gravity, tsize;
 	int visible;
 	u32 color;
 } Obj;
@@ -346,11 +346,11 @@ ${sceneRules}
 /* ---------- Dibujo ---------- */
 ${A.hasImages ? `static C2D_SpriteSheet sheet;\nstatic const int anim_tbl[${Math.max(1, A.animTable.length)}] = { ${A.animTable.join(', ') || '0'} };\n` : ''}static C2D_TextBuf text_buf;
 
-static void draw_text(const char* s, float x, float y, u32 color) {
+static void draw_text(const char* s, float x, float y, u32 color, float size) {
 	C2D_Text t;
 	C2D_TextParse(&t, text_buf, s);
 	C2D_TextOptimize(&t);
-	C2D_DrawText(&t, C2D_WithColor, x, y, 0.0f, 0.55f, 0.55f, color);
+	C2D_DrawText(&t, C2D_WithColor, x, y, 0.0f, 0.55f * size, 0.55f * size, color);
 }
 
 static void draw_screen(int screen) {
@@ -365,11 +365,11 @@ ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames
 			  C2D_Image img = C2D_SpriteSheetGetImage(sheet, idx);
 			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, NULL, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color);'}
 			break;
-		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, o->color); break;
+		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, o->color, o->tsize); break;
 		case T_BUTTON:
 			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color);
 			format_text(o->tmpl, buf, sizeof buf);
-			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8, 0xFF000000);
+			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, 0xFF000000, o->tsize);
 			break;
 		}
 	}

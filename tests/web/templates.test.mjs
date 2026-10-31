@@ -77,7 +77,7 @@ test('C generado: velocidad, bordes, control H/V y random por eje', () => {
   assert.match(c, /edge_hit\(1, 1\)/);
   assert.match(c, /o->controls != 3/);
   assert.match(c, /objs\[1\]\.vx = 3\.000f;/);
-  assert.match(c, /3\.000f, 2\.000f, 0\.000f, 1,/); // vx, vy y gravedad iniciales de la pelota
+  assert.match(c, /3\.000f, 2\.000f, 0\.000f, 1\.000f, 1,/); // vx, vy, gravedad y tamaño de texto iniciales de la pelota
   const d = generateMainC(dodgeProject());
   assert.match(d, /random_pos\(\d+, 1\);/);
   assert.match(generateMainC(blankProject()), /#define NUM_OBJS 0/);
