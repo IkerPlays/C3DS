@@ -82,7 +82,14 @@ export async function status(gh, id) {
   const run = await findRun(gh, id);
   if (!run) return json(200, { status: 'queued' });
   if (run.status !== 'completed') return json(200, { status: run.status === 'in_progress' ? 'running' : 'queued' });
-  return json(200, run.conclusion === 'success' ? { status: 'success' } : { status: 'failed', url: run.html_url });
+  if (run.conclusion === 'success') return json(200, { status: 'success' });
+  // Indica qué paso falló (sin exponer registros completos).
+  let failedStep = null;
+  try {
+    const jobs = await must(await gh.call(`/actions/runs/${run.id}/jobs`), 'jobs');
+    for (const j of jobs.jobs || []) { const st = (j.steps || []).find((x) => x.conclusion === 'failure'); if (st) { failedStep = `${j.name}: ${st.name}`; break; } }
+  } catch { /* sin detalle */ }
+  return json(200, { status: 'failed', url: run.html_url, failedStep });
 }
 
 export async function download(gh, id) {

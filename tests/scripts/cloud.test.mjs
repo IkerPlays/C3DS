@@ -24,6 +24,7 @@ function fakeGithub(over = {}) {
     if (path.includes('/runs?status=')) return res(200, { workflow_runs: state.active || [] });
     if (path.includes('/runs?event=')) return res(200, { workflow_runs: state.runs });
     if (path.endsWith('/artifacts')) return res(200, { artifacts: state.artifacts || [] });
+    if (path.endsWith('/jobs')) return res(200, { jobs: state.jobs || [] });
     if (path.includes('/artifacts/') && path.endsWith('/zip')) return res(302, null, { location: 'https://blob.example/zip?sig=1' });
     return res(500, {});
   };
@@ -70,7 +71,9 @@ test('estado de la compilación', async () => {
   assert.deepEqual(await q(mk(null)), { status: 'queued' });
   assert.deepEqual(await q(mk({ display_title: `Cloud build ${ID}`, status: 'in_progress' })), { status: 'running' });
   assert.deepEqual(await q(mk({ display_title: `Cloud build ${ID}`, status: 'completed', conclusion: 'success' })), { status: 'success' });
-  assert.deepEqual(await q(mk({ display_title: `Cloud build ${ID}`, status: 'completed', conclusion: 'failure', html_url: 'u' })), { status: 'failed', url: 'u' });
+  assert.deepEqual(await q(mk({ display_title: `Cloud build ${ID}`, status: 'completed', conclusion: 'failure', html_url: 'u' })), { status: 'failed', url: 'u', failedStep: null });
+  const withJobs = fakeGithub({ runs: [{ id: 5, display_title: `Cloud build ${ID}`, status: 'completed', conclusion: 'failure', html_url: 'u' }], jobs: [{ name: 'build', steps: [{ name: 'make', conclusion: 'success' }, { name: 'make cia (.cia)', conclusion: 'failure' }] }] });
+  assert.deepEqual(await q(withJobs), { status: 'failed', url: 'u', failedStep: 'build: make cia (.cia)' });
   assert.equal((await route({ method: 'GET', pathname: '/api/build/../../etc', env, fetchImpl: mk(null).fetchImpl })).status, 404);
   assert.equal((await route({ method: 'GET', pathname: '/api/build/NOPE', env, fetchImpl: mk(null).fetchImpl })).status, 400);
 });

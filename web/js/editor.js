@@ -629,7 +629,7 @@ async function cloudBuild(target = '3ds') {
         link.append(h('a', { class: 'btn primary', href: dl.url }, target !== '3ds' ? `Descargar la app de ${TARGET_NAME[target]} (zip)` : `Descargar ${slug(project.name)}.3dsx + .cia (zip)`), h('p', { class: 'muted small' }, 'El enlace caduca en unos minutos.'));
         return;
       }
-      if (s.status === 'failed') { link.append(h('p', { class: 'err' }, 'La compilación falló. Revisa el proyecto o usa “Exportar .zip” y compila en local.'), s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'Ver registro en GitHub') : null); return; }
+      if (s.status === 'failed') { link.append(h('p', { class: 'err' }, 'La compilación falló. Revisa el proyecto o usa “Exportar .zip” y compila en local.'), s.failedStep ? h('p', { class: 'muted small' }, `Paso que falló: ${s.failedStep}`) : null, s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'Ver registro en GitHub') : null); return; }
     }
     status.textContent = 'Tarda demasiado. Inténtalo más tarde.';
   } catch (e) {
