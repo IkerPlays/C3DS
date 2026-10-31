@@ -1,5 +1,6 @@
 // Página de inicio (demo en vivo, plantillas) y de descargas (releases de GitHub).
 import { h, $, toast } from './ui.js';
+import { icon } from './icons.js';
 import { Game, render } from './runtime.js';
 import { newProject } from './model.js';
 import { TEMPLATES, LESSONS } from './templates.js';
@@ -58,7 +59,7 @@ function mountTemplates(root, openTemplate) {
     const thumb = h('canvas', { class: 'thumb-canvas', width: 400, height: 240, 'aria-hidden': 'true' });
     drawThumb(t, thumb);
     return h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => openTemplate(t) },
-      thumb, h('strong', {}, `${t.icon} ${t.name}`), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir en el editor →'));
+      thumb, h('strong', { class: 'tpl-title' }, icon(t.icon, 20), ` ${t.name}`), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir en el editor →'));
   }));
 }
 
@@ -66,7 +67,7 @@ function mountLessons(root, openTemplate) {
   const box = $('#lesson-cards', root);
   if (!box) return;
   box.replaceChildren(...LESSONS.map((t) => h('button', { class: 'card tpl lesson', 'data-lesson': t.id, onClick: () => openTemplate(t) },
-    h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir lección →'))));
+    h('span', { class: 'card-icon' }, icon(t.icon, 30)), h('strong', {}, t.name), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir lección →'))));
 }
 
 /* ---------- Descargas ---------- */
@@ -88,7 +89,7 @@ function osCard(os, group, mine) {
   const main = list[0];
   return h('div', { class: `card os ${mine ? 'mine' : ''}`, 'data-os': os },
     mine ? h('span', { class: 'pill' }, 'Recomendado para ti') : null,
-    h('span', { class: 'card-icon' }, OS_INFO[os].icon),
+    h('span', { class: 'card-icon os-icon' }, icon(OS_INFO[os].icon, 36)),
     h('strong', {}, OS_INFO[os].label),
     h('span', { class: 'muted small' }, OS_INFO[os].note),
     h('a', { class: 'btn primary', href: main.url, rel: 'noopener' }, `Descargar ${main.kind}`, h('small', {}, humanSize(main.size))),
@@ -102,8 +103,8 @@ function renderHomeDownload(root, rel, os) {
   if (!box) return;
   const a = rel && os ? primaryAsset(rel, os) : null;
   box.replaceChildren(a
-    ? h('a', { class: 'btn big', href: a.url, rel: 'noopener', id: 'hero-download' }, `⬇ Descargar para ${OS_INFO[os].label}`, h('small', {}, `v${rel.version} · ${humanSize(a.size)}`))
-    : h('button', { class: 'btn big', id: 'hero-download', onClick: () => { location.hash = 'downloads'; } }, '⬇ Descargas'));
+    ? h('a', { class: 'btn big', href: a.url, rel: 'noopener', id: 'hero-download' }, h('span', { class: 'btn-line' }, icon('download', 18), ` Descargar para ${OS_INFO[os].label}`), h('small', {}, `v${rel.version} · ${humanSize(a.size)}`))
+    : h('button', { class: 'btn big', id: 'hero-download', onClick: () => { location.hash = 'downloads'; } }, h('span', { class: 'btn-line' }, icon('download', 18), ' Descargas')));
 }
 
 function renderDownloadsPage(root, data, os, error) {
@@ -127,7 +128,7 @@ function renderDownloadsPage(root, data, os, error) {
   if (devBox) {
     if (dev) devBox.replaceChildren(
       h('p', { class: 'muted' }, `Última versión de desarrollo: ${dev.name} · ${fmtDate(dev.date)}. Puede fallar; se genera con cada cambio.`),
-      h('div', { class: 'chips' }, dev.oses.flatMap((o) => dev.byOs[o].map((a) => h('a', { class: 'chip-link', href: a.url, rel: 'noopener' }, `${OS_INFO[o].icon} ${a.kind} `, h('small', {}, humanSize(a.size)))))));
+      h('div', { class: 'chips' }, dev.oses.flatMap((o) => dev.byOs[o].map((a) => h('a', { class: 'chip-link', href: a.url, rel: 'noopener' }, icon(OS_INFO[o].icon, 16), ` ${a.kind} `, h('small', {}, humanSize(a.size)))))));
     else devBox.replaceChildren(h('p', { class: 'muted' }, 'No hay devbuilds publicados.'));
   }
 }

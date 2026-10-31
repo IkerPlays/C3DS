@@ -1,22 +1,22 @@
 // Descargas: lee las releases de GitHub, agrupa los archivos por sistema y recomienda el de tu dispositivo.
 export const REPO = 'IkerPlays/C3DS';
 export const OS_INFO = {
-  windows: { label: 'Windows', icon: '🪟', note: 'Windows 10/11 (64 bits)' },
-  macos: { label: 'macOS', icon: '🍎', note: 'Apple Silicon. Sin notarizar: clic derecho → Abrir' },
-  linux: { label: 'Linux', icon: '🐧', note: '.deb (Debian/Ubuntu) o AppImage' },
-  android: { label: 'Android', icon: '🤖', note: 'APK de depuración, instalable directamente' },
-  ios: { label: 'iOS', icon: '📱', note: 'IPA sin firmar: instálalo con AltStore/Sideloadly' },
+  windows: { label: 'Windows', icon: 'windows', note: 'Windows 10/11 (64 bits)' },
+  macos: { label: 'macOS', icon: 'macos', note: 'Apple Silicon. Sin notarizar: clic derecho → Abrir' },
+  linux: { label: 'Linux', icon: 'linux', note: '.deb (Debian/Ubuntu) o AppImage' },
+  android: { label: 'Android', icon: 'android', note: 'APK de depuración, instalable directamente' },
+  ios: { label: 'iOS', icon: 'ios', note: 'IPA sin firmar: instálalo con AltStore/Sideloadly' },
 };
 const OS_ORDER = ['windows', 'macos', 'linux', 'android', 'ios'];
 
 const KIND = (os, detail, ext) => {
   if (ext === 'apk') return { label: 'APK', rank: 0 };
   if (ext === 'ipa') return { label: 'IPA sin firmar', rank: 0 };
-  if (ext === 'dmg') return { label: 'Imagen de disco (.dmg)', rank: 0 };
+  if (ext === 'dmg') return { label: 'Imagen .dmg', rank: 0 };
   if (/Setup/i.test(detail)) return { label: 'Instalador', rank: 0 };
   if (/Portable/i.test(detail)) return { label: 'Portable (sin instalar)', rank: 1 };
-  if (ext === 'AppImage') return { label: 'AppImage (cualquier distro)', rank: 0 };
-  if (ext === 'deb') return { label: 'Paquete .deb (Debian/Ubuntu)', rank: 1 };
+  if (ext === 'AppImage') return { label: 'AppImage', rank: 0 };
+  if (ext === 'deb') return { label: '.deb (Debian/Ubuntu)', rank: 1 };
   return { label: `${os} .${ext}`, rank: 2 };
 };
 

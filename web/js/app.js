@@ -4,6 +4,7 @@ import { mountEditor } from './editor.js';
 import { mountImporter } from './importer.js';
 import { mountHome, isNativeApp } from './home.js';
 import { mountThemeToggle } from './theme.js';
+import { hydrateIcons } from './icons.js';
 import { checkForUpdate } from './update-check.js';
 import { decodeProject, tokenFromHash } from './share.js';
 
@@ -27,6 +28,7 @@ document.addEventListener('click', (e) => {
   if (TABS.includes(t)) { e.preventDefault(); showTab(t); }
 });
 
+hydrateIcons(document);
 mountThemeToggle($('#theme-btn'));
 for (const [k, v] of LIMIT_ROWS) $('#limits-table').append(h('tr', {}, h('th', { scope: 'row' }, k), h('td', {}, v)));
 

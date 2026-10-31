@@ -14,6 +14,7 @@ import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
 import { startBuild, buildStatus, buildDownload, STATUS_LABEL } from './cloud.js';
 import { TEMPLATES, LESSONS } from './templates.js';
+import { icon } from './icons.js';
 import { encodeProject, shareUrl, MAX_LINK_CHARS } from './share.js';
 
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
@@ -304,35 +305,35 @@ function renderLeft() {
       h('button', { class: 'row', onClick: () => { sceneId = s.id; selectedId = null; refreshAll(); } }, project.startScene === s.id ? '★ ' : '', s.name),
       h('button', { class: 'mini ghost', title: 'Marcar como escena inicial', onClick: () => { project.startScene = s.id; changed({ structure: true }); } }, '★'),
       h('button', { class: 'mini ghost', title: 'Duplicar escena', onClick: () => duplicateScene(s.id) }, '⧉'),
-      h('button', { class: 'mini ghost', title: 'Eliminar escena', onClick: () => deleteScene(s.id) }, '🗑'))))));
+      h('button', { class: 'mini ghost', title: 'Eliminar escena', onClick: () => deleteScene(s.id) }, icon('trash', 16)))))));
   // Objetos
   const sc = scene();
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Objetos'),
-      h('div', { class: 'addrow' }, Object.entries(OBJECT_TYPES).map(([t, l]) => h('button', { class: 'mini', title: `Añadir ${l.toLowerCase()}`, onClick: () => addObject(t) }, { rect: '▭', text: 'T', sprite: '🖼', button: '⏺' }[t])))),
+      h('div', { class: 'addrow' }, Object.entries(OBJECT_TYPES).map(([t, l]) => h('button', { class: 'mini', title: `Añadir ${l.toLowerCase()}`, onClick: () => addObject(t) }, { rect: icon('rect', 16), text: 'T', sprite: icon('image', 16), button: icon('btnobj', 16) }[t])))),
     h('ul', { class: 'list' }, sc.objects.length ? [...sc.objects].reverse().map((o) => h('li', { class: o.id === selectedId ? 'active' : '' },
       h('button', { class: 'row', onClick: () => selectObject(o.id) }, h('span', { class: 'chip', style: { background: o.color } }), o.name, h('small', {}, o.screen === 'top' ? 'sup' : 'inf')))) : h('li', { class: 'empty' }, 'Sin objetos. Añade uno con los botones de arriba.'))));
   // Recursos
   root.append(h('section', { class: 'panel-sec' },
-    h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('button', { class: 'mini', id: 'btn-slicer', title: 'Cortar una hoja de sprites en fotogramas', onClick: openSlicer }, '✂'), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
+    h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('button', { class: 'mini', id: 'btn-slicer', title: 'Cortar una hoja de sprites en fotogramas', onClick: openSlicer }, icon('scissors', 16)), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
     h('ul', { class: 'list' }, project.assets.images.length ? project.assets.images.map((a) => h('li', {},
       h('img', { class: 'thumb', src: project.blobs[a.id], alt: '' }), h('span', { class: 'grow' }, a.name, h('small', {}, `${a.w}×${a.h}`)),
-      h('button', { class: 'mini ghost', onClick: () => deleteAsset('image', a.id) }, '🗑'))) : h('li', { class: 'empty' }, 'Sin imágenes. Se reducen a 512 px como máximo.'))));
+      h('button', { class: 'mini ghost', onClick: () => deleteAsset('image', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin imágenes. Se reducen a 512 px como máximo.'))));
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Sonidos'), h('label', { class: 'mini', title: 'Añadir sonidos (WAV, OGG, MP3)' }, '+', h('input', { type: 'file', accept: 'audio/*', multiple: true, hidden: true, onChange: (e) => { addSounds([...e.target.files]); e.target.value = ''; } }))),
     h('ul', { class: 'list' }, project.assets.sounds.length ? project.assets.sounds.map((a) => h('li', {},
       h('button', { class: 'mini ghost', title: 'Escuchar', onClick: () => { const au = sounds.get(a.id); if (au) { au.currentTime = 0; au.play().catch(() => {}); } } }, '▶'),
       h('span', { class: 'grow' }, a.name, h('small', {}, `${a.seconds}s`)),
-      h('label', { class: 'mini ghost', title: 'Repetir en bucle (música)' }, h('input', { type: 'checkbox', checked: !!a.loop, 'aria-label': 'Bucle', onChange: (e) => { a.loop = e.target.checked; changed(); } }), '🔁'),
-      h('button', { class: 'mini ghost', onClick: () => deleteAsset('sound', a.id) }, '🗑'))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
+      h('label', { class: 'mini ghost', title: 'Repetir en bucle (música)' }, h('input', { type: 'checkbox', checked: !!a.loop, 'aria-label': 'Bucle', onChange: (e) => { a.loop = e.target.checked; changed(); } }), icon('repeat', 16)),
+      h('button', { class: 'mini ghost', onClick: () => deleteAsset('sound', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
   // Variables
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Variables'), h('button', { class: 'mini', title: 'Añadir variable', onClick: () => { if (project.variables.length >= LIMITS.variables) return toast(`Máximo ${LIMITS.variables}.`, 'error'); let i = project.variables.length + 1; while (project.variables.some((v) => v.name === `var${i}`)) i++; project.variables.push({ name: `var${i}`, value: 0 }); changed({ structure: true }); } }, '+')),
     h('ul', { class: 'list' }, project.variables.length ? project.variables.map((v, i) => h('li', { class: 'var' },
       h('input', { value: v.name, 'aria-label': 'Nombre', onChange: (e) => renameVar(i, e.target.value, e.target) }),
       h('input', { type: 'number', value: v.value, 'aria-label': 'Valor inicial', onInput: (e) => { v.value = Number(e.target.value) || 0; live(); } }),
-      h('label', { class: 'mini ghost', title: 'Guardar esta variable en la SD (p. ej. récord)' }, h('input', { type: 'checkbox', checked: !!v.persist, 'aria-label': 'Guardar', onChange: (e) => { v.persist = e.target.checked; changed(); } }), '💾'),
-      h('button', { class: 'mini ghost', onClick: () => { project.variables.splice(i, 1); changed({ structure: true }); } }, '🗑'))) : h('li', { class: 'empty' }, 'Sin variables. Úsalas para puntos, vidas…'))));
+      h('label', { class: 'mini ghost', title: 'Guardar esta variable en la SD (p. ej. récord)' }, h('input', { type: 'checkbox', checked: !!v.persist, 'aria-label': 'Guardar', onChange: (e) => { v.persist = e.target.checked; changed(); } }), icon('save', 16)),
+      h('button', { class: 'mini ghost', onClick: () => { project.variables.splice(i, 1); changed({ structure: true }); } }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin variables. Úsalas para puntos, vidas…'))));
 }
 
 function renameVar(i, name, input) {
@@ -434,7 +435,7 @@ function renderLogic(body) {
         h('button', { class: 'mini ghost', title: 'Bajar regla', disabled: ri === sc.rules.length - 1, onClick: () => { [sc.rules[ri + 1], sc.rules[ri]] = [sc.rules[ri], sc.rules[ri + 1]]; changed({ structure: true }); } }, '↓')),
       h('div', { class: 'rule-head' }, h('b', {}, 'CUANDO'),
         selectInput(Object.entries(EVENTS).map(([k, e]) => [k, e.label]), r.when.type, (v) => { r.when = defaultWhen(v, ctx); changed({ structure: true }); }),
-        h('button', { class: 'mini ghost', title: 'Eliminar regla', onClick: () => { sc.rules.splice(ri, 1); changed({ structure: true }); } }, '🗑')),
+        h('button', { class: 'mini ghost', title: 'Eliminar regla', onClick: () => { sc.rules.splice(ri, 1); changed({ structure: true }); } }, icon('trash', 16))),
       h('div', { class: 'rule-fields' }, when.fields.map((f) => field(f.label, fieldEditor(f, r.when, ctx)))),
       r.also ? h('div', { class: 'also' },
         h('div', { class: 'rule-head' }, h('b', {}, 'Y ADEMÁS'),
@@ -539,15 +540,15 @@ function openProjects() {
   const draw = () => {
     body.replaceChildren(
       h('h4', {}, 'Nuevo proyecto desde una plantilla'),
-      h('div', { class: 'tpl-grid' }, TEMPLATES.map((t) => h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
+      h('div', { class: 'tpl-grid' }, TEMPLATES.map((t) => h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, icon(t.icon, 26)), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
       h('h4', {}, 'Lecciones'),
-      h('div', { class: 'tpl-grid' }, LESSONS.map((t) => h('button', { class: 'card tpl', 'data-lesson': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
+      h('div', { class: 'tpl-grid' }, LESSONS.map((t) => h('button', { class: 'card tpl', 'data-lesson': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, icon(t.icon, 26)), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
       h('div', { class: 'row-btns' },
         h('label', { class: 'btn' }, 'Abrir archivo .c3ds.json…', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onChange: async (e) => { const f = e.target.files[0]; if (!f) return; try { const p = migrate(JSON.parse(await f.text())); p.localId = newLocalId(); if (validate(p).some((x) => /^Falta/.test(x.text))) toast('El archivo no contiene todos los recursos.', 'error'); setProject(p, { fresh: true }); d.close(); } catch (err) { toast(`Archivo no válido: ${err.message}`, 'error'); } } }))),
       h('h4', {}, 'Guardados en este navegador'),
       h('ul', { class: 'list proj' }, listProjects().length ? listProjects().map((x) => h('li', { class: x.id === project.localId ? 'active' : '' },
         h('button', { class: 'row', onClick: () => { const p = loadProject(x.id); if (p) { setProject(migrate(p)); d.close(); } else toast('No se pudo abrir.', 'error'); } }, x.name, h('small', {}, `${new Date(x.updated).toLocaleString()} · ${(x.bytes / 1024).toFixed(0)} KB`)),
-        h('button', { class: 'mini ghost', title: 'Borrar', onClick: () => { if (confirm(`¿Borrar "${x.name}"?`)) { deleteProject(x.id); draw(); } } }, '🗑'))) : h('li', { class: 'empty' }, 'Todavía no hay proyectos guardados.')),
+        h('button', { class: 'mini ghost', title: 'Borrar', onClick: () => { if (confirm(`¿Borrar "${x.name}"?`)) { deleteProject(x.id); draw(); } } }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Todavía no hay proyectos guardados.')),
     );
   };
   const d = dialog('Proyectos y plantillas', body);
@@ -562,7 +563,7 @@ function showShortcuts() {
 }
 
 function showGuide() {
-  const steps = [['1', 'Crea', 'Elige una plantilla en 📁 Proyectos o empieza en blanco. Añade rectángulos, textos, sprites y botones táctiles.'], ['2', 'Coloca', 'Arrastra en el escenario; el cuadro rojo redimensiona. Las flechas mueven 1 px; Mayús, 10.'], ['3', 'Programa', 'En Lógica: “Cuando pase esto → haz esto”. Colisiones, bordes, toques, variables y temporizadores.'], ['4', 'Prueba', '▶ Probar: pausa, paso a paso, velocidad y cajas de colisión para depurar.'], ['5', 'Exporta', 'Proyecto 3DS (.zip → .3dsx/.cia), HTML5, o app para Windows, macOS y Linux.']];
+  const steps = [['1', 'Crea', 'Elige una plantilla en Proyectos o empieza en blanco. Añade rectángulos, textos, sprites y botones táctiles.'], ['2', 'Coloca', 'Arrastra en el escenario; el cuadro rojo redimensiona. Las flechas mueven 1 px; Mayús, 10.'], ['3', 'Programa', 'En Lógica: “Cuando pase esto → haz esto”. Colisiones, bordes, toques, variables y temporizadores.'], ['4', 'Prueba', '▶ Probar: pausa, paso a paso, velocidad y cajas de colisión para depurar.'], ['5', 'Exporta', 'Proyecto 3DS (.zip → .3dsx/.cia), HTML5, o app para Windows, macOS y Linux.']];
   dialog('Guía rápida', h('ol', { class: 'guide-steps' }, steps.map(([n, t, d]) => h('li', {}, h('span', { class: 'num' }, n), h('div', {}, h('strong', {}, t), h('p', { class: 'muted' }, d))))));
 }
 
@@ -647,8 +648,8 @@ export function mountEditor(root) {
   refs.right = h('aside', { class: 'ed-right', 'aria-label': 'Propiedades' });
   refs.name = h('input', { class: 'proj-name', 'aria-label': 'Nombre del proyecto', maxlength: 40, onInput: (e) => { project.name = e.target.value || 'Sin nombre'; live(); } });
   refs.status = h('span', { class: 'status' });
-  refs.undo = h('button', { class: 'icon-btn', title: 'Deshacer (Ctrl+Z)', onClick: undo }, '↶');
-  refs.redo = h('button', { class: 'icon-btn', title: 'Rehacer (Ctrl+Y)', onClick: redo }, '↷');
+  refs.undo = h('button', { class: 'icon-btn', title: 'Deshacer (Ctrl+Z)', onClick: undo }, icon('undo', 18));
+  refs.redo = h('button', { class: 'icon-btn', title: 'Rehacer (Ctrl+Y)', onClick: redo }, icon('redo', 18));
   refs.play = h('button', { class: 'btn primary', id: 'btn-play', onClick: () => (runner ? stopPlay() : startPlay()) }, '▶ Probar');
   refs.hud = h('div', { class: 'hud', 'aria-live': 'off' });
   refs.coords = h('span', { class: 'coords', 'aria-hidden': 'true' });
@@ -656,8 +657,8 @@ export function mountEditor(root) {
   refs.debugBar = h('div', { class: 'debug-bar' },
     refs.pauseBtn,
     h('button', { class: 'btn small', id: 'btn-step', title: 'Avanzar un frame', onClick: () => { if (runner) { runner.step(); refs.pauseBtn.textContent = '▶ Seguir'; } } }, '⏭ Frame'),
-    h('button', { class: 'btn small', id: 'btn-shot', title: 'Guardar una captura de las dos pantallas', onClick: takeScreenshot }, '📸 Captura'),
-    h('button', { class: 'btn small', id: 'btn-restart', title: 'Reiniciar el juego', onClick: () => { if (runner) { runner.restart(); runner.pause(false); refs.pauseBtn.textContent = '⏸ Pausa'; buildLiveVars(); } } }, '↺ Reiniciar'),
+    h('button', { class: 'btn small', id: 'btn-shot', title: 'Guardar una captura de las dos pantallas', onClick: takeScreenshot }, [icon('camera', 16), ' Captura']),
+    h('button', { class: 'btn small', id: 'btn-restart', title: 'Reiniciar el juego', onClick: () => { if (runner) { runner.restart(); runner.pause(false); refs.pauseBtn.textContent = '⏸ Pausa'; buildLiveVars(); } } }, [icon('restart', 16), ' Reiniciar']),
     h('label', { class: 'check small' }, 'Velocidad', selectInput([[0.5, '0.5×'], [1, '1×'], [2, '2×'], [4, '4×']], 1, (v) => runner?.setSpeed(v))),
     h('label', { class: 'check small' }, h('input', { type: 'checkbox', id: 'chk-boxes', onChange: (e) => runner?.showBoxes(e.target.checked) }), 'Cajas de colisión'));
   refs.varsLive = h('div', { class: 'vars-live', 'aria-label': 'Variables en vivo' });
@@ -668,21 +669,21 @@ export function mountEditor(root) {
   let guideSeen = false;
   try { guideSeen = localStorage.getItem('c3ds:guide') === '1'; } catch { /* sin almacenamiento */ }
   refs.guide = h('div', { class: 'guide', hidden: guideSeen, id: 'guide' },
-    h('span', {}, '👋 ¿Primera vez? Añade objetos con los botones ▭ T 🖼 ⏺, arrástralos, crea reglas en la pestaña Lógica y pulsa ▶ Probar.'),
+    h('span', {}, '¿Primera vez? Añade objetos con los botones de “Objetos”, arrástralos, crea reglas en la pestaña Lógica y pulsa ▶ Probar.'),
     h('button', { class: 'btn small', onClick: showGuide }, 'Ver guía rápida'),
     h('button', { class: 'btn small ghost', id: 'btn-guide-close', onClick: () => { refs.guide.hidden = true; try { localStorage.setItem('c3ds:guide', '1'); } catch { /* ok */ } } }, 'Entendido'));
   const menu = h('div', { class: 'menu', onClick: (e) => { if (e.target.closest('[role=menuitem]')) menu.classList.remove('open'); } },
     h('button', { class: 'btn', id: 'btn-export', 'aria-haspopup': 'menu', 'aria-expanded': 'false', onClick: (e) => { const m = e.currentTarget.parentElement; const open = m.classList.toggle('open'); e.currentTarget.setAttribute('aria-expanded', String(open)); } }, 'Exportar ▾'),
     h('div', { class: 'menu-items', role: 'menu' },
-      h('button', { role: 'menuitem', onClick: exportZip }, '📦 Proyecto 3DS (.zip)  →  .3dsx / .cia'),
-      h('button', { role: 'menuitem', id: 'btn-cloud', onClick: () => cloudBuild('3ds') }, '☁ Compilar en la nube (.3dsx + .cia)'),
-      h('button', { role: 'menuitem', id: 'btn-html5', onClick: exportHtml5 }, '🌐 Juego HTML5 (jugable en navegador)'),
-      h('button', { role: 'menuitem', id: 'btn-itch', onClick: exportItch }, '🎮 HTML5 para itch.io (.zip)'),
-      h('button', { role: 'menuitem', id: 'btn-share', onClick: shareLink }, '🔗 Compartir con un enlace'),
-      h('button', { role: 'menuitem', onClick: exportJson }, '💾 Copia del proyecto (.c3ds.json)'),
-      h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, '🪟 Juego para Windows (.exe, en la nube)'),
-      h('button', { role: 'menuitem', id: 'btn-cloud-mac', onClick: () => cloudBuild('macos') }, '🍎 Juego para macOS (.dmg, en la nube)'),
-      h('button', { role: 'menuitem', id: 'btn-cloud-linux', onClick: () => cloudBuild('linux') }, '🐧 Juego para Linux (.AppImage / .deb, en la nube)')));
+      h('button', { role: 'menuitem', onClick: exportZip }, [icon('package', 18), ' Proyecto 3DS (.zip)  →  .3dsx / .cia']),
+      h('button', { role: 'menuitem', id: 'btn-cloud', onClick: () => cloudBuild('3ds') }, [icon('cloud', 18), ' Compilar en la nube (.3dsx + .cia)']),
+      h('button', { role: 'menuitem', id: 'btn-html5', onClick: exportHtml5 }, [icon('web', 18), ' Juego HTML5 (jugable en navegador)']),
+      h('button', { role: 'menuitem', id: 'btn-itch', onClick: exportItch }, [icon('gamepad', 18), ' HTML5 para itch.io (.zip)']),
+      h('button', { role: 'menuitem', id: 'btn-share', onClick: shareLink }, [icon('link', 18), ' Compartir con un enlace']),
+      h('button', { role: 'menuitem', onClick: exportJson }, [icon('save', 18), ' Copia del proyecto (.c3ds.json)']),
+      h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, [icon('windows', 18), ' Juego para Windows (.exe, en la nube)']),
+      h('button', { role: 'menuitem', id: 'btn-cloud-mac', onClick: () => cloudBuild('macos') }, [icon('macos', 18), ' Juego para macOS (.dmg, en la nube)']),
+      h('button', { role: 'menuitem', id: 'btn-cloud-linux', onClick: () => cloudBuild('linux') }, [icon('linux', 18), ' Juego para Linux (.AppImage / .deb, en la nube)'])));
   refs.stageWrap = h('div', { class: 'stage-wrap' },
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),
@@ -698,8 +699,8 @@ export function mountEditor(root) {
   root.append(
     h('div', { class: 'ed-toolbar' },
       refs.name, refs.undo, refs.redo, refs.status, h('span', { class: 'spacer' }), refs.warnBadge,
-      h('button', { class: 'icon-btn', id: 'btn-help', title: 'Atajos de teclado (?)', 'aria-label': 'Atajos de teclado', onClick: showShortcuts }, '⌨'),
-      h('button', { class: 'btn', id: 'btn-projects', onClick: openProjects }, '📁 Proyectos'), refs.play, menu),
+      h('button', { class: 'icon-btn', id: 'btn-help', title: 'Atajos de teclado (?)', 'aria-label': 'Atajos de teclado', onClick: showShortcuts }, icon('keyboard', 18)),
+      h('button', { class: 'btn', id: 'btn-projects', onClick: openProjects }, [icon('folder', 18), ' Proyectos']), refs.play, menu),
     refs.warnPanel,
     refs.guide,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));

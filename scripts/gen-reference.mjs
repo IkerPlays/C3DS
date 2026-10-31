@@ -46,7 +46,7 @@ En textos y botones, \`{nombre}\` se sustituye por el valor de la variable. Las 
 - Imágenes: ${LIMITS.images} (máx. ${LIMITS.maxImageSide} px por lado) · Sonidos: ${LIMITS.sounds} · Variables: ${LIMITS.variables}
 
 ## Plantillas
-${TEMPLATES.map((t) => `- ${t.icon} **${t.name}**: ${t.desc}`).join('\n')}
+${TEMPLATES.map((t) => `- **${t.name}**: ${t.desc}`).join('\n')}
 `;
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) { writeFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'REFERENCIA.md'), render()); console.log('docs/REFERENCIA.md actualizado'); }

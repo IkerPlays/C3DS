@@ -62,9 +62,9 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - Imágenes: 32 (máx. 512 px por lado) · Sonidos: 16 · Variables: 32
 
 ## Plantillas
-- 🪙 **Recoger monedas**: Menú con botón táctil, jugador con D-Pad, sprite y sonido.
-- 🏓 **Pong (1 jugador)**: Pelota con velocidad y rebotes en los bordes; pala vertical.
-- ☄️ **Esquivar**: Bloques que caen, marcador y pantalla de fin con reintento.
-- 🕹️ **Arcade (Circle Pad + stylus)**: Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.
-- 🏃 **Corredor (saltos)**: Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.
-- 📄 **En blanco**: Una escena vacía.
+- **Recoger monedas**: Menú con botón táctil, jugador con D-Pad, sprite y sonido.
+- **Pong (1 jugador)**: Pelota con velocidad y rebotes en los bordes; pala vertical.
+- **Esquivar**: Bloques que caen, marcador y pantalla de fin con reintento.
+- **Arcade (Circle Pad + stylus)**: Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.
+- **Corredor (saltos)**: Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.
+- **En blanco**: Una escena vacía.

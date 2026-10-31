@@ -199,22 +199,22 @@ export const lessonSound = () => lesson('Lección 5 - Sonido', (p, sc) => {
     { id: nextId(p), when: { type: 'touch', obj: b2.id }, then: [{ type: 'sound', sound: musId }] },
     { id: nextId(p), when: { type: 'touch', obj: b3.id }, then: [{ type: 'stopSound', sound: musId }] },
   );
-  note(p, sc, 'Las canciones usan “bucle” (🔁 en la lista de sonidos).', 200);
+  note(p, sc, 'Las canciones usan “bucle” (el icono de repetir en la lista de sonidos).', 200);
 });
 
 export const LESSONS = [
-  { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: '🕹️', make: lessonMove },
-  { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: '💥', make: lessonCollide },
-  { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: '🔢', make: lessonVariables },
-  { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: '🎬', make: lessonScenes },
-  { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: '🔊', make: lessonSound },
+  { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: lessonMove },
+  { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: lessonCollide },
+  { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: 'hash', make: lessonVariables },
+  { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: 'clapper', make: lessonScenes },
+  { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: 'sound', make: lessonSound },
 ];
 
 export const TEMPLATES = [
-  { id: 'coins', name: 'Recoger monedas', desc: 'Menú con botón táctil, jugador con D-Pad, sprite y sonido.', icon: '🪙', make: () => newProject() },
-  { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: '🏓', make: pongProject },
-  { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: '☄️', make: dodgeProject },
-  { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: '🕹️', make: arcadeProject },
-  { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: '🏃', make: runnerProject },
-  { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: '📄', make: blankProject },
+  { id: 'coins', name: 'Recoger monedas', desc: 'Menú con botón táctil, jugador con D-Pad, sprite y sonido.', icon: 'coin', make: () => newProject() },
+  { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: 'pong', make: pongProject },
+  { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: 'comet', make: dodgeProject },
+  { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: 'joystick', make: arcadeProject },
+  { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: runnerProject },
+  { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: blankProject },
 ];

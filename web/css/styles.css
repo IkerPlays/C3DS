@@ -249,3 +249,15 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
   main{padding:10px}
   .ed-toolbar{gap:6px}.proj-name{width:100%}
 }
+
+/* iconos SVG */
+.svg-icon{display:inline-flex;align-items:center;justify-content:center;vertical-align:middle;line-height:0;flex:none}
+.card-icon{color:var(--acc2);line-height:0;min-height:32px;display:flex;align-items:center}
+.card-icon.os-icon{color:var(--fg)}
+.card.os.mine .card-icon.os-icon{color:var(--acc2)}
+.trust li{display:flex;align-items:center;gap:8px}.trust .svg-icon{color:var(--muted)}
+.btn .svg-icon{margin-right:2px}.menu-items button{display:flex;align-items:center;gap:8px}.menu-items .svg-icon{color:var(--muted)}
+.btn-line{display:inline-flex;align-items:center;gap:6px}
+.tpl-title{display:flex;align-items:center;gap:6px}.tpl-title .svg-icon{color:var(--acc2)}
+.chip-link .svg-icon{color:var(--muted)}
+.icon-btn .svg-icon{line-height:0}

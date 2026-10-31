@@ -20,7 +20,7 @@ test('groupRelease: agrupa por sistema, ordena y recomienda el instalador', () =
   assert.equal(g.version, '0.1.0');
   assert.equal(primaryAsset(g, 'windows').kind, 'Instalador');
   assert.equal(g.byOs.windows[1].kind, 'Portable (sin instalar)');
-  assert.equal(primaryAsset(g, 'linux').kind, 'AppImage (cualquier distro)');
+  assert.equal(primaryAsset(g, 'linux').kind, 'AppImage');
   assert.equal(g.checksums, 'https://x/SHA256SUMS.txt');
   assert.equal(primaryAsset(g, 'plan9'), null);
 });
