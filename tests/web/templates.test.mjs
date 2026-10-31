@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -204,4 +204,17 @@ test('lecciones: válidas, exportables y jugables', () => {
   const go = h.objs.find((o) => o.type === 'button');
   h.step({ down: new Set(), held: new Set(), touch: { x: go.x + 5, y: go.y + 5 }, touchDown: true });
   assert.equal(h.scene.name, 'Segunda');
+});
+
+test('Topos: tocar suma puntos, la cuenta atrás termina en la pantalla final', () => {
+  const p = toposProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p, { rng: () => 0.5 });
+  const mole = g.objs.find((o) => o.name === 'Topo');
+  const inp = (extra = {}) => ({ down: new Set(), held: new Set(), touch: null, touchDown: false, ...extra });
+  g.step(inp({ touch: { x: mole.x + 5, y: mole.y + 5 }, touchDown: true }));
+  assert.equal(g.vars.puntos, 1);
+  for (let i = 0; i < 60 * 21; i++) g.step(inp());
+  assert.equal(g.scene.name, 'Fin');
+  assert.match(generateMainC(p), /vars\[1\] \+= -1;/);
 });

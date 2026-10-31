@@ -27,6 +27,7 @@ const ICONS = {
   pong: S('<rect x="3.5" y="8" width="3" height="8" rx="1"/><circle cx="14.5" cy="12" r="2"/><path d="M19 4v16" stroke-dasharray="2 2.6"/>'),
   comet: S('<circle cx="16.5" cy="7.5" r="3.5"/><path d="M14 10 4.5 19.5M12.5 9 6 11.5M15 12.5 12.5 18"/>'),
   joystick: S('<circle cx="12" cy="6" r="3"/><path d="M12 9v6"/><rect x="4" y="15" width="16" height="5" rx="2"/>'),
+  target: S('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2"/>'),
   runner: S('<circle cx="14.5" cy="4.8" r="1.9"/><path d="M11.5 9.5 9 13l3.5 2.5-1 5M11.5 9.5l4 .5 2 3M9 13l-3.5 1M5 20.5h14"/>'),
   move: S('<path d="M12 3v18M3 12h18M12 3l-2.5 2.8M12 3l2.5 2.8M12 21l-2.5-2.8M12 21l2.5-2.8M3 12l2.8-2.5M3 12l2.8 2.5M21 12l-2.8-2.5M21 12l-2.8 2.5"/>'),
   burst: S('<path d="M12 2.5v4M12 17.5v4M2.5 12h4M17.5 12h4M5.3 5.3l2.8 2.8M15.9 15.9l2.8 2.8M18.7 5.3l-2.8 2.8M8.1 15.9l-2.8 2.8"/><circle cx="12" cy="12" r="2.2"/>'),

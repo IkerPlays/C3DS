@@ -131,6 +131,30 @@ export function runnerProject() {
   return p;
 }
 
+/** Topos: toca al topo antes de que salte a otro sitio; cuenta atrás con temporizador. */
+export function toposProject() {
+  const p = empty('Topos');
+  p.variables = [{ name: 'puntos', value: 0 }, { name: 'tiempo', value: 20 }];
+  const hit = addBeep(p, 'golpe', 660);
+  const game = makeScene(p, 'Juego'); const over = makeScene(p, 'Fin');
+  game.bg.top = '#008751'; game.bg.bottom = '#5f574f'; over.bg.top = '#7e2553'; over.bg.bottom = '#1d2b53';
+  const mole = makeObject(p, 'rect', { name: 'Topo', screen: 'bottom', x: 140, y: 100, w: 44, h: 44, color: '#ab5236' });
+  const hud = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Puntos: {puntos}   Tiempo: {tiempo}', color: '#ffffff' });
+  const help = makeObject(p, 'text', { name: 'Ayuda', x: 90, y: 110, text: 'Toca al topo en la pantalla de abajo', color: '#fff1e8' });
+  game.objects.push(mole, hud, help);
+  game.rules.push(
+    { id: nextId(p), when: { type: 'touch', obj: mole.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: hit }, { type: 'randomPos', obj: mole.id, axis: 'xy' }] },
+    { id: nextId(p), when: { type: 'timer', seconds: 1 }, then: [{ type: 'addVar', var: 'tiempo', value: -1 }, { type: 'randomPos', obj: mole.id, axis: 'xy' }] },
+    { id: nextId(p), when: { type: 'var', var: 'tiempo', op: '<=', value: 0 }, then: [{ type: 'goto', scene: over.id }] },
+  );
+  const fin = makeObject(p, 'text', { name: 'Fin', x: 120, y: 90, text: '¡Tiempo! Has cazado {puntos}', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Reintentar', x: 100, y: 100, text: 'Otra vez' });
+  over.objects.push(fin, again);
+  over.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'setVar', var: 'tiempo', value: 20 }, { type: 'goto', scene: game.id }] });
+  p.scenes.push(game, over); p.startScene = game.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -216,5 +240,6 @@ export const TEMPLATES = [
   { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: 'comet', make: dodgeProject },
   { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: 'joystick', make: arcadeProject },
   { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: runnerProject },
+  { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: toposProject },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: blankProject },
 ];

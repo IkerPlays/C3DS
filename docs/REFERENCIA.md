@@ -70,4 +70,5 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - **Esquivar**: Bloques que caen, marcador y pantalla de fin con reintento.
 - **Arcade (Circle Pad + stylus)**: Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.
 - **Corredor (saltos)**: Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.
+- **Topos (táctil)**: Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.
 - **En blanco**: Una escena vacía.

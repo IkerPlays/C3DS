@@ -172,7 +172,7 @@ test('inicio: hero, demo en vivo, plantillas y descarga recomendada', async () =
   await page.waitForTimeout(600);
   const painted = await page.locator('#demo-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 77) n++; return n; });
   assert.ok(painted > 500, 'la demo dibuja al jugador');
-  assert.equal(await page.locator('#tpl-cards .tpl').count(), 5);
+  assert.equal(await page.locator('#tpl-cards .tpl').count(), 6);
   await page.click('#tpl-cards [data-tpl=pong]');
   await page.waitForSelector('#cv-top');
   assert.equal(await page.inputValue('.proj-name'), 'Pong');
