@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>C3DS - Importa y crea para 3DS homebrew</title>
+  <meta name="description" content="Analiza proyectos de Unity, Godot o Unreal para 3DS homebrew y crea juegos .3dsx desde cero con un editor visual.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<header class="top">
+  <h1>C3DS <small>v0.1 · alfa</small></h1>
+  <nav id="tabs" role="tablist">
+    <button role="tab" data-tab="import" aria-selected="true">Importar</button>
+    <button role="tab" data-tab="editor" aria-selected="false">Editor</button>
+    <button role="tab" data-tab="limits" aria-selected="false">Límites 3DS</button>
+    <button role="tab" data-tab="about" aria-selected="false">Estado</button>
+  </nav>
+</header>
+
+<main>
+  <section id="tab-import" class="panel">
+    <h2>Importar proyecto</h2>
+    <p class="muted">Unity, Godot, Unreal (carpeta o .zip) o un .exe. El análisis ocurre en tu navegador: nada se sube a ningún servidor.</p>
+    <div id="drop" class="drop" tabindex="0">
+      <p><strong>Arrastra aquí</strong> una carpeta, un .zip o un .exe</p>
+      <div class="row">
+        <label class="btn">Carpeta <input id="pick-dir" type="file" webkitdirectory hidden></label>
+        <label class="btn">.zip / .exe <input id="pick-file" type="file" accept=".zip,.exe" hidden></label>
+      </div>
+    </div>
+    <div id="report" hidden aria-live="polite"></div>
+  </section>
+
+  <section id="tab-editor" class="panel" hidden>
+    <h2>Editor</h2>
+    <p class="muted">Crea una app/juego desde cero y expórtalo como proyecto homebrew de 3DS (C + citro2d) listo para compilar a <code>.3dsx</code>.</p>
+    <div class="editor">
+      <div class="stage">
+        <div class="toolbar">
+          <button id="add-rect" class="btn">+ Rectángulo</button>
+          <button id="add-text" class="btn">+ Texto</button>
+          <button id="del" class="btn danger">Borrar</button>
+          <span class="spacer"></span>
+          <label>Destino
+            <select id="target"><option value="3ds">Nintendo 3DS (.3dsx)</option><option disabled>Windows .exe (próximamente)</option><option disabled>Android / iOS / macOS / Linux (próximamente)</option></select>
+          </label>
+          <button id="export" class="btn primary">Exportar .zip</button>
+        </div>
+        <p class="screen-label">Pantalla superior 400×240</p>
+        <canvas id="cv-top" width="400" height="240"></canvas>
+        <p class="screen-label">Pantalla inferior 320×240 (táctil)</p>
+        <canvas id="cv-bottom" width="320" height="240"></canvas>
+        <ul id="warnings" class="warnings" aria-live="polite"></ul>
+      </div>
+      <aside class="props">
+        <h3>Proyecto</h3>
+        <label>Nombre <input id="p-name" maxlength="40"></label>
+        <label>Autor <input id="p-author" maxlength="40"></label>
+        <label>Fondo superior <input id="p-bg-top" type="color"></label>
+        <label>Fondo inferior <input id="p-bg-bottom" type="color"></label>
+        <h3>Objeto</h3>
+        <div id="props-empty" class="muted">Selecciona un objeto en el lienzo.</div>
+        <form id="props-form" hidden>
+          <label>Pantalla <select id="e-screen"><option value="top">Superior</option><option value="bottom">Inferior</option></select></label>
+          <label>X <input id="e-x" type="number"></label>
+          <label>Y <input id="e-y" type="number"></label>
+          <label class="rect-only">Ancho <input id="e-w" type="number" min="1" max="400"></label>
+          <label class="rect-only">Alto <input id="e-h" type="number" min="1" max="240"></label>
+          <label>Color <input id="e-color" type="color"></label>
+          <label class="text-only">Texto <input id="e-text" maxlength="80"></label>
+          <label class="rect-only"><span><input id="e-player" type="checkbox"> Se mueve con el D-Pad</span></label>
+          <label class="rect-only">Velocidad <input id="e-speed" type="number" min="0" max="20"></label>
+        </form>
+      </aside>
+    </div>
+  </section>
+
+  <section id="tab-limits" class="panel" hidden>
+    <h2>Límites de la Nintendo 3DS</h2>
+    <p class="muted">Valores orientativos. El analizador y el editor los usan para avisarte.</p>
+    <table id="limits-table"></table>
+  </section>
+
+  <section id="tab-about" class="panel" hidden>
+    <h2>Estado del proyecto</h2>
+    <ul class="status">
+      <li class="ok">Analizador de proyectos Unity / Godot / Unreal / .exe (en el navegador)</li>
+      <li class="ok">Editor básico → proyecto C para 3DS (.3dsx vía devkitPro)</li>
+      <li class="soon">Compilación en la nube de .3dsx y .cia desde la web</li>
+      <li class="soon">Conversión automática de assets (texturas .t3x, audio, modelos)</li>
+      <li class="soon">Apps nativas: Windows, macOS, Linux, Android, iOS</li>
+    </ul>
+    <p class="muted">Importante: ningún motor (Unity, Godot, Unreal) puede exportarse tal cual a 3DS y un .exe x86/x64 no puede convertirse a ARM11. C3DS analiza qué es reutilizable (assets) y qué hay que portar (código), y te da una base compilable.</p>
+  </section>
+</main>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

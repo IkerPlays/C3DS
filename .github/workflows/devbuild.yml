@@ -1,0 +1,103 @@
+# DEVBUILDS: cambios pequeños en main -> pre-release "dev-<plataforma>-<n>" solo de las plataformas tocadas.
+name: Devbuild
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - 'android/**'
+      - 'ios/**'
+      - 'windows/**'
+      - 'macos/**'
+      - 'linux/**'
+      - 'scripts/**'
+      - '.github/workflows/_build.yml'
+      - '.github/workflows/devbuild.yml'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Plataforma a compilar
+        type: choice
+        default: all
+        options: [all, web, android, ios, windows, macos, linux]
+permissions:
+  contents: read
+concurrency:
+  group: devbuild
+  cancel-in-progress: false
+env:
+  KEEP: 10
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      any: ${{ steps.p.outputs.any }}
+      matrix: ${{ steps.p.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: p
+        env:
+          BEFORE: ${{ github.event.before }}
+          ONLY: ${{ inputs.platform }}
+        run: |
+          args=(--after "$GITHUB_SHA" --run "$GITHUB_RUN_NUMBER")
+          if [ "$GITHUB_EVENT_NAME" = "workflow_dispatch" ]; then args+=(--only "${ONLY:-all}"); else args+=(--before "$BEFORE"); fi
+          node scripts/plan-devbuild.mjs "${args[@]}"
+
+  build:
+    needs: plan
+    if: needs.plan.outputs.any == 'true'
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      runner: ${{ matrix.runner }}
+      version: ${{ matrix.version }}
+
+  publish:
+    needs: [plan, build]
+    if: needs.plan.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: c3ds-*
+          path: assets
+      - name: Publicar pre-releases
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MATRIX: ${{ needs.plan.outputs.matrix }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          for platform in $(echo "$MATRIX" | jq -r '.include[].platform'); do
+            version=$(echo "$MATRIX" | jq -r --arg p "$platform" '.include[] | select(.platform==$p) | .version')
+            tag="dev-${platform}-${GITHUB_RUN_NUMBER}"
+            if [ -n "${BEFORE:-}" ] && ! echo "$BEFORE" | grep -qE '^0+$' && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              range="$BEFORE..$GITHUB_SHA"
+            else
+              range="-10 $GITHUB_SHA"
+            fi
+            { echo "Devbuild **$platform** \`$version\` (no estable)."; echo; echo "Commit: $GITHUB_SHA"; echo; echo "### Cambios"
+              git log --no-merges --pretty='- %s (%h)' $range -- "$platform/" scripts/ | head -30; } > notes.md
+            (cd "assets/c3ds-${platform}-${version}" && sha256sum *.zip > SHA256SUMS.txt)
+            gh release create "$tag" "assets/c3ds-${platform}-${version}"/* \
+              --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --prerelease --latest=false \
+              --title "Devbuild $platform #$GITHUB_RUN_NUMBER" --notes-file notes.md
+            # Conserva solo las KEEP más recientes de esta plataforma.
+            gh release list --repo "$GITHUB_REPOSITORY" --limit 200 --json tagName,createdAt \
+              --jq "[.[] | select(.tagName | startswith(\"dev-${platform}-\"))] | sort_by(.createdAt) | reverse | .[$KEEP:] | .[].tagName" |
+              while read -r old; do [ -n "$old" ] && gh release delete "$old" --repo "$GITHUB_REPOSITORY" --yes --cleanup-tag; done
+          done
