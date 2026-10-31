@@ -262,6 +262,7 @@ test('vista previa: pausa, paso, reinicio, velocidad, cajas y variables en vivo'
   assert.match(await page.textContent('.hud'), /pausa/);
   await page.click('#btn-step'); await page.click('#btn-step');
   await page.check('#chk-boxes');
+  await page.waitForTimeout(150);
   const green = await page.locator('#cv-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 0 && d[i + 1] === 228 && d[i + 2] === 54) n++; return n; });
   assert.ok(green > 20, 'se dibujan las cajas de colisión');
   await page.fill('.vars-live input[data-var=puntos]', '7'); await page.press('.vars-live input[data-var=puntos]', 'Tab');
@@ -341,6 +342,40 @@ test('plantilla Corredor y condición “Y además” desde la interfaz', async 
   await page.click('#btn-play'); await page.waitForTimeout(500);
   const ok = await page.evaluate(() => /Corre/.test(document.querySelector('.hud').textContent));
   assert.equal(ok, true);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('importar escenas de Godot (.tscn) crea escenas con sprites, textos y botones', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('[data-tab=import]');
+  const dir = await mkdtemp(join(tmpdir(), 'c3ds-godot2-'));
+  await mkdir(join(dir, 'art')); await mkdir(join(dir, 'scenes'));
+  await writeFile(join(dir, 'project.godot'), 'window/size/viewport_width=800\nwindow/size/viewport_height=480\nconfig/features=PackedStringArray("4.2")');
+  await writeFile(join(dir, 'art', 'hero.png'), tinyPng());
+  await writeFile(join(dir, 'scenes', 'main.tscn'), `[gd_scene format=3]
+[ext_resource type="Texture2D" path="res://art/hero.png" id="1_a"]
+[node name="Main" type="Node2D"]
+[node name="Hero" type="Sprite2D" parent="."]
+position = Vector2(400, 240)
+texture = ExtResource("1_a")
+[node name="Score" type="Label" parent="."]
+offset_left = 40.0
+offset_top = 20.0
+text = "Hola Godot"
+[node name="Play" type="Button" parent="."]
+offset_left = 300.0
+offset_top = 300.0
+offset_right = 500.0
+offset_bottom = 360.0
+text = "Jugar"
+`);
+  await page.setInputFiles('#pick-dir', dir);
+  await page.waitForSelector('#btn-godot-scenes');
+  await page.click('#btn-godot-scenes');
+  await page.waitForFunction(() => window.c3ds.editor.getProject().name === 'Proyecto de Godot');
+  const info = await page.evaluate(() => { const p = window.c3ds.editor.getProject(); return { scenes: p.scenes.map((s) => s.name), types: p.scenes[0].objects.map((o) => o.type).sort(), images: p.assets.images.length }; });
+  assert.deepEqual(info, { scenes: ['main'], types: ['button', 'sprite', 'text'], images: 1 });
   assert.deepEqual(errors, []);
   await ctx.close();
 });

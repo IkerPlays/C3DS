@@ -5,7 +5,8 @@ import { buildReport, classify, pngSize, extOf } from './analyze.js';
 import { parsePE } from './pe.js';
 import { readZipEntries, extractZipEntry, createZip } from './zip.js';
 import { imageToAsset, audioToWav } from './images.js';
-import { slug, newProject, makeScene, LIMITS } from './model.js';
+import { slug, newProject, makeScene, nextId, LIMITS } from './model.js';
+import { parseTscn, parseViewport, sceneFromTscn, sceneNameFromPath } from './godot.js';
 
 const MAX_FILES = 200000;
 const IMG_EXT = new Set(['png', 'jpg', 'jpeg', 'webp', 'bmp', 'gif']);
@@ -95,6 +96,11 @@ export function mountImporter(root, { openInEditor }) {
           h('button', { class: 'btn primary', id: 'btn-convert', onClick: () => convert(status, false) }, 'Descargar assets listos para 3DS (.zip)'),
           h('button', { class: 'btn', id: 'btn-to-editor', onClick: () => convert(status, true) }, 'Crear proyecto en el editor con estos assets'))));
     }
+    const tscns = entries.filter((e) => /\.tscn$/i.test(e.path) && e.size < 2 * 1048576);
+    if (det.engine === 'godot' && tscns.length) {
+      const st = h('p', { class: 'muted small' }, `${tscns.length} escena(s) .tscn encontradas. Se convierten sprites, textos, rectángulos de color y botones; la lógica (GDScript) hay que rehacerla con reglas.`);
+      out.append(h('div', { class: 'convert' }, h('h4', {}, 'Escenas de Godot'), st, h('div', { class: 'row-btns' }, h('button', { class: 'btn primary', id: 'btn-godot-scenes', onClick: () => importGodotScenes(entries, tscns, st) }, 'Crear proyecto con las escenas de Godot'))));
+    }
     if (det.engine !== 'unknown') out.append(h('button', { class: 'btn', onClick: () => openInEditor(null) }, 'Empezar un proyecto 3DS nuevo en el editor'));
   }
 
@@ -142,6 +148,38 @@ export function mountImporter(root, { openInEditor }) {
     } else {
       download(createZip(files.map((f) => ({ path: `assets-3ds/${f.path}`, content: f.content }))), 'assets-3ds.zip', 'application/zip');
     }
+  }
+
+  async function importGodotScenes(entries, tscns, status) {
+    const p = newProject();
+    p.name = 'Proyecto de Godot'; p.scenes = []; p.variables = []; p.assets = { images: [], sounds: [] }; p.blobs = {}; p.seq = 0;
+    const godotCfg = entries.find((e) => /(^|\/)project\.godot$/i.test(e.path));
+    const vp = parseViewport(godotCfg ? new TextDecoder().decode(await godotCfg.read(65536)) : '');
+    const imageCache = new Map(); const skipped = [];
+    const byPath = (res) => { const rel = String(res).replace(/^res:\/\//, ''); return entries.find((e) => e.path.replace(/\\/g, '/').endsWith(rel)); };
+    let done = 0;
+    for (const e of tscns.slice(0, LIMITS.scenes)) {
+      status.textContent = `Convirtiendo escenas… ${++done}/${Math.min(tscns.length, LIMITS.scenes)}`;
+      const parsed = parseTscn(new TextDecoder().decode(await e.read(2 * 1048576)));
+      for (const [, res] of parsed.resources) {
+        if (imageCache.has(res) || !/\.(png|jpe?g|webp|bmp)$/i.test(res) || p.assets.images.length >= LIMITS.images) continue;
+        const f = byPath(res); if (!f || f.size > MAX_ASSET_BYTES) continue;
+        try {
+          const probe = await createImageBitmap(new Blob([await f.read(MAX_ASSET_BYTES)]));
+          const r = await imageToAsset(new Blob([await f.read(MAX_ASSET_BYTES)]));
+          const id = nextId(p);
+          p.assets.images.push({ id, name: slug(res.split('/').pop().replace(/\.[^.]+$/, '')).slice(0, 24), w: r.w, h: r.h }); p.blobs[id] = r.dataURL;
+          imageCache.set(res, { id, w: r.w, h: r.h, nativeW: probe.width, nativeH: probe.height });
+        } catch { skipped.push(res); }
+      }
+      const { scene, skipped: sk } = sceneFromTscn(p, sceneNameFromPath(e.path), parsed, vp, imageCache);
+      skipped.push(...sk.map((x) => `${scene.name}: ${x}`));
+      if (scene.objects.length) p.scenes.push(scene);
+    }
+    if (!p.scenes.length) { status.textContent = 'No se encontró nada convertible en las escenas.'; return; }
+    p.startScene = p.scenes[0].id;
+    status.textContent = `Listo: ${p.scenes.length} escena(s), ${p.scenes.reduce((n, s) => n + s.objects.length, 0)} objetos${skipped.length ? `; ${skipped.length} elementos omitidos` : ''}.`;
+    openInEditor(p);
   }
 
   async function handleFiles(files) {
