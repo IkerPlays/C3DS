@@ -76,7 +76,7 @@ test('exportar proyecto 3DS (.zip) con nombres claros', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'c3ds-ui-'));
   const path = join(dir, 'x.zip'); await dl.saveAs(path);
   const names = readZipEntries(new Uint8Array(await readFile(path))).map((e) => e.path);
-  for (const n of ['source/main.c', 'Makefile', 'gfx/sprites.t3s', 'cia/app.rsf', 'romfs/sounds/moneda-2.wav']) assert.ok(names.includes(`mi-primer-juego/${n}`), n);
+  for (const n of ['source/main.c', 'Makefile', 'gfx/sprites.t3s', 'cia/app.rsf', 'romfs/sounds/moneda-5.wav']) assert.ok(names.includes(`mi-primer-juego/${n}`), n);
   assert.deepEqual(errors, []);
   await ctx.close();
 });
@@ -101,7 +101,7 @@ test('añadir imagen y sonido desde archivos', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'c3ds-assets-'));
   await writeFile(join(dir, 'foto.png'), tinyPng());
   await page.locator('.ed-left input[accept="image/*"]').setInputFiles(join(dir, 'foto.png'));
-  await page.waitForFunction(() => window.c3ds.editor.getProject().assets.images.length === 2);
+  await page.waitForFunction(() => window.c3ds.editor.getProject().assets.images.length === 5);
   const { toneWav } = await import('../../web/js/wav.js');
   await writeFile(join(dir, 'pip.wav'), toneWav(500, 0.1));
   await page.locator('.ed-left input[accept="audio/*"]').setInputFiles(join(dir, 'pip.wav'));
@@ -172,7 +172,7 @@ test('inicio: hero, demo en vivo, plantillas y descarga recomendada', async () =
   await page.waitForTimeout(600);
   const painted = await page.locator('#demo-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 77) n++; return n; });
   assert.ok(painted > 500, 'la demo dibuja al jugador');
-  assert.equal(await page.locator('#tpl-cards .tpl').count(), 3);
+  assert.equal(await page.locator('#tpl-cards .tpl').count(), 4);
   await page.click('#tpl-cards [data-tpl=pong]');
   await page.waitForSelector('#cv-top');
   assert.equal(await page.inputValue('.proj-name'), 'Pong');
@@ -286,6 +286,36 @@ test('copiar y pegar objetos, reglas activables y guía de bienvenida', async ()
   assert.match(await page.textContent('.rule-summary'), /Al tocar Botón jugar/);
   await page.locator('.rule .rule-top input[type=checkbox]').first().uncheck();
   assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].rules[0].enabled), false);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('cortar hoja de sprites crea un grupo animable', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  const dir = await mkdtemp(join(tmpdir(), 'c3ds-sheet-'));
+  const { encodePNG } = await import('../../web/js/png.js');
+  const px = new Uint8Array(32 * 8 * 4).map((_, i) => (i % 4 === 3 ? 255 : (i * 13) % 256));
+  await writeFile(join(dir, 'heroe.png'), Buffer.from(encodePNG(32, 8, px)));
+  await page.click('#btn-slicer');
+  await page.setInputFiles('#sl-file', join(dir, 'heroe.png'));
+  await page.fill('#sl-cols', '4'); await page.fill('#sl-rows', '1');
+  await page.click('.dlg button:has-text("Cortar y añadir")');
+  await page.waitForFunction(() => window.c3ds.editor.getProject().assets.images.filter((a) => a.group === 'heroe').length === 4);
+  await page.locator('.ed-left .panel-sec').nth(1).locator('[title="Añadir sprite"]').click();
+  await page.waitForSelector('.insp select');
+  const opts = await page.locator('.insp .field:has(span:text-is("Animación")) option').allTextContents();
+  assert.ok(opts.some((o) => /heroe \(4 fotogramas\)/.test(o)), opts.join('|'));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('plantilla Arcade: se carga con música en bucle y variable guardada', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=arcade]');
+  const info = await page.evaluate(() => { const p = window.c3ds.editor.getProject(); return { loop: p.assets.sounds.some((s) => s.loop), persist: p.variables.some((v) => v.persist) }; });
+  assert.deepEqual(info, { loop: true, persist: true });
+  await page.click('#btn-play'); await page.waitForTimeout(400);
+  await page.click('#btn-play');
   assert.deepEqual(errors, []);
   await ctx.close();
 });

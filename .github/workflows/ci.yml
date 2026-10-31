@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        template: [coins, pong, dodge, blank]
+        template: [coins, pong, dodge, arcade, blank]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -54,7 +54,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        template: [coins, pong, dodge, blank]
+        template: [coins, pong, dodge, arcade, blank]
     steps:
       - uses: actions/download-artifact@v4
         with:

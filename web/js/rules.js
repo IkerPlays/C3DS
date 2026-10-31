@@ -23,6 +23,7 @@ export const ACTIONS = {
   setVar: { label: 'Poner variable a', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Valor' }] },
   addVar: { label: 'Sumar a variable', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Cantidad' }] },
   sound: { label: 'Reproducir sonido', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
+  stopSound: { label: 'Parar sonido / música', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
   setPos: { label: 'Colocar objeto en', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'x', t: 'number', label: 'X' }, { k: 'y', t: 'number', label: 'Y' }] },
   move: { label: 'Mover objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'dx', t: 'number', label: 'ΔX' }, { k: 'dy', t: 'number', label: 'ΔY' }] },
   randomPos: { label: 'Colocar objeto al azar', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'axis', t: 'randAxis', label: 'En' }] },
@@ -74,7 +75,7 @@ export function describeRule(r, p, scene) {
   }[w.type]?.() ?? '…';
   const act = (a) => ({
     goto: () => `ir a “${sc(a.scene)}”`, setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
-    sound: () => `sonar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
+    sound: () => `sonar “${snd(a.sound)}”`, stopSound: () => `parar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
     randomPos: () => `${obj(a.obj)} al azar`, setVel: () => `vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`,
     setText: () => `texto de ${obj(a.obj)}`, show: () => `mostrar ${obj(a.obj)}`, hide: () => `ocultar ${obj(a.obj)}`, quit: () => 'salir',
   }[a.type]?.() ?? '…');

@@ -8,7 +8,8 @@ test('proyecto de ejemplo válido', () => {
   const p = newProject();
   assert.equal(p.scenes.length, 2);
   assert.deepEqual(validate(p), []);
-  assert.equal(p.assets.images.length, 1);
+  assert.equal(p.assets.images.length, 4);
+  assert.equal(p.scenes[1].objects[1].animGroup, 'moneda');
   const ids = p.scenes.flatMap((s) => s.objects.map((o) => o.id));
   assert.equal(new Set(ids).size, ids.length, 'ids únicos');
 });

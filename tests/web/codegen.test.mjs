@@ -67,9 +67,9 @@ test('Makefile: tabulaciones, tex3ds y objetivo por defecto', () => {
 test('archivos exportados', () => {
   const files = exportFiles(newProject());
   const names = files.map((f) => f.path);
-  for (const n of ['source/main.c', 'Makefile', 'gfx/sprites.t3s', 'cia/app.rsf', 'cia/banner.png', 'romfs/sounds/moneda-2.wav', 'mi-primer-juego.c3ds.json']) assert.ok(names.includes(`mi-primer-juego/${n}`), n);
+  for (const n of ['source/main.c', 'Makefile', 'gfx/sprites.t3s', 'cia/app.rsf', 'cia/banner.png', 'romfs/sounds/moneda-5.wav', 'mi-primer-juego.c3ds.json']) assert.ok(names.includes(`mi-primer-juego/${n}`), n);
   assert.ok(files.every((f) => f.path.startsWith('mi-primer-juego/') && !f.path.includes('..')));
-  assert.match(files.find((f) => f.path.endsWith('sprites.t3s')).content, /^--atlas -f rgba -z auto\nmoneda-1\.png\n$/);
+  assert.match(files.find((f) => f.path.endsWith('sprites.t3s')).content, /^--atlas -f rgba -z auto\n(moneda-\d-\d+\.png\n){4}$/);
   assert.match(files.find((f) => f.path.endsWith('build.yml')).content, /mi-primer-juego\.cia/);
   assert.match(generateWorkflow(newProject()), new RegExp(MAKEROM_SHA256));
 });

@@ -2,13 +2,13 @@
 import { h, $, toast, dialog, download, debounce } from './ui.js';
 import {
   SCREENS, KEYS, KEY_LABEL, LIMITS, OBJECT_TYPES, CONTROL_MODES, newProject, migrate, makeObject, makeScene, nextId, validate,
-  findScene, slug, isVarName,
+  findScene, slug, isVarName, animFrames,
 } from './model.js';
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases } from './runtime.js';
 import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction, describeRule } from './rules.js';
-import { imageToAsset, audioToWav } from './images.js';
+import { imageToAsset, audioToWav, sliceSheet } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
@@ -233,6 +233,29 @@ async function addImages(files) {
   loadImages(); changed({ structure: true });
 }
 
+function openSlicer() {
+  const cols = h('input', { type: 'number', value: 4, min: 1, max: 16, id: 'sl-cols' });
+  const rows = h('input', { type: 'number', value: 1, min: 1, max: 16, id: 'sl-rows' });
+  const file = h('input', { type: 'file', accept: 'image/*', id: 'sl-file' });
+  const info = h('p', { class: 'muted small' }, 'Elige una imagen con los fotogramas en cuadrícula (p. ej. 4 columnas × 1 fila). Se crean imágenes numeradas y un grupo de animación.');
+  dialog('Cortar hoja de sprites', h('div', {}, field('Imagen', file), h('div', { class: 'grid2' }, field('Columnas', cols), field('Filas', rows)), info), [
+    { label: 'Cancelar' },
+    { label: 'Cortar y añadir', kind: 'primary', onClick: async () => {
+      const f = file.files[0]; const c = Number(cols.value) || 1; const r = Number(rows.value) || 1;
+      if (!f) { toast('Elige una imagen.', 'error'); return false; }
+      if (project.assets.images.length + c * r > LIMITS.images) { toast(`Superaría el máximo de ${LIMITS.images} imágenes.`, 'error'); return false; }
+      try {
+        const frames = await sliceSheet(f, c, r);
+        const base = f.name.replace(/\.[^.]+$/, '').replace(/[^\w-]+/g, '_').slice(0, 18) || 'hoja';
+        let group = base; let n = 2; while (project.assets.images.some((a) => a.group === group)) group = `${base}${n++}`;
+        frames.forEach((fr, i) => { const id = nextId(project); project.assets.images.push({ id, name: `${group}_${i + 1}`, w: fr.w, h: fr.h, group }); project.blobs[id] = fr.dataURL; });
+        loadImages(); changed({ structure: true });
+        toast(`${frames.length} fotogramas añadidos (grupo “${group}”). Selecciona un sprite y elige la animación.`, 'ok', 5000);
+      } catch (e) { toast(`No se pudo cortar: ${e.message}`, 'error'); return false; }
+      return true;
+    } }]);
+}
+
 async function addSounds(files) {
   for (const f of files) {
     if (project.assets.sounds.length >= LIMITS.sounds) { toast(`Máximo ${LIMITS.sounds} sonidos.`, 'error'); break; }
@@ -290,7 +313,7 @@ function renderLeft() {
       h('button', { class: 'row', onClick: () => selectObject(o.id) }, h('span', { class: 'chip', style: { background: o.color } }), o.name, h('small', {}, o.screen === 'top' ? 'sup' : 'inf')))) : h('li', { class: 'empty' }, 'Sin objetos. Añade uno con los botones de arriba.'))));
   // Recursos
   root.append(h('section', { class: 'panel-sec' },
-    h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
+    h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('button', { class: 'mini', id: 'btn-slicer', title: 'Cortar una hoja de sprites en fotogramas', onClick: openSlicer }, '✂'), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
     h('ul', { class: 'list' }, project.assets.images.length ? project.assets.images.map((a) => h('li', {},
       h('img', { class: 'thumb', src: project.blobs[a.id], alt: '' }), h('span', { class: 'grow' }, a.name, h('small', {}, `${a.w}×${a.h}`)),
       h('button', { class: 'mini ghost', onClick: () => deleteAsset('image', a.id) }, '🗑'))) : h('li', { class: 'empty' }, 'Sin imágenes. Se reducen a 512 px como máximo.'))));
@@ -299,6 +322,7 @@ function renderLeft() {
     h('ul', { class: 'list' }, project.assets.sounds.length ? project.assets.sounds.map((a) => h('li', {},
       h('button', { class: 'mini ghost', title: 'Escuchar', onClick: () => { const au = sounds.get(a.id); if (au) { au.currentTime = 0; au.play().catch(() => {}); } } }, '▶'),
       h('span', { class: 'grow' }, a.name, h('small', {}, `${a.seconds}s`)),
+      h('label', { class: 'mini ghost', title: 'Repetir en bucle (música)' }, h('input', { type: 'checkbox', checked: !!a.loop, 'aria-label': 'Bucle', onChange: (e) => { a.loop = e.target.checked; changed(); } }), '🔁'),
       h('button', { class: 'mini ghost', onClick: () => deleteAsset('sound', a.id) }, '🗑'))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
   // Variables
   root.append(h('section', { class: 'panel-sec' },
@@ -306,6 +330,7 @@ function renderLeft() {
     h('ul', { class: 'list' }, project.variables.length ? project.variables.map((v, i) => h('li', { class: 'var' },
       h('input', { value: v.name, 'aria-label': 'Nombre', onChange: (e) => renameVar(i, e.target.value, e.target) }),
       h('input', { type: 'number', value: v.value, 'aria-label': 'Valor inicial', onInput: (e) => { v.value = Number(e.target.value) || 0; live(); } }),
+      h('label', { class: 'mini ghost', title: 'Guardar esta variable en la SD (p. ej. récord)' }, h('input', { type: 'checkbox', checked: !!v.persist, 'aria-label': 'Guardar', onChange: (e) => { v.persist = e.target.checked; changed(); } }), '💾'),
       h('button', { class: 'mini ghost', onClick: () => { project.variables.splice(i, 1); changed({ structure: true }); } }, '🗑'))) : h('li', { class: 'empty' }, 'Sin variables. Úsalas para puntos, vidas…'))));
 }
 
@@ -343,8 +368,12 @@ function renderRight() {
     o.type !== 'sprite' ? f('color', 'Color', colorInput(() => o.color, (v) => { o.color = v; })) : null,
     o.type === 'text' || o.type === 'button' ? f('text', 'Texto', textInput(() => o.text, (v) => { o.text = v; })) : null,
     o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”.') : null,
+    o.type === 'sprite' ? f('animGroup', 'Animación', selectInput([['', 'Sin animación'], ...[...new Set(project.assets.images.map((a) => a.group).filter(Boolean))].map((g) => [g, `${g} (${animFrames(project, g).length} fotogramas)`])], o.animGroup || '', (v) => { o.animGroup = v || null; changed({ structure: true }); })) : null,
+    o.type === 'sprite' && o.animGroup ? f('animFps', 'Fotogramas/s', numInput(() => o.animFps || 8, (v) => { o.animFps = Math.max(1, Math.min(60, v)); }, { min: 1, max: 60 })) : null,
     o.type === 'sprite' ? f('image', 'Imagen', selectInput(project.assets.images.map((a) => [a.id, a.name]), o.image, (v) => { o.image = Number(v); changed(); })) : null,
     o.type === 'rect' || o.type === 'sprite' ? f('controls', 'Control', selectInput(Object.entries(CONTROL_MODES), String(o.controls), (v) => { o.controls = v === 'true' ? true : v === 'false' ? false : v; changed({ structure: true }); })) : null,
+    o.controls === 'circle' ? h('p', { class: 'muted small' }, 'En la vista previa el Circle Pad se mueve con I J K L.') : null,
+    o.controls === 'touch' ? h('p', { class: 'muted small' }, 'Sigue el stylus; solo en la pantalla inferior.') : null,
     o.controls ? f('speed', 'Vel. D-Pad', numInput(() => o.speed, (v) => { o.speed = Math.max(0, Math.min(20, v)); }, { min: 0, max: 20 })) : null,
     o.type === 'rect' || o.type === 'sprite' ? h('div', { class: 'grid2' }, f('vx', 'Vel X', numInput(() => o.vx || 0, (v) => { o.vx = v; }, { step: 0.5 })), f('vy', 'Vel Y', numInput(() => o.vy || 0, (v) => { o.vy = v; }, { step: 0.5 }))) : null,
     o.type === 'rect' || o.type === 'sprite' ? h('p', { class: 'muted small' }, 'Vel X/Y mueven el objeto solo (px por frame). Úsalo con la regla “toca el borde”.') : null,

@@ -42,3 +42,16 @@ export function wavInfo(b) {
   const dv = new DataView(b.buffer, b.byteOffset, b.byteLength);
   return { channels: dv.getUint16(22, true), rate: dv.getUint32(24, true), bits: dv.getUint16(34, true), bytes: dv.getUint32(40, true) };
 }
+
+/** Melodía sencilla (onda cuadrada suave) para música de ejemplo; `notes` en Hz (0 = silencio). */
+export function melodyWav(notes, noteSec = 0.25, rate = 22050) {
+  const per = Math.round(noteSec * rate);
+  const out = new Float32Array(per * notes.length);
+  notes.forEach((f, n) => {
+    for (let i = 0; i < per; i++) {
+      const env = Math.min(1, i / 200) * (1 - i / per) ** 0.4;
+      out[n * per + i] = f ? Math.sign(Math.sin((2 * Math.PI * f * i) / rate)) * 0.12 * env : 0;
+    }
+  });
+  return encodeWav(out, rate);
+}

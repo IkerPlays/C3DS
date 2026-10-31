@@ -49,3 +49,20 @@ export async function audioToWav(arrayBuffer, maxSeconds = 15) {
   const bytes = encodeWav(samples, rate);
   return { bytes, dataURL: toDataURL(bytes, 'audio/wav'), seconds: samples.length / rate, trimmed: buf.length > len };
 }
+
+/** Corta una hoja de sprites (cuadrícula cols×rows) en fotogramas PNG. Los fotogramas se limitan a `max` px. */
+export async function sliceSheet(file, cols, rows, max = LIMITS.maxImageSide) {
+  const bmp = await decodeImage(file);
+  const fw = Math.floor(bmp.width / cols); const fh = Math.floor(bmp.height / rows);
+  if (fw < 1 || fh < 1) throw new Error('La cuadrícula es mayor que la imagen');
+  const size = fitSize(fw, fh, max);
+  const out = [];
+  for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+    const cv = document.createElement('canvas'); cv.width = size.w; cv.height = size.h;
+    const ctx = cv.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(bmp, c * fw, r * fh, fw, fh, 0, 0, size.w, size.h);
+    const bytes = await canvasPng(cv);
+    out.push({ w: size.w, h: size.h, bytes, dataURL: toDataURL(bytes, 'image/png') });
+  }
+  return out;
+}

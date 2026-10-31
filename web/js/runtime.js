@@ -14,6 +14,9 @@ export class Game {
     this.rng = opts.rng || Math.random;
     this.onSound = opts.onSound || (() => {});
     this.vars = Object.fromEntries(project.variables.map((v) => [v.name, num(v.value)]));
+    this.storage = opts.storage || null; // { load(): object, save(object) } para variables con "guardar"
+    this.onStopSound = opts.onStopSound || (() => {});
+    if (this.storage) { const saved = this.storage.load() || {}; for (const v of project.variables) if (v.persist && v.name in saved) this.vars[v.name] = num(saved[v.name]); }
     this.sceneId = project.startScene;
     this.quit = false;
     this.frames = 0;
@@ -22,7 +25,16 @@ export class Game {
 
   get scene() { return this.p.scenes.find((s) => s.id === this.sceneId); }
 
+  /** Guarda las variables marcadas como persistentes (si hay almacenamiento). */
+  persist() {
+    if (!this.storage) return;
+    const out = {};
+    for (const v of this.p.variables) if (v.persist) out[v.name] = this.vars[v.name];
+    this.storage.save(out);
+  }
+
   enter(id) {
+    if (this.objs) this.persist();
     this.sceneId = id;
     this.frames = 0;
     this.objs = this.scene.objects.map((o) => ({ ...o, tpl: o.text }));
@@ -33,13 +45,16 @@ export class Game {
   /** input: { down:Set<string>, held:Set<string>, touch:{x,y}|null, touchDown:boolean } */
   step(input) {
     if (this.quit) return;
-    const { down = new Set(), held = new Set(), touch = null, touchDown = false } = input;
+    const { down = new Set(), held = new Set(), touch = null, touchDown = false, circle = { x: 0, y: 0 } } = input;
     const touched = touchDown && touch;
     for (const o of this.objs) {
       if (!o.visible) continue;
       const s = SCREENS[o.screen];
       let mx = 0; let my = 0;
-      if (o.controls) {
+      if (o.controls === 'circle') { mx = circle.x * o.speed; my = circle.y * o.speed; }
+      else if (o.controls === 'touch') {
+        if (touch && o.screen === 'bottom') { o.x = Math.max(0, Math.min(s.w - o.w, touch.x - o.w / 2)); o.y = Math.max(0, Math.min(s.h - o.h, touch.y - o.h / 2)); }
+      } else if (o.controls) {
         if (o.controls !== 'v') mx = ((held.has('RIGHT') ? 1 : 0) - (held.has('LEFT') ? 1 : 0)) * o.speed;
         if (o.controls !== 'h') my = ((held.has('DOWN') ? 1 : 0) - (held.has('UP') ? 1 : 0)) * o.speed;
       }
@@ -90,6 +105,7 @@ export class Game {
       case 'setVar': this.vars[a.var] = num(a.value); break;
       case 'addVar': this.vars[a.var] = (this.vars[a.var] || 0) + num(a.value); break;
       case 'sound': this.onSound(a.sound); break;
+      case 'stopSound': this.onStopSound(a.sound); break;
       case 'setPos': if (o) { o.x = num(a.x); o.y = num(a.y); } break;
       case 'move': if (o) { o.x += num(a.dx); o.y += num(a.dy); } break;
       case 'randomPos': if (o) {
@@ -101,13 +117,21 @@ export class Game {
       case 'setText': if (o) o.tpl = a.text; break;
       case 'show': if (o) o.visible = true; break;
       case 'hide': if (o) o.visible = false; break;
-      case 'quit': this.quit = true; break;
+      case 'quit': this.quit = true; this.persist(); break;
       default: break;
     }
     return null;
   }
 
   text(o) { return formatText(o.tpl, this.vars); }
+}
+
+/** Imagen actual de un sprite (con animación por grupo si la tiene). */
+export function spriteImage(game, o) {
+  if (!o.animGroup) return o.image;
+  const frames = game.p.assets.images.filter((a) => a.group === o.animGroup);
+  if (!frames.length) return o.image;
+  return frames[Math.floor((game.frames * (num(o.animFps) || 8)) / 60) % frames.length].id;
 }
 
 /** Dibuja la escena actual. `images`: Map(assetId -> CanvasImageSource). */
@@ -122,24 +146,33 @@ export function render(game, ctxs, images) {
       if (!o.visible || o.screen !== key) continue;
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
-      else if (o.type === 'sprite') { const im = images.get(o.image); if (im) ctx.drawImage(im, o.x, o.y, o.w, o.h); else ctx.fillRect(o.x, o.y, o.w, o.h); }
+      else if (o.type === 'sprite') { const im = images.get(spriteImage(game, o)); if (im) ctx.drawImage(im, o.x, o.y, o.w, o.h); else ctx.fillRect(o.x, o.y, o.w, o.h); }
       else if (o.type === 'text') ctx.fillText(game.text(o), o.x, o.y);
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8); }
     }
   }
 }
 
+/** Circle Pad en el teclado: I (arriba) J (izquierda) K (abajo) L (derecha). */
+export const CIRCLE_KEYS = { i: [0, -1], k: [0, 1], j: [-1, 0], l: [1, 0] };
+
 export const KEY_MAP = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', z: 'A', x: 'B', s: 'X', a: 'Y', q: 'L', w: 'R', Enter: 'START', Shift: 'SELECT' };
 
 /** Ejecuta el juego en 2 canvas a 60 pasos/s. Devuelve el control del simulador (pausa, paso, reinicio, velocidad…). */
 export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   const ctxs = { top: canvases.top.getContext('2d'), bottom: canvases.bottom.getContext('2d') };
-  const mkGame = () => new Game(project, { onSound: (id) => { try { const a = sounds.get(id); if (a) { a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } } });
+  const saveKey = `c3ds:save:${project.name}`;
+  const storage = { load() { try { return JSON.parse(localStorage.getItem(saveKey) || '{}'); } catch { return {}; } }, save(o) { try { localStorage.setItem(saveKey, JSON.stringify(o)); } catch { /* sin almacenamiento */ } } };
+  const mkGame = () => new Game(project, {
+    storage,
+    onSound: (id) => { try { const a = sounds.get(id); if (a) { a.loop = !!project.assets.sounds.find((x) => x.id === id)?.loop; a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } },
+    onStopSound: (id) => { try { const a = sounds.get(id); if (a) { a.pause(); a.currentTime = 0; } } catch { /* sin audio */ } },
+  });
   let game = mkGame();
   const held = new Set(); let down = new Set(); let touch = null; let touchDown = false; let lastTouch = null;
   let paused = false; let speed = 1; let stepOnce = false; let boxes = false;
-  const kd = (e) => { if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (!k) return; e.preventDefault(); if (!held.has(k)) down.add(k); held.add(k); };
-  const ku = (e) => { const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (k) held.delete(k); };
+  const kd = (e) => { if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; if (CIRCLE_KEYS[e.key?.toLowerCase()]) { circleHeld.add(e.key.toLowerCase()); e.preventDefault(); return; } const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (!k) return; e.preventDefault(); if (!held.has(k)) down.add(k); held.add(k); };
+  const ku = (e) => { circleHeld.delete(e.key?.toLowerCase()); const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (k) held.delete(k); };
   const bc = canvases.bottom;
   const pos = (e) => { const r = bc.getBoundingClientRect(); return { x: ((e.clientX - r.left) * SCREENS.bottom.w) / r.width, y: ((e.clientY - r.top) * SCREENS.bottom.h) / r.height }; };
   const pd = (e) => { touch = pos(e); lastTouch = touch; touchDown = true; bc.setPointerCapture?.(e.pointerId); };
@@ -148,7 +181,9 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
   bc.addEventListener('pointerdown', pd); bc.addEventListener('pointermove', pm); bc.addEventListener('pointerup', pu); bc.addEventListener('pointercancel', pu);
   let raf = 0; let last = performance.now(); let acc = 0; let alive = true;
-  const tick = () => { game.step({ down, held, touch: touch || (touchDown ? lastTouch : null), touchDown }); down = new Set(); touchDown = false; };
+  const circleHeld = new Set();
+  const circle = () => { let x = 0; let y = 0; for (const k of circleHeld) { x += CIRCLE_KEYS[k][0]; y += CIRCLE_KEYS[k][1]; } return { x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) }; };
+  const tick = () => { game.step({ down, held, touch: touch || (touchDown ? lastTouch : null), touchDown, circle: circle() }); down = new Set(); touchDown = false; };
   const drawBoxes = () => {
     for (const key of ['top', 'bottom']) {
       const ctx = ctxs[key]; ctx.strokeStyle = '#00e436'; ctx.lineWidth = 1;
@@ -181,7 +216,7 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
     setSpeed: (v) => { speed = Math.max(0.1, Math.min(4, Number(v) || 1)); },
     showBoxes: (v) => { boxes = !!v; },
     stop() {
-      alive = false; cancelAnimationFrame(raf);
+      alive = false; cancelAnimationFrame(raf); game.persist(); for (const a of sounds.values()) { try { a.pause(); } catch { /* ok */ } }
       window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku);
       bc.removeEventListener('pointerdown', pd); bc.removeEventListener('pointermove', pm); bc.removeEventListener('pointerup', pu); bc.removeEventListener('pointercancel', pu);
     },

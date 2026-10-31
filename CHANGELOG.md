@@ -11,7 +11,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 - **Editor**: plantillas (Recoger monedas, **Pong**, **Esquivar**, en blanco), velocidad automática de objetos, evento “toca el borde”, acción “cambiar velocidad”, control solo horizontal/vertical, colocar al azar por eje, centrar, orden de capas, duplicar escena, coordenadas del cursor y ayuda de atajos (`?`).
 - **Simulación**: pausa, paso a paso (frame), reinicio, velocidad 0.5×–4×, cajas de colisión y variables editables en vivo.
 - **Editor**: reglas que se pueden desactivar y reordenar, con resumen en lenguaje natural; copiar y pegar objetos (también entre escenas); guía de bienvenida.
-- Tests: 66 unitarios y 19 de interfaz.
+- **Motor 3DS**: control con **Circle Pad** y **seguir el stylus**; **música en bucle** y acción “parar sonido”; variables que se **guardan en la SD** (récords); **animación de sprites** con cortador de hojas de sprites.
+- Plantilla **Arcade** (Circle Pad + stylus + música + total guardado + moneda animada). La moneda de la plantilla de ejemplo ahora gira.
+- Tests: 74 unitarios y 21 de interfaz.
 
 ## [0.1.0] - 2026-10-31
 Primera versión pública (alfa).

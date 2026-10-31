@@ -8,7 +8,7 @@ export const SCREENS = { top: { w: 400, h: 240 }, bottom: { w: 320, h: 240 } };
 export const KEYS = ['A', 'B', 'X', 'Y', 'L', 'R', 'START', 'SELECT', 'UP', 'DOWN', 'LEFT', 'RIGHT'];
 export const KEY_LABEL = { UP: '⬆ Arriba', DOWN: '⬇ Abajo', LEFT: '⬅ Izquierda', RIGHT: '➡ Derecha', START: 'Start', SELECT: 'Select' };
 export const LIMITS = { scenes: 16, objectsPerScene: 64, images: 32, sounds: 16, variables: 32, rules: 64, maxImageSide: 512 };
-export const CONTROL_MODES = { false: 'Ninguno', true: 'D-Pad (4 direcciones)', h: 'Solo horizontal', v: 'Solo vertical' };
+export const CONTROL_MODES = { false: 'Ninguno', true: 'D-Pad (4 direcciones)', h: 'Solo horizontal', v: 'Solo vertical', circle: 'Circle Pad (analógico)', touch: 'Seguir el stylus (táctil)' };
 export const OBJECT_TYPES = { rect: 'Rectángulo', text: 'Texto', sprite: 'Sprite', button: 'Botón táctil' };
 
 export const slug = (s) => (String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'juego').slice(0, 40);
@@ -16,10 +16,13 @@ export const isVarName = (s) => /^[A-Za-z_][A-Za-z0-9_]{0,23}$/.test(s);
 const HEX = /^#[0-9a-f]{6}$/i;
 export const isHex = (s) => HEX.test(s);
 
+/** Imágenes de un grupo de animación (hoja de sprites cortada), en orden. */
+export const animFrames = (p, group) => (group ? p.assets.images.filter((a) => a.group === group) : []);
+
 export function nextId(p) { p.seq = (p.seq || 0) + 1; return p.seq; }
 
 export function makeObject(p, type, over = {}) {
-  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, visible: true };
+  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, animGroup: null, animFps: 8, visible: true };
   if (type === 'text') Object.assign(base, { w: 0, h: 0, text: 'Texto' });
   if (type === 'button') Object.assign(base, { screen: 'bottom', w: 120, h: 40, color: '#29adff', text: 'Botón' });
   const o = { ...base, ...over };
@@ -35,17 +38,24 @@ export function makeScene(p, name = 'Escena') {
 export function newProject() {
   const p = { format: 2, seq: 0, name: 'Mi primer juego', author: 'Autor', description: 'Creado con C3DS', assets: { images: [], sounds: [] }, blobs: {}, variables: [{ name: 'puntos', value: 0 }], scenes: [], startScene: 0 };
 
-  const star = new Uint8Array(32 * 32 * 4);
-  for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
-    const d = Math.hypot(x - 15.5, y - 15.5);
-    const i = (y * 32 + x) * 4;
-    if (d < 14) { star[i] = 255; star[i + 1] = d < 8 ? 236 : 163; star[i + 2] = d < 8 ? 39 : 0; star[i + 3] = 255; }
-  }
-  const imgId = nextId(p);
-  p.assets.images.push({ id: imgId, name: 'moneda', w: 32, h: 32 });
-  p.blobs[imgId] = toDataURL(encodePNG(32, 32, star), 'image/png');
+  // Moneda que gira: 4 fotogramas (anchura 32, 24, 10, 24) generados en código.
+  const frameIds = [];
+  [32, 24, 10, 24].forEach((w, f) => {
+    const px = new Uint8Array(32 * 32 * 4);
+    for (let y = 0; y < 32; y++) for (let x = 0; x < 32; x++) {
+      const dx = (x - 15.5) / (w / 2); const dy = (y - 15.5) / 14;
+      const d = Math.hypot(dx, dy);
+      const i = (y * 32 + x) * 4;
+      if (d < 1) { px[i] = 255; px[i + 1] = d < 0.55 ? 236 : 163; px[i + 2] = d < 0.55 ? 39 : 0; px[i + 3] = 255; }
+    }
+    const id = nextId(p);
+    p.assets.images.push({ id, name: `moneda_${f + 1}`, w: 32, h: 32, group: 'moneda' });
+    p.blobs[id] = toDataURL(encodePNG(32, 32, px), 'image/png');
+    frameIds.push(id);
+  });
+  const imgId = frameIds[0];
   const sndId = nextId(p);
-  p.assets.sounds.push({ id: sndId, name: 'moneda', seconds: 0.15 });
+  p.assets.sounds.push({ id: sndId, name: 'moneda', seconds: 0.15, loop: false });
   p.blobs[sndId] = toDataURL(toneWav(988, 0.15), 'audio/wav');
 
   const menu = makeScene(p, 'Menú');
@@ -55,7 +65,7 @@ export function newProject() {
   const play = makeObject(p, 'button', { name: 'Botón jugar', x: 100, y: 100, text: 'Jugar' });
   menu.objects.push(title, play);
   const player = makeObject(p, 'rect', { name: 'Jugador', x: 180, y: 100, color: '#ff004d', controls: true, speed: 3 });
-  const coin = makeObject(p, 'sprite', { name: 'Moneda', x: 300, y: 60, w: 32, h: 32, image: imgId });
+  const coin = makeObject(p, 'sprite', { name: 'Moneda', x: 300, y: 60, w: 32, h: 32, image: imgId, animGroup: 'moneda', animFps: 8 });
   const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Puntos: {puntos}', color: '#ffffff' });
   const hint = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 110, text: 'D-Pad: mover   START: menú', color: '#c2c3c7' });
   game.objects.push(player, coin, score, hint);
@@ -116,6 +126,7 @@ export function validate(p) {
       if (!scr) { warn('error', `"${o.name}": pantalla inválida.`); continue; }
       if (!isHex(o.color)) warn('error', `"${o.name}": color inválido.`);
       if (o.type === 'sprite' && !imgIds.has(o.image)) warn('error', `"${o.name}" (${s.name}): no tiene imagen.`);
+      if (o.animGroup && !animFrames(p, o.animGroup).length) warn('error', `"${o.name}" (${s.name}): el grupo de animación "${o.animGroup}" no tiene imágenes.`);
       if (o.type !== 'text' && (o.x < 0 || o.y < 0 || o.x + o.w > scr.w || o.y + o.h > scr.h)) warn('warn', `"${o.name}" (${s.name}) sale de la pantalla.`);
       if (o.type === 'button' && o.screen !== 'bottom') warn('warn', `"${o.name}": los botones táctiles solo funcionan en la pantalla inferior.`);
     }
@@ -127,7 +138,7 @@ export function validate(p) {
       for (const a of r.then) {
         if (a.obj != null) refs.push(a.obj);
         if (a.type === 'goto' && !sceneIds.has(a.scene)) warn('error', `Regla en "${s.name}": escena de destino no existe.`);
-        if (a.type === 'sound' && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
+        if ((a.type === 'sound' || a.type === 'stopSound') && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
         if ((a.type === 'setVar' || a.type === 'addVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);
       }
       if (refs.some((id) => !objIds.has(id))) warn('error', `Regla en "${s.name}": hace referencia a un objeto que ya no existe.`);

@@ -21,7 +21,7 @@ test('deshacer / rehacer', () => {
   p.name = 'B'; p.scenes[0].name = 'Otra'; h.commit();
   assert.equal(h.canUndo, true); assert.equal(h.canRedo, false);
   h.undo(); assert.equal(p.name, 'A'); assert.equal(p.scenes[0].name, 'Menú');
-  assert.ok(Object.keys(p.blobs).length === 2, 'los blobs se conservan');
+  assert.ok(Object.keys(p.blobs).length === 5, 'los blobs se conservan');
   h.undo(); assert.equal(p.name, 'Mi primer juego');
   assert.equal(h.undo(), false);
   h.redo(); h.redo(); assert.equal(p.name, 'B'); assert.equal(h.redo(), false);

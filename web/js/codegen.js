@@ -1,5 +1,5 @@
 // Generador de proyectos 3DS (devkitARM + libctru + citro2d + ndsp) a partir de un proyecto del editor.
-import { SCREENS, slug, findObject } from './model.js';
+import { SCREENS, slug, animFrames } from './model.js';
 import { fromDataURL } from './bytes.js';
 import { ciaAssets, MAKEROM_URL, MAKEROM_SHA256, BANNERTOOL_URL, BANNERTOOL_SHA256 } from './cia.js';
 
@@ -8,7 +8,7 @@ const rgb = (hex) => [1, 3, 5].map((i) => parseInt(/^#[0-9a-f]{6}$/i.test(hex) ?
 const col = (hex) => { const [r, g, b] = rgb(hex); return `0xFF${[b, g, r].map((n) => n.toString(16).padStart(2, '0')).join('').toUpperCase()}`; };
 const int = (v, lo = -100000, hi = 100000) => Math.max(lo, Math.min(hi, Math.round(Number(v) || 0)));
 const flt = (v, lim = 50) => `${Math.max(-lim, Math.min(lim, Number(v) || 0)).toFixed(3)}f`;
-const ctl = (c) => (c === true ? 1 : c === 'h' ? 2 : c === 'v' ? 3 : 0);
+const ctl = (c) => (c === true ? 1 : c === 'h' ? 2 : c === 'v' ? 3 : c === 'circle' ? 4 : c === 'touch' ? 5 : 0);
 
 /** Cadena C en UTF-8 con escapes octales (seguro para cualquier texto). `%` se duplica para printf. */
 export function cString(s, forPrintf = false) {
@@ -51,7 +51,14 @@ export function analyze(p) {
   const imageIndex = new Map(p.assets.images.map((a, i) => [a.id, i]));
   const soundIndex = new Map(p.assets.sounds.map((a, i) => [a.id, i]));
   const varIndex = new Map(p.variables.map((v, i) => [v.name, i]));
-  return { objs, objIndex, sceneIndex, imageIndex, soundIndex, varIndex, hasImages: p.assets.images.length > 0, hasSounds: p.assets.sounds.length > 0 };
+  // Tabla de animaciones: por cada objeto animado, sus fotogramas (índices de imagen) en una tabla global.
+  const animTable = []; const animOf = new Map();
+  for (const o of objs) {
+    const frames = o.type === 'sprite' && o.animGroup ? animFrames(p, o.animGroup).map((a) => imageIndex.get(a.id)) : [];
+    if (frames.length) { animOf.set(o.id, { off: animTable.length, n: frames.length }); animTable.push(...frames); }
+  }
+  const persistVars = p.variables.map((v, i) => (v.persist ? i : -1)).filter((i) => i >= 0);
+  return { objs, objIndex, sceneIndex, imageIndex, soundIndex, varIndex, animTable, animOf, persistVars, hasImages: p.assets.images.length > 0, hasSounds: p.assets.sounds.length > 0 };
 }
 
 const KEYC = { A: 'KEY_A', B: 'KEY_B', X: 'KEY_X', Y: 'KEY_Y', L: 'KEY_L', R: 'KEY_R', START: 'KEY_START', SELECT: 'KEY_SELECT', UP: 'KEY_DUP', DOWN: 'KEY_DDOWN', LEFT: 'KEY_DLEFT', RIGHT: 'KEY_DRIGHT' };
@@ -65,7 +72,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -89,6 +96,7 @@ export function generateMainC(p) {
       case 'setVar': return `vars[${v}] = ${int(a.value)};`;
       case 'addVar': return `vars[${v}] += ${int(a.value)};`;
       case 'sound': return `play_sound(${A.soundIndex.get(a.sound) ?? 0});`;
+      case 'stopSound': return `stop_sound(${A.soundIndex.get(a.sound) ?? 0});`;
       case 'setPos': return `objs[${o}].x = ${int(a.x)}.0f; objs[${o}].y = ${int(a.y)}.0f;`;
       case 'move': return `objs[${o}].x += ${int(a.dx)}.0f; objs[${o}].y += ${int(a.dy)}.0f;`;
       case 'randomPos': return `random_pos(${o}, ${{ xy: 0, x: 1, y: 2 }[a.axis || 'xy'] ?? 0});`;
@@ -111,6 +119,7 @@ export function generateMainC(p) {
   }).join('\n');
 
   const bg = p.scenes.map((s) => `\t{ ${col(s.bg.top)}, ${col(s.bg.bottom)} },`).join('\n');
+  const soundLoops = p.assets.sounds.map((x) => (x.loop ? 1 : 0)).join(', ');
   const soundFiles = p.assets.sounds.map((s) => `\t${cString(`romfs:/sounds/${slug(s.name)}-${s.id}.wav`)},`).join('\n');
 
   return `// Generado por C3DS - ${p.name.replace(/[^\w ]/g, '_')}
@@ -120,6 +129,7 @@ export function generateMainC(p) {
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #define NUM_OBJS ${A.objs.length}
 #define NUM_VARS ${Math.max(1, p.variables.length)}
@@ -130,7 +140,7 @@ export function generateMainC(p) {
 enum { T_RECT, T_TEXT, T_SPRITE, T_BUTTON };
 
 typedef struct {
-	int type, scene, screen, image, controls, tmpl;
+	int type, scene, screen, image, controls, tmpl, anim_off, anim_n, anim_fps;
 	float x, y, w, h, speed, vx, vy;
 	int visible;
 	u32 color;
@@ -185,7 +195,38 @@ static void random_pos(int i, int mode) {
 	if (mode != 1) o->y = (float)(rand() % (int)(mh > 1 ? mh : 1));
 }
 
+/* ---------- Guardado (variables marcadas con "guardar") en la SD ---------- */
+#define NUM_PERSIST ${A.persistVars.length}
+#if NUM_PERSIST > 0
+static const int persist_idx[NUM_PERSIST] = { ${A.persistVars.join(', ')} };
+static const char* save_dir = "sdmc:/3ds/${slug(p.name)}";
+static const char* save_file = "sdmc:/3ds/${slug(p.name)}/save.dat";
+
+static void load_vars(void) {
+	FILE* f = fopen(save_file, "rb");
+	if (!f) return;
+	int tmp[NUM_PERSIST];
+	if (fread(tmp, sizeof(int), NUM_PERSIST, f) == NUM_PERSIST) for (int i = 0; i < NUM_PERSIST; i++) vars[persist_idx[i]] = tmp[i];
+	fclose(f);
+}
+
+static void save_vars(void) {
+	mkdir("sdmc:/3ds", 0777);
+	mkdir(save_dir, 0777);
+	FILE* f = fopen(save_file, "wb");
+	if (!f) return;
+	int tmp[NUM_PERSIST];
+	for (int i = 0; i < NUM_PERSIST; i++) tmp[i] = vars[persist_idx[i]];
+	fwrite(tmp, sizeof(int), NUM_PERSIST, f);
+	fclose(f);
+}
+#else
+static void load_vars(void) {}
+static void save_vars(void) {}
+#endif
+
 static void enter_scene(int s) {
+	save_vars();
 	cur_scene = s;
 	scene_frames = 0;
 	for (int i = 0; i < NUM_OBJS; i++) if (init_objs[i].scene == s) objs[i] = init_objs[i];
@@ -200,6 +241,7 @@ static int audio_ok = 0;
 static const char* sound_files[NUM_SOUNDS] = {
 ${soundFiles}
 };
+static const int sound_loop[NUM_SOUNDS] = { ${soundLoops} };
 
 static void load_sounds(void) {
 	audio_ok = R_SUCCEEDED(ndspInit());
@@ -235,7 +277,13 @@ static void play_sound(int i) {
 	memset(&wave_bufs[i], 0, sizeof(ndspWaveBuf));
 	wave_bufs[i].data_vaddr = sounds[i].data;
 	wave_bufs[i].nsamples = sounds[i].samples;
+	wave_bufs[i].looping = sound_loop[i] ? true : false;
 	ndspChnWaveBufAdd(i, &wave_bufs[i]);
+}
+
+static void stop_sound(int i) {
+	if (!audio_ok || i < 0 || i >= NUM_SOUNDS) return;
+	ndspChnReset(i);
 }
 
 static void free_sounds(void) {
@@ -246,20 +294,23 @@ static void free_sounds(void) {
 #else
 static void load_sounds(void) {}
 static void play_sound(int i) { (void)i; }
+static void stop_sound(int i) { (void)i; }
 static void free_sounds(void) {}
 #endif
 
 /* ---------- Lógica ---------- */
-static void update(u32 down, u32 held, int touched, int tx, int ty) {
+static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, float cy) {
 	for (int i = 0; i < NUM_OBJS; i++) {
 		Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible) continue;
-		/* controls: 0 ninguno, 1 D-Pad, 2 solo horizontal, 3 solo vertical */
-		if (o->controls && o->controls != 3) {
+		/* controls: 0 ninguno, 1 D-Pad, 2 horizontal, 3 vertical, 4 Circle Pad, 5 stylus */
+		if (o->controls == 4) { o->x += cx * o->speed; o->y += cy * o->speed; }
+		if (o->controls == 5 && (held & KEY_TOUCH) && o->screen == 1) { o->x = tx - o->w / 2; o->y = ty - o->h / 2; }
+		if (o->controls >= 1 && o->controls <= 3 && o->controls != 3) {
 			if (held & KEY_DLEFT)  o->x -= o->speed;
 			if (held & KEY_DRIGHT) o->x += o->speed;
 		}
-		if (o->controls && o->controls != 2) {
+		if (o->controls >= 1 && o->controls <= 3 && o->controls != 2) {
 			if (held & KEY_DUP)    o->y -= o->speed;
 			if (held & KEY_DDOWN)  o->y += o->speed;
 		}
@@ -270,7 +321,7 @@ static void update(u32 down, u32 held, int touched, int tx, int ty) {
 		if (o->x > screen_w[o->screen] - o->w) o->x = screen_w[o->screen] - o->w;
 		if (o->y > screen_h[o->screen] - o->h) o->y = screen_h[o->screen] - o->h;
 	}
-	(void)down; (void)held; (void)touched; (void)tx; (void)ty;
+	(void)down; (void)held; (void)touched; (void)tx; (void)ty; (void)cx; (void)cy;
 	switch (cur_scene) {
 ${sceneRules}
 	default: break;
@@ -279,7 +330,7 @@ ${sceneRules}
 }
 
 /* ---------- Dibujo ---------- */
-${A.hasImages ? 'static C2D_SpriteSheet sheet;\n' : ''}static C2D_TextBuf text_buf;
+${A.hasImages ? `static C2D_SpriteSheet sheet;\nstatic const int anim_tbl[${Math.max(1, A.animTable.length)}] = { ${A.animTable.join(', ') || '0'} };\n` : ''}static C2D_TextBuf text_buf;
 
 static void draw_text(const char* s, float x, float y, u32 color) {
 	C2D_Text t;
@@ -296,7 +347,8 @@ static void draw_screen(int screen) {
 		switch (o->type) {
 		case T_RECT: C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color); break;
 		case T_SPRITE:
-${A.hasImages ? `			{ C2D_Image img = C2D_SpriteSheetGetImage(sheet, o->image);
+${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames * o->anim_fps / 60) % o->anim_n] : o->image;
+			  C2D_Image img = C2D_SpriteSheetGetImage(sheet, idx);
 			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, NULL, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color);'}
 			break;
 		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, o->color); break;
@@ -321,14 +373,20 @@ int main(int argc, char* argv[]) {
 	text_buf = C2D_TextBufNew(8192);
 ${A.hasImages ? '\tsheet = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");\n\tif (!sheet) svcBreak(USERBREAK_PANIC);\n' : ''}	load_sounds();
 	srand((unsigned)svcGetSystemTick());
+	load_vars();
 	enter_scene(START_SCENE);
 
 	while (aptMainLoop() && !quit) {
 		hidScanInput();
 		u32 down = hidKeysDown(), held = hidKeysHeld();
 		touchPosition tp;
+		circlePosition cp;
 		hidTouchRead(&tp);
-		update(down, held, (down & KEY_TOUCH) != 0, tp.px, tp.py);
+		hidCircleRead(&cp);
+		float cx = cp.dx / 156.0f, cy = -cp.dy / 156.0f;
+		if (cx > -0.1f && cx < 0.1f) cx = 0;
+		if (cy > -0.1f && cy < 0.1f) cy = 0;
+		update(down, held, (down & KEY_TOUCH) != 0, tp.px, tp.py, cx, cy);
 		if (next_scene >= 0) { enter_scene(next_scene); next_scene = -1; }
 
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
@@ -342,6 +400,7 @@ ${A.hasImages ? '\tsheet = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");\n\tif 
 		C3D_FrameEnd(0);
 	}
 
+	save_vars();
 	free_sounds();
 ${A.hasImages ? '\tC2D_SpriteSheetFree(sheet);\n' : ''}	C2D_TextBufDelete(text_buf);
 	C2D_Fini();

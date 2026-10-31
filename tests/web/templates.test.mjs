@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, pongProject, dodgeProject, blankProject } from '../../web/js/templates.js';
+import { TEMPLATES, pongProject, dodgeProject, blankProject, arcadeProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
+import { newProject } from '../../web/js/model.js';
 import { generateMainC, exportFiles } from '../../web/js/codegen.js';
 
 const inp = (o = {}) => ({ down: new Set(o.down || []), held: new Set(o.held || []), touch: o.touch || null, touchDown: !!o.touchDown });
@@ -79,4 +80,62 @@ test('C generado: velocidad, bordes, control H/V y random por eje', () => {
   const d = generateMainC(dodgeProject());
   assert.match(d, /random_pos\(\d+, 1\);/);
   assert.match(generateMainC(blankProject()), /#define NUM_OBJS 0/);
+});
+
+test('Circle Pad (analógico) y stylus (táctil) mueven los objetos', () => {
+  const g = new Game(arcadeProject(), { rng: () => 0.5 });
+  const ship = g.objs.find((o) => o.name === 'Nave'); const cur = g.objs.find((o) => o.name === 'Cursor');
+  const x0 = ship.x;
+  g.step({ down: new Set(), held: new Set(), circle: { x: 0.5, y: 0 } });
+  assert.equal(ship.x, x0 + 2);
+  g.step({ down: new Set(), held: new Set(), circle: { x: -1, y: 1 } });
+  assert.equal(ship.x, x0 - 2); assert.equal(ship.y, 114);
+  g.step({ down: new Set(), held: new Set(), touch: { x: 100, y: 120 }, touchDown: false });
+  assert.deepEqual([cur.x, cur.y], [90, 110]);
+  g.step({ down: new Set(), held: new Set(), touch: null });
+  assert.deepEqual([cur.x, cur.y], [90, 110], 'al soltar se queda');
+});
+
+test('música en bucle, parar sonido y variables guardadas', () => {
+  const plays = []; const saved = {}; let stored = { total: 41 };
+  const storage = { load: () => stored, save: (o) => { Object.assign(saved, o); } };
+  const p = arcadeProject();
+  const g = new Game(p, { rng: () => 0.5, onSound: (id) => plays.push(id), storage });
+  assert.equal(g.vars.total, 41, 'carga el total guardado');
+  g.step({ down: new Set(), held: new Set() });
+  assert.ok(plays.includes(p.assets.sounds.find((s) => s.loop).id), 'la música empieza con la escena');
+  const ship = g.objs.find((o) => o.name === 'Nave'); const coin = g.objs.find((o) => o.name === 'Moneda');
+  ship.x = coin.x; ship.y = coin.y;
+  g.step({ down: new Set(), held: new Set() });
+  assert.equal(g.vars.total, 42);
+  g.persist(); assert.equal(saved.total, 42); assert.equal('puntos' in saved, false, 'solo se guardan las marcadas');
+});
+
+test('animación de sprites por grupo', async () => {
+  const { spriteImage } = await import('../../web/js/runtime.js');
+  const p = newProject(); const g = new Game(p, { rng: () => 0.5 });
+  g.enter(p.scenes[1].id);
+  const coin = g.objs[1];
+  const ids = p.assets.images.filter((a) => a.group === 'moneda').map((a) => a.id);
+  const seen = new Set();
+  for (let i = 0; i < 60; i++) { seen.add(spriteImage(g, coin)); g.frames = i; }
+  assert.deepEqual([...seen].sort(), [...ids].sort(), 'recorre los 4 fotogramas');
+  assert.equal(spriteImage(g, { ...coin, animGroup: null }), coin.image);
+});
+
+test('C generado: animaciones, Circle Pad, stylus, bucle, guardado', () => {
+  const c = generateMainC(arcadeProject());
+  assert.match(c, /static const int anim_tbl\[4\] = \{ 0, 1, 2, 3 \};/);
+  assert.match(c, /anim_tbl\[o->anim_off \+ \(scene_frames \* o->anim_fps \/ 60\) % o->anim_n\]/);
+  assert.match(c, /hidCircleRead\(&cp\)/); assert.match(c, /o->controls == 5 && \(held & KEY_TOUCH\)/);
+  assert.match(c, /static const int sound_loop\[NUM_SOUNDS\] = \{ 0, 1 \};/);
+  assert.match(c, /#define NUM_PERSIST 1/); assert.match(c, /persist_idx\[NUM_PERSIST\] = \{ 1 \}/);
+  assert.match(c, /sdmc:\/3ds\/arcade\/save\.dat/);
+  assert.match(generateMainC(blankProject()), /#define NUM_PERSIST 0/);
+});
+
+test('validar: grupo de animación inexistente', async () => {
+  const { validate } = await import('../../web/js/model.js');
+  const p = newProject(); p.scenes[1].objects[1].animGroup = 'nada';
+  assert.ok(validate(p).some((x) => /grupo de animación "nada"/.test(x.text)));
 });
