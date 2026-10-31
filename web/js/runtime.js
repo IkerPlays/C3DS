@@ -42,6 +42,11 @@ export class Game {
 
   obj(id) { return this.objs.find((o) => o.id === id); }
 
+  /** Primer objeto sólido visible de su pantalla con el que solapa `o` (o null). */
+  blocked(o) {
+    return this.objs.find((q) => q !== o && q.solid && q.visible && q.screen === o.screen && overlap(o, q)) || null;
+  }
+
   /** input: { down:Set<string>, held:Set<string>, touch:{x,y}|null, touchDown:boolean } */
   step(input) {
     if (this.quit) return;
@@ -61,8 +66,12 @@ export class Game {
       if (o.gravity) o.vy = Math.min(12, num(o.vy) + num(o.gravity));
       mx += num(o.vx); my += num(o.vy);
       if (!mx && !my) continue;
+      const ox = o.x; const oy = o.y;
       o.x = Math.max(0, Math.min(s.w - o.w, o.x + mx));
+      if (this.blocked(o)) o.x = ox;
       o.y = Math.max(0, Math.min(s.h - o.h, o.y + my));
+      const wall = this.blocked(o);
+      if (wall) { o.y = my > 0 ? wall.y - o.h : wall.y + wall.h; if (o.y < 0 || o.y > s.h - o.h) o.y = oy; o.vy = 0; }
     }
     let next = null;
     for (const r of this.scene.rules) {

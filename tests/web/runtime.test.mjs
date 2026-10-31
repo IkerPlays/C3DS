@@ -96,3 +96,23 @@ test('mando: botones y stick se traducen a la 3DS', () => {
   assert.deepEqual(r.circle, { x: 0.8, y: 0 }, 'zona muerta en el stick');
   assert.equal(GAMEPAD_MAP[0], 'B');
 });
+
+test('objetos sólidos bloquean el paso y dejan apoyarse', async () => {
+  const { newProject, makeObject } = await import('../../web/js/model.js');
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.objects.length = 0; sc.rules.length = 0;
+  const wall = makeObject(p, 'rect', { name: 'Muro', x: 100, y: 100, w: 20, h: 100, solid: true });
+  const floor = makeObject(p, 'rect', { name: 'Suelo', x: 0, y: 200, w: 400, h: 40, solid: true });
+  const hero = makeObject(p, 'rect', { name: 'Heroe', x: 60, y: 150, w: 20, h: 20, vx: 3, gravity: 0.5 });
+  sc.objects.push(wall, floor, hero);
+  const g = new Game(p); g.enter(sc.id);
+  const inp = { down: new Set(), held: new Set(), touch: null, touchDown: false };
+  for (let i = 0; i < 100; i++) g.step(inp);
+  const h = g.objs.find((o) => o.name === 'Heroe');
+  assert.ok(h.x + h.w <= 100, 'el muro lo detiene: x=' + h.x);
+  assert.equal(h.y + h.h, 200, 'se apoya exactamente en el suelo');
+  const c = generateMainC(p);
+  assert.match(c, /static int blocked\(int i\)/); assert.match(c, /int solid;/);
+  assert.match(c, /0xFF[0-9A-F]{6}, 1 \}, \/\/ \d+/);
+});

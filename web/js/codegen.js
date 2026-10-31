@@ -75,7 +75,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -153,6 +153,7 @@ typedef struct {
 	float x, y, w, h, speed, vx, vy, gravity, tsize;
 	int visible;
 	u32 color;
+	int solid;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -178,6 +179,12 @@ static int hit(int a, int b) {
 	const Obj *p = &objs[a], *q = &objs[b];
 	return p->visible && q->visible && p->screen == q->screen &&
 		p->x < q->x + q->w && q->x < p->x + p->w && p->y < q->y + q->h && q->y < p->y + p->h;
+}
+
+static int blocked(int i) {
+	for (int j = 0; j < NUM_OBJS; j++)
+		if (j != i && objs[j].solid && objs[j].scene == objs[i].scene && hit(i, j)) return j;
+	return -1;
 }
 
 static int touch_in(int i, int touched, int tx, int ty) {
@@ -323,6 +330,7 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 	for (int i = 0; i < NUM_OBJS; i++) {
 		Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible) continue;
+		float ox = o->x, oy = o->y;
 		/* controls: 0 ninguno, 1 D-Pad, 2 horizontal, 3 vertical, 4 Circle Pad, 5 stylus */
 		if (o->controls == 4) { o->x += cx * o->speed; o->y += cy * o->speed; }
 		if (o->controls == 5 && (held & KEY_TOUCH) && o->screen == 1) { o->x = tx - o->w / 2; o->y = ty - o->h / 2; }
@@ -337,10 +345,22 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 		if (o->gravity != 0) { o->vy += o->gravity; if (o->vy > 12) o->vy = 12; }
 		o->x += o->vx;
 		o->y += o->vy;
-		if (o->x < 0) o->x = 0;
-		if (o->y < 0) o->y = 0;
-		if (o->x > screen_w[o->screen] - o->w) o->x = screen_w[o->screen] - o->w;
-		if (o->y > screen_h[o->screen] - o->h) o->y = screen_h[o->screen] - o->h;
+		float nx = o->x, ny = o->y;
+		if (nx < 0) nx = 0;
+		if (ny < 0) ny = 0;
+		if (nx > screen_w[o->screen] - o->w) nx = screen_w[o->screen] - o->w;
+		if (ny > screen_h[o->screen] - o->h) ny = screen_h[o->screen] - o->h;
+		o->x = nx; o->y = oy;
+		if (blocked(i) >= 0) o->x = ox;
+		o->y = ny;
+		{
+			int w = blocked(i);
+			if (w >= 0) {
+				o->y = (ny > oy) ? objs[w].y - o->h : objs[w].y + objs[w].h;
+				if (o->y < 0 || o->y > screen_h[o->screen] - o->h) o->y = oy;
+				o->vy = 0;
+			}
+		}
 	}
 	(void)down; (void)held; (void)touched; (void)tx; (void)ty; (void)cx; (void)cy;
 	switch (cur_scene) {

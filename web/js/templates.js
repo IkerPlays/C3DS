@@ -155,6 +155,29 @@ export function toposProject() {
   return p;
 }
 
+/** Laberinto: muros sólidos, llegar a la meta; el tiempo corre y se guarda el mejor. */
+export function mazeProject() {
+  const p = empty('Laberinto');
+  p.variables = [{ name: 'pasos', value: 0 }];
+  const game = makeScene(p, 'Laberinto'); const win = makeScene(p, 'Meta');
+  game.bg.top = '#1d2b53'; game.bg.bottom = '#0e1020'; win.bg.top = '#008751'; win.bg.bottom = '#1d2b53';
+  const wall = (name, x, y, w, h) => makeObject(p, 'rect', { name, x, y, w, h, color: '#83769c', solid: true });
+  const walls = [
+    wall('Muro 1', 60, 0, 16, 150), wall('Muro 2', 140, 90, 16, 150), wall('Muro 3', 220, 0, 16, 150), wall('Muro 4', 300, 90, 16, 150),
+  ];
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 14, y: 200, w: 20, h: 20, color: '#ff004d', controls: true, speed: 2 });
+  const goal = makeObject(p, 'rect', { name: 'Meta', x: 360, y: 200, w: 28, h: 28, color: '#00e436' });
+  const hud = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 12, y: 8, text: 'Llega al cuadrado verde', color: '#c2c3c7' });
+  game.objects.push(...walls, player, goal, hud);
+  game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: goal.id }, then: [{ type: 'goto', scene: win.id }] });
+  const t = makeObject(p, 'text', { name: 'Texto', x: 140, y: 90, text: '¡Lo conseguiste!', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Otra vez', x: 100, y: 100, text: 'Otra vez' });
+  win.objects.push(t, again);
+  win.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'goto', scene: game.id }] });
+  p.scenes.push(game, win); p.startScene = game.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -241,5 +264,6 @@ export const TEMPLATES = [
   { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: 'joystick', make: arcadeProject },
   { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: runnerProject },
   { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: toposProject },
+  { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: mazeProject },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: blankProject },
 ];

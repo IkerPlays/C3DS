@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Objetos **sólidos** (muros, suelos, plataformas) que bloquean el paso, en simulador y en C; plantilla **Laberinto**.
 - Reglas: acción **“Cambiar animación de un sprite”** (andar, saltar, parado…) en simulador, C y referencia.
 - Plantilla **Topos** (táctil, temporizador y cuenta atrás); el CI la compila a `.3dsx`/`.cia`.
 - Reglas: acción **“Poner variable a un número al azar”** (simulador, C y referencia).

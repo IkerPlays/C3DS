@@ -72,4 +72,5 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - **Arcade (Circle Pad + stylus)**: Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.
 - **Corredor (saltos)**: Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.
 - **Topos (táctil)**: Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.
+- **Laberinto (muros sólidos)**: Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.
 - **En blanco**: Una escena vacía.

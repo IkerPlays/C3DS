@@ -22,7 +22,7 @@ export const animFrames = (p, group) => (group ? p.assets.images.filter((a) => a
 export function nextId(p) { p.seq = (p.seq || 0) + 1; return p.seq; }
 
 export function makeObject(p, type, over = {}) {
-  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, gravity: 0, size: 1, animGroup: null, animFps: 8, visible: true };
+  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, gravity: 0, size: 1, animGroup: null, animFps: 8, visible: true, solid: false };
   if (type === 'text') Object.assign(base, { w: 0, h: 0, text: 'Texto' });
   if (type === 'button') Object.assign(base, { screen: 'bottom', w: 120, h: 40, color: '#29adff', text: 'Botón' });
   const o = { ...base, ...over };

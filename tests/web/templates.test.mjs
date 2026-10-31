@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -217,4 +217,15 @@ test('Topos: tocar suma puntos, la cuenta atrás termina en la pantalla final', 
   for (let i = 0; i < 60 * 21; i++) g.step(inp());
   assert.equal(g.scene.name, 'Fin');
   assert.match(generateMainC(p), /vars\[1\] \+= -1;/);
+});
+
+test('Laberinto: los muros bloquean y la meta lleva a la pantalla final', () => {
+  const p = mazeProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p);
+  const pl = g.objs.find((o) => o.name === 'Jugador');
+  const held = new Set(['RIGHT']);
+  for (let i = 0; i < 100; i++) g.step({ down: new Set(), held, touch: null, touchDown: false });
+  assert.equal(pl.x, 120, 'el segundo muro (abajo) lo detiene');
+  assert.match(generateMainC(p), /blocked\(i\) >= 0/);
 });
