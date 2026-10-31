@@ -457,3 +457,14 @@ test('compartir con un enlace: el enlace abre una copia del proyecto', async () 
   assert.deepEqual([errors, errs], [[], []]);
   await ctx.close();
 });
+
+test('accesibilidad: todos los botones del editor tienen nombre accesible', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('.tabs.small button:has-text("Lógica")');
+  const unnamed = await page.evaluate(() => [...document.querySelectorAll('#tab-editor button, #tab-editor [role=menuitem]')].filter((b) => !(b.textContent || '').trim() && !b.getAttribute('aria-label') && !b.getAttribute('title')).map((b) => b.outerHTML.slice(0, 80)));
+  assert.deepEqual(unnamed, []);
+  const noAlt = await page.evaluate(() => [...document.querySelectorAll('#tab-editor img:not([alt])')].length);
+  assert.equal(noAlt, 0);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

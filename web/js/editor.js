@@ -318,14 +318,14 @@ function renderLeft() {
     h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('button', { class: 'mini', id: 'btn-slicer', title: 'Cortar una hoja de sprites en fotogramas', onClick: openSlicer }, icon('scissors', 16)), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
     h('ul', { class: 'list' }, project.assets.images.length ? project.assets.images.map((a) => h('li', {},
       h('img', { class: 'thumb', src: project.blobs[a.id], alt: '' }), h('span', { class: 'grow' }, a.name, h('small', {}, `${a.w}×${a.h}`)),
-      h('button', { class: 'mini ghost', onClick: () => deleteAsset('image', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin imágenes. Se reducen a 512 px como máximo.'))));
+      h('button', { class: 'mini ghost', title: `Eliminar imagen ${a.name}`, onClick: () => deleteAsset('image', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin imágenes. Se reducen a 512 px como máximo.'))));
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Sonidos'), h('label', { class: 'mini', title: 'Añadir sonidos (WAV, OGG, MP3)' }, '+', h('input', { type: 'file', accept: 'audio/*', multiple: true, hidden: true, onChange: (e) => { addSounds([...e.target.files]); e.target.value = ''; } }))),
     h('ul', { class: 'list' }, project.assets.sounds.length ? project.assets.sounds.map((a) => h('li', {},
       h('button', { class: 'mini ghost', title: 'Escuchar', onClick: () => { const au = sounds.get(a.id); if (au) { au.currentTime = 0; au.play().catch(() => {}); } } }, '▶'),
       h('span', { class: 'grow' }, a.name, h('small', {}, `${a.seconds}s`)),
       h('label', { class: 'mini ghost', title: 'Repetir en bucle (música)' }, h('input', { type: 'checkbox', checked: !!a.loop, 'aria-label': 'Bucle', onChange: (e) => { a.loop = e.target.checked; changed(); } }), icon('repeat', 16)),
-      h('button', { class: 'mini ghost', onClick: () => deleteAsset('sound', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
+      h('button', { class: 'mini ghost', title: `Eliminar sonido ${a.name}`, onClick: () => deleteAsset('sound', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
   // Variables
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Variables'), h('button', { class: 'mini', title: 'Añadir variable', onClick: () => { if (project.variables.length >= LIMITS.variables) return toast(`Máximo ${LIMITS.variables}.`, 'error'); let i = project.variables.length + 1; while (project.variables.some((v) => v.name === `var${i}`)) i++; project.variables.push({ name: `var${i}`, value: 0 }); changed({ structure: true }); } }, '+')),
@@ -333,7 +333,7 @@ function renderLeft() {
       h('input', { value: v.name, 'aria-label': 'Nombre', onChange: (e) => renameVar(i, e.target.value, e.target) }),
       h('input', { type: 'number', value: v.value, 'aria-label': 'Valor inicial', onInput: (e) => { v.value = Number(e.target.value) || 0; live(); } }),
       h('label', { class: 'mini ghost', title: 'Guardar esta variable en la SD (p. ej. récord)' }, h('input', { type: 'checkbox', checked: !!v.persist, 'aria-label': 'Guardar', onChange: (e) => { v.persist = e.target.checked; changed(); } }), icon('save', 16)),
-      h('button', { class: 'mini ghost', onClick: () => { project.variables.splice(i, 1); changed({ structure: true }); } }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin variables. Úsalas para puntos, vidas…'))));
+      h('button', { class: 'mini ghost', title: `Eliminar variable ${v.name}`, onClick: () => { project.variables.splice(i, 1); changed({ structure: true }); } }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin variables. Úsalas para puntos, vidas…'))));
 }
 
 function renameVar(i, name, input) {

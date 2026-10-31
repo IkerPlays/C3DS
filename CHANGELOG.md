@@ -6,6 +6,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 ## [Unreleased]
 ### Añadido
 - **Compartir con un enlace**: el proyecto viaja comprimido dentro del enlace (`#p=…`); quien lo abre lo ve en su editor. Sin servidor.
+- **Accesibilidad**: los botones solo con icono tienen nombre accesible (y un test lo vigila).
 - **Iconos SVG propios** (Windows, macOS, Linux, Android, iOS, plantillas, lecciones, menús y botones del editor) en lugar de emojis.
 - **Tamaño de texto** configurable (también en la 3DS). La compilación en la nube indica el paso que falló.
 - **Lecciones**: 5 mini-proyectos guiados (mover, colisiones, variables, escenas, sonido) en el Inicio y en 📁 Proyectos.
