@@ -323,7 +323,6 @@ test('plantilla Arcade: se carga con música en bucle y variable guardada', asyn
 
 test('captura de pantalla y resumen de memoria', async () => {
   const { page, ctx, errors } = await openPage(browser, server.url);
-  await page.click('.warn-panel', { trial: true }).catch(() => {});
   await page.click('.badge'); assert.match(await page.textContent('#mem-info'), /Memoria estimada/);
   await page.click('#btn-play');
   const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#btn-shot')]);
