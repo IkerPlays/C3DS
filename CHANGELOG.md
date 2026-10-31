@@ -4,13 +4,14 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Reglas: acción **“Poner variable a un número al azar”** (simulador, C y referencia).
+- Arreglo del formato del changelog de la 0.3.0.
 
 ## [0.3.0] - 2026-10-31
 - Reglas: evento **“Se toca la pantalla táctil”** y acción **“Cambiar el color de un objeto”**.
 - **Mando** (API Gamepad) en la vista previa: botones con disposición Nintendo y stick como Circle Pad.
 - **Arrastrar y soltar** imágenes, sonidos o un `.c3ds.json` sobre el escenario del editor.
 - Descargas: lista de **versiones anteriores** con enlaces por sistema.
-### Añadido
 - **Compartir con un enlace**: el proyecto viaja comprimido dentro del enlace (`#p=…`); quien lo abre lo ve en su editor. Sin servidor.
 - **Accesibilidad**: los botones solo con icono tienen nombre accesible (y un test lo vigila).
 - **Iconos SVG propios** (Windows, macOS, Linux, Android, iOS, plantillas, lecciones, menús y botones del editor) en lugar de emojis.

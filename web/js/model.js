@@ -143,7 +143,7 @@ export function validate(p) {
         if (a.type === 'setColor' && !isHex(a.color)) warn('error', `Regla en "${s.name}": color inválido.`);
         if (a.type === 'goto' && !sceneIds.has(a.scene)) warn('error', `Regla en "${s.name}": escena de destino no existe.`);
         if ((a.type === 'sound' || a.type === 'stopSound') && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
-        if ((a.type === 'setVar' || a.type === 'addVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);
+        if ((a.type === 'setVar' || a.type === 'addVar' || a.type === 'randVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);
       }
       if (refs.some((id) => !objIds.has(id))) warn('error', `Regla en "${s.name}": hace referencia a un objeto que ya no existe.`);
     }

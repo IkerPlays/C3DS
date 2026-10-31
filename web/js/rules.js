@@ -24,6 +24,7 @@ export const ACTIONS = {
   goto: { label: 'Ir a la escena', fields: [{ k: 'scene', t: 'scene', label: 'Escena' }] },
   setVar: { label: 'Poner variable a', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Valor' }] },
   addVar: { label: 'Sumar a variable', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Cantidad' }] },
+  randVar: { label: 'Poner variable a un número al azar', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'min', t: 'number', label: 'Mínimo' }, { k: 'max', t: 'number', label: 'Máximo' }] },
   sound: { label: 'Reproducir sonido', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
   stopSound: { label: 'Parar sonido / música', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
   setPos: { label: 'Colocar objeto en', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'x', t: 'number', label: 'X' }, { k: 'y', t: 'number', label: 'Y' }] },
@@ -46,7 +47,7 @@ export function defaultFor(field, ctx) {
     case 'object': return scene.objects[0]?.id ?? null;
     case 'var': return p.variables[0]?.name ?? '';
     case 'op': return '==';
-    case 'number': return field.k === 'seconds' ? 1 : field.k === 'value' && field.label === 'Cantidad' ? 1 : 0;
+    case 'number': return field.k === 'seconds' ? 1 : field.k === 'max' ? 10 : field.k === 'value' && field.label === 'Cantidad' ? 1 : 0;
     case 'text': return 'Texto';
     case 'scene': return p.scenes.find((s) => s.id !== scene.id)?.id ?? p.scenes[0]?.id ?? null;
     case 'sound': return p.assets.sounds[0]?.id ?? null;
@@ -87,6 +88,7 @@ function describeBase(r, p, scene) {
   }[w.type]?.() ?? '…';
   const act = (a) => ({
     goto: () => `ir a “${sc(a.scene)}”`, setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
+    randVar: () => `${a.var} = azar(${a.min}…${a.max})`,
     sound: () => `sonar “${snd(a.sound)}”`, stopSound: () => `parar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
     randomPos: () => `${obj(a.obj)} al azar`, landOn: () => `${obj(a.obj)} aterriza sobre ${obj(a.on)}`, setVel: () => `vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`,
     setText: () => `texto de ${obj(a.obj)}`, setColor: () => `color de ${obj(a.obj)} = ${a.color}`, show: () => `mostrar ${obj(a.obj)}`, hide: () => `ocultar ${obj(a.obj)}`, quit: () => 'salir',

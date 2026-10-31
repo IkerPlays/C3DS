@@ -97,6 +97,7 @@ export function generateMainC(p) {
       case 'goto': return `next_scene = ${A.sceneIndex.get(a.scene) ?? 0};`;
       case 'setVar': return `vars[${v}] = ${int(a.value)};`;
       case 'addVar': return `vars[${v}] += ${int(a.value)};`;
+      case 'randVar': { const lo = Math.min(int(a.min), int(a.max)), hi = Math.max(int(a.min), int(a.max)); return `vars[${v}] = ${lo} + rand() % ${hi - lo + 1};`; }
       case 'sound': return `play_sound(${A.soundIndex.get(a.sound) ?? 0});`;
       case 'stopSound': return `stop_sound(${A.soundIndex.get(a.sound) ?? 0});`;
       case 'setPos': return `objs[${o}].x = ${int(a.x)}.0f; objs[${o}].y = ${int(a.y)}.0f;`;

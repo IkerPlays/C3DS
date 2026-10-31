@@ -65,3 +65,17 @@ test('touchAny y setColor: simulador y C', async () => {
   const { validate } = await import('../../web/js/model.js');
   assert.ok(validate(p).some((x) => /color inválido/.test(x.text)));
 });
+
+test('randVar: simulador y C', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'start' }, then: [{ type: 'randVar', var: 'puntos', min: 3, max: 7 }] });
+  for (let i = 0; i < 30; i++) {
+    const g = new Game(p); g.enter(sc.id);
+    g.step({ down: new Set(), held: new Set(), touch: { x: 0, y: 0 }, touchDown: false });
+    assert.ok(g.vars.puntos >= 3 && g.vars.puntos <= 7);
+  }
+  assert.match(generateMainC(p), /vars\[0\] = 3 \+ rand\(\) % 5;/);
+  assert.match(describeRule(sc.rules[0], p, sc), /puntos = azar\(3…7\)/);
+});

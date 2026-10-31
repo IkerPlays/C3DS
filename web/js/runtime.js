@@ -111,6 +111,7 @@ export class Game {
       case 'goto': return a.scene;
       case 'setVar': this.vars[a.var] = num(a.value); break;
       case 'addVar': this.vars[a.var] = (this.vars[a.var] || 0) + num(a.value); break;
+      case 'randVar': { const lo = Math.round(num(a.min)), hi = Math.round(num(a.max)); const a0 = Math.min(lo, hi), b0 = Math.max(lo, hi); this.vars[a.var] = a0 + Math.floor(Math.random() * (b0 - a0 + 1)); break; }
       case 'sound': this.onSound(a.sound); break;
       case 'stopSound': this.onStopSound(a.sound); break;
       case 'setPos': if (o) { o.x = num(a.x); o.y = num(a.y); } break;
