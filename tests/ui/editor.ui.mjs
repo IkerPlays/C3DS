@@ -470,3 +470,23 @@ test('accesibilidad: todos los botones del editor tienen nombre accesible', asyn
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('arrastrar una imagen y un proyecto .json al escenario', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  const png = [...tinyPng()];
+  await page.evaluate((bytes) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([new Uint8Array(bytes)], 'arrastrada.png', { type: 'image/png' }));
+    document.querySelector('.stage-wrap').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, png);
+  await page.waitForFunction(() => window.c3ds.editor.getProject().assets.images.some((a) => a.name === 'arrastrada'));
+  const json = JSON.stringify({ ...(await page.evaluate(() => window.c3ds.editor.getProject())), name: 'Desde archivo' });
+  await page.evaluate((txt) => {
+    const dt = new DataTransfer();
+    dt.items.add(new File([txt], 'p.c3ds.json', { type: 'application/json' }));
+    document.querySelector('.stage-wrap').dispatchEvent(new DragEvent('drop', { dataTransfer: dt, bubbles: true, cancelable: true }));
+  }, json);
+  await page.waitForFunction(() => window.c3ds.editor.getProject().name === 'Desde archivo');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

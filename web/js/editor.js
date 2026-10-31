@@ -705,6 +705,23 @@ export function mountEditor(root) {
     refs.guide,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));
   root.style.setProperty('--zoom', zoom);
+  // Arrastrar archivos al escenario: imágenes, sonidos o un proyecto .c3ds.json.
+  const dropZone = refs.stageWrap;
+  dropZone.addEventListener('dragover', (e) => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); dropZone.classList.add('drop-over'); } });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-over'));
+  dropZone.addEventListener('drop', async (e) => {
+    e.preventDefault(); dropZone.classList.remove('drop-over');
+    const files = [...(e.dataTransfer?.files || [])];
+    const json = files.find((f) => /\.json$/i.test(f.name));
+    if (json) {
+      try { const p = migrate(JSON.parse(await json.text())); p.localId = newLocalId(); setProject(p, { fresh: true }); toast(`Proyecto “${p.name}” abierto.`, 'ok'); } catch (err) { toast(`Archivo no válido: ${err.message}`, 'error'); }
+      return;
+    }
+    const imgs = files.filter((f) => f.type.startsWith('image/')); const auds = files.filter((f) => f.type.startsWith('audio/'));
+    if (imgs.length) await addImages(imgs);
+    if (auds.length) await addSounds(auds);
+    if (!imgs.length && !auds.length) toast('Suelta imágenes, sonidos o un proyecto .c3ds.json.', 'info');
+  });
   bindStage();
   window.addEventListener('keydown', (e) => {
     const inField = /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName) && document.activeElement.type !== 'checkbox';

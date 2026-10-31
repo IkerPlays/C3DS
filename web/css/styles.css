@@ -262,3 +262,4 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .chip-link .svg-icon{color:var(--muted)}
 .icon-btn .svg-icon{line-height:0}
 .old-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}.old-list li{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.old-list .chip-link{padding:3px 10px;font-size:.82rem}
+.stage-wrap.drop-over{outline:2px dashed var(--acc);outline-offset:-4px;background:color-mix(in srgb,var(--acc) 8%,var(--panel))}

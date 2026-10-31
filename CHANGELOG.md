@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- **Arrastrar y soltar** imágenes, sonidos o un `.c3ds.json` sobre el escenario del editor.
 - Descargas: lista de **versiones anteriores** con enlaces por sistema.
 ### Añadido
 - **Compartir con un enlace**: el proyecto viaja comprimido dentro del enlace (`#p=…`); quien lo abre lo ve en su editor. Sin servidor.
