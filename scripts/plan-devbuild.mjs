@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Prepara la matriz del devbuild: SIEMPRE todas las plataformas, en una sola release.
+// Prepara la matriz del devbuild: SIEMPRE todas las plataformas con release (no la web), en una sola release.
 //   node scripts/plan-devbuild.mjs --run <n> --after <sha>
 // Versión: <VERSION raíz>-dev.<run>  (el commit va en las notas de la release)
 import { readFileSync, appendFileSync } from 'node:fs';
@@ -11,7 +11,7 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export function buildMatrix(platforms, { run, root = ROOT }) {
   const base = readFileSync(join(root, 'VERSION'), 'utf8').trim().replace(/[-+].*$/, '');
   const version = `${base}-dev.${run}`;
-  return { version, matrix: { include: Object.entries(platforms).map(([platform, p]) => ({ platform, runner: p.runner })) } };
+  return { version, matrix: { include: Object.entries(platforms).filter(([, p]) => p.release !== false).map(([platform, p]) => ({ platform, runner: p.runner })) } };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {

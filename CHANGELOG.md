@@ -14,7 +14,7 @@ Primera versión pública (alfa).
 - **Escenas y lógica**: varias escenas, variables, reglas “cuando → entonces” (botones, colisiones, toques, variables, temporizadores), botones táctiles en la pantalla inferior, texto con `{variable}`.
 - **Vista previa** dentro del editor con el mismo motor que el exportador HTML5 (teclado, ratón/táctil y mando en pantalla).
 - **Guardado automático** en el navegador (varios proyectos), deshacer/rehacer (Ctrl+Z / Ctrl+Y), copia en archivo `.c3ds.json`.
-- **Exportar**: proyecto 3DS (`.zip` con `make` y `make cia`), juego HTML5 (un solo archivo) y compilación en la nube.
+- **Exportar**: proyecto 3DS (`.zip` con `make` y `make cia`), juego HTML5 (un solo archivo), **juego para Windows `.exe`** (en la nube, con Tauri) y compilación en la nube.
 
 ### Compilación
 - `.3dsx` y **`.cia`** (makerom 0.18 + bannertool 1.2.0, fijados por SHA-256). El CI compila un proyecto de ejemplo con sprites y sonido.
@@ -27,10 +27,11 @@ Primera versión pública (alfa).
 ### Apps y releases
 - Apps nativas: Windows, macOS, Linux (Tauri v2), Android, iOS (Capacitor).
 - Archivos con nombres claros: `C3DS-<versión>-<Plataforma>…` (p. ej. `C3DS-0.1.0-Windows-Setup.exe`).
-- Workflows: CI (tests + interfaz con Playwright), release global, release por plataforma, devbuilds (`dev-<n>`) y cloud build.
+- Workflows: CI (tests + interfaz con Playwright + compilación real de ejemplos), release global, release por plataforma, devbuilds (`dev-<n>`) y cloud build.
+- La web se despliega en Netlify y **no** se incluye en las releases.
 
 ### Limitaciones conocidas
-- Windows `.exe` desde el editor (hoy: HTML5 o app de escritorio) y actualizaciones automáticas dentro de las apps están pendientes.
+- Actualizaciones automáticas dentro de las apps pendientes (requieren claves de firma propias); hoy hay aviso de nueva versión.
 - Unity/Godot/Unreal no se convierten automáticamente: se reutilizan los assets y se rehace la lógica. Un `.exe` solo se analiza.
 - macOS sin notarizar, iOS sin firmar y Android con clave de depuración.
 - El `.cia` no se ha probado en consola real.

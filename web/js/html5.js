@@ -1,7 +1,9 @@
 // Exportación HTML5: un único index.html jugable (usa el mismo motor que la vista previa).
+import { RUNTIME_SOURCE } from './runtime-source.js';
+
 const strip = (src) => src.replace(/^import .*$/gm, '').replace(/^export /gm, '');
 
-export function buildHtml5(project, runtimeSource) {
+export function buildHtml5(project, runtimeSource = RUNTIME_SOURCE) {
   const data = JSON.stringify(project).replace(/</g, '\\u003c');
   const title = String(project.name).replace(/[<>&"]/g, '');
   return `<!doctype html>

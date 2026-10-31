@@ -2,7 +2,7 @@
 
 Desde el editor: **Exportar ▾ → ☁ Compilar en la nube**. La web envía el proyecto a una Netlify Function, que lanza el
 workflow `cloud-build.yml` de GitHub Actions (devkitARM + tex3ds + makerom + bannertool). Al terminar, la web ofrece
-descargar el resultado (`.3dsx` + `.cia`) como **artifact** (caduca en 1 día). **No se crea ninguna release.**
+descargar el resultado (`.3dsx` + `.cia`, o con **🪟 Juego para Windows** el `.exe` y su instalador) como **artifact** (caduca en 1 día). **No se crea ninguna release.**
 
 ```
 navegador ──POST /api/build──▶ Netlify Function ──(token)──▶ GitHub

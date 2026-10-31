@@ -11,13 +11,17 @@ import { extractSection } from './changelog.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 export const loadPlatforms = () => JSON.parse(readFileSync(join(ROOT, 'scripts/platforms.json'), 'utf8'));
+/** Plataformas que se publican en releases (la web se despliega aparte en Netlify). */
+export const releasable = (platforms) => Object.keys(platforms).filter((k) => platforms[k].release !== false);
+
 export const SEMVER = '\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?';
 
 export function parseTag(tag, platforms = loadPlatforms()) {
   const m = new RegExp(`^(?:([a-z]+)-)?v(${SEMVER})$`).exec(tag);
   if (!m) throw new Error(`Tag inválido "${tag}". Usa vX.Y.Z (global) o <plataforma>-vX.Y.Z.`);
   const [, platform, version] = m;
-  if (platform && !platforms[platform]) throw new Error(`Plataforma desconocida "${platform}". Válidas: ${Object.keys(platforms).join(', ')}`);
+  if (platform && !platforms[platform]) throw new Error(`Plataforma desconocida "${platform}". Válidas: ${releasable(platforms).join(', ')}`);
+  if (platform && platforms[platform].release === false) throw new Error(`"${platform}" no se publica en releases (se despliega en Netlify).`);
   return { scope: platform ? 'platform' : 'all', platform: platform || null, version, prerelease: version.includes('-') };
 }
 
@@ -29,7 +33,7 @@ export function resolve(tag, root = ROOT) {
   if (declared !== info.version) throw new Error(`El tag ${tag} no coincide con ${info.platform ? `${info.platform}/` : ''}VERSION (${declared}).`);
   const notes = extractSection(readFileSync(join(dir, 'CHANGELOG.md'), 'utf8'), info.version);
   if (!notes) throw new Error(`Falta la sección "## [${info.version}]" (con contenido) en ${info.platform ? `${info.platform}/` : ''}CHANGELOG.md.`);
-  const names = info.platform ? [info.platform] : Object.keys(platforms);
+  const names = info.platform ? [info.platform] : releasable(platforms);
   const matrix = { include: names.map((p) => ({ platform: p, runner: platforms[p].runner })) };
   return { ...info, notes, matrix };
 }

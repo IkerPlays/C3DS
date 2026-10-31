@@ -74,6 +74,13 @@ test('HTML5 exportado incluye el motor y el proyecto, sin romper el HTML', () =>
   assert.ok(!html.includes('<title></script>'));
 });
 
+test('runtime-source.js está sincronizado con runtime.js', async () => {
+  const { render } = await import('../../scripts/gen-runtime-source.mjs');
+  assert.equal(readFileSync(new URL('../../web/js/runtime-source.js', import.meta.url), 'utf8'), render(), 'ejecuta: npm run gen:runtime');
+  const html = buildHtml5(newProject());
+  assert.match(html, /class Game/);
+});
+
 test('aviso de actualización', async () => {
   assert.equal(compareVersions('v1.2.0', '1.1.9'), 1);
   assert.equal(compareVersions('0.1.0', '0.1.0-dev.4'), 0);

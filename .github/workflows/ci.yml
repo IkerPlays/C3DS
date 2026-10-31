@@ -78,3 +78,21 @@ jobs:
           path: |
             sample/*.3dsx
             sample/*.cia
+
+  # Valida de verdad el destino Windows: genera el juego HTML5 de ejemplo y lo empaqueta como .exe con Tauri.
+  windows-game-sample:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generar juego HTML5 de ejemplo
+        shell: bash
+        run: node scripts/gen-sample.mjs sample-html --html5
+      - name: Empaquetar .exe
+        shell: bash
+        run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result
+      - shell: bash
+        run: ls -la result/*.exe

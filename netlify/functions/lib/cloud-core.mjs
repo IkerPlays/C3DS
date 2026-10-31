@@ -5,12 +5,14 @@ import { createZip } from '../../../web/js/zip.js';
 import { exportFiles } from '../../../web/js/codegen.js';
 import { validate, migrate, slug } from '../../../web/js/model.js';
 import { bytesToBase64 } from '../../../web/js/bytes.js';
+import { buildHtml5 } from '../../../web/js/html5.js';
 
 export const BRANCH = 'cloud-builds';
 export const WORKFLOW = 'cloud-build.yml';
 export const MAX_BODY_BYTES = 4.5 * 1024 * 1024; // las Functions de Netlify aceptan ~6 MB
 export const MAX_ACTIVE = 3;
 const ID_RE = /^[a-f0-9]{16}$/;
+export const TARGETS = ['3ds', 'windows'];
 
 const json = (status, body) => ({ status, body });
 const randomId = () => [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('');
@@ -51,7 +53,8 @@ async function findRun(gh, id) {
   return runs.find((r) => `${r.display_title} ${r.name}`.includes(id)) || null;
 }
 
-export async function startBuild(gh, raw) {
+export async function startBuild(gh, raw, target = '3ds') {
+  if (!TARGETS.includes(target)) return json(400, { error: 'Destino no válido.' });
   if (raw.length > MAX_BODY_BYTES) return json(413, { error: 'El proyecto es demasiado grande para compilarlo en la nube (máx. ≈4 MB). Reduce imágenes o sonidos.' });
   let project;
   try { project = migrate(JSON.parse(raw)); } catch { return json(400, { error: 'Proyecto no válido.' }); }
@@ -61,14 +64,17 @@ export async function startBuild(gh, raw) {
   const active = (await listRuns(gh, 'status=in_progress&per_page=30')).length + (await listRuns(gh, 'status=queued&per_page=30')).length;
   if (active >= MAX_ACTIVE) return json(429, { error: 'Hay muchas compilaciones en curso. Inténtalo en unos minutos.' });
 
-  const files = exportFiles(project).filter((f) => !f.path.includes('/.github/'));
+  // 3ds: proyecto C regenerado en el servidor. windows: el juego HTML5 que el workflow empaqueta en un .exe (Tauri).
+  const files = target === 'windows'
+    ? [{ path: `${slug(project.name)}/index.html`, content: buildHtml5(project) }]
+    : exportFiles(project).filter((f) => !f.path.includes('/.github/'));
   const zip = createZip(files);
   const id = randomId();
   await ensureBranch(gh);
   await must(await gh.call(`/contents/jobs/${id}.zip`, { method: 'PUT', body: { message: `cloud build ${id}`, content: bytesToBase64(zip), branch: BRANCH } }), 'subir proyecto');
   const repo = await must(await gh.call(''), 'repo');
-  await must(await gh.call(`/actions/workflows/${WORKFLOW}/dispatches`, { method: 'POST', body: { ref: repo.default_branch, inputs: { job_id: id } } }), 'lanzar workflow');
-  return json(202, { id, name: slug(project.name) });
+  await must(await gh.call(`/actions/workflows/${WORKFLOW}/dispatches`, { method: 'POST', body: { ref: repo.default_branch, inputs: { job_id: id, target } } }), 'lanzar workflow');
+  return json(202, { id, name: slug(project.name), target });
 }
 
 export async function status(gh, id) {
@@ -93,13 +99,13 @@ export async function download(gh, id) {
 }
 
 /** Enrutador: devuelve { status, body }. `env` = { C3DS_GITHUB_TOKEN, C3DS_REPO }. */
-export async function route({ method, pathname, body, env, fetchImpl }) {
+export async function route({ method, pathname, search = '', body, env, fetchImpl }) {
   const token = env.C3DS_GITHUB_TOKEN;
   if (!token) return json(503, { error: 'La compilación en la nube no está configurada en este sitio.' });
   const gh = createGithub({ token, repo: env.C3DS_REPO || 'IkerPlays/C3DS', fetchImpl });
   const parts = pathname.replace(/^\/api\/build\/?/, '').split('/').filter(Boolean);
   try {
-    if (method === 'POST' && parts.length === 0) return await startBuild(gh, body || '');
+    if (method === 'POST' && parts.length === 0) return await startBuild(gh, body || '', new URLSearchParams(search).get('target') || '3ds');
     if (method === 'GET' && parts.length === 1) return await status(gh, parts[0]);
     if (method === 'GET' && parts.length === 2 && parts[1] === 'download') return await download(gh, parts[0]);
     return json(404, { error: 'No encontrado.' });

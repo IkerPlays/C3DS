@@ -8,7 +8,7 @@ async function call(path, opts) {
   return data;
 }
 
-export const startBuild = (project) => call('/api/build', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(project) });
+export const startBuild = (project, target = '3ds') => call(`/api/build?target=${encodeURIComponent(target)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(project) });
 export const buildStatus = (id) => call(`/api/build/${encodeURIComponent(id)}`);
 export const buildDownload = (id) => call(`/api/build/${encodeURIComponent(id)}/download`);
 

@@ -2,7 +2,8 @@
   "web": {
     "label": "Web",
     "runner": "ubuntu-latest",
-    "exclude": []
+    "exclude": [],
+    "release": false
   },
   "android": {
     "label": "Android",

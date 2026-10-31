@@ -19,16 +19,18 @@ test('parseTag', () => {
 
 test('resolve: coincide con VERSION y changelog del repo', () => {
   const g = resolve(`v${readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()}`);
-  assert.equal(g.matrix.include.length, 6);
+  assert.equal(g.matrix.include.length, 5);
+  assert.ok(!g.matrix.include.some((m) => m.platform === 'web'), 'la web no va en las releases');
   assert.ok(g.notes.length > 10);
   assert.throws(() => resolve('v9.9.9'), /no coincide/);
-  assert.throws(() => resolve('web-v9.9.9'), /no coincide/);
+  assert.throws(() => resolve('web-v0.1.0'), /no se publica en releases/);
 });
 
 test('cada plataforma tiene carpeta, VERSION, CHANGELOG y release válidos', () => {
   assert.deepEqual(Object.keys(P).sort(), ['android', 'ios', 'linux', 'macos', 'web', 'windows']);
   for (const p of Object.keys(P)) {
     assert.ok(existsSync(join(ROOT, p, 'README.md')), p);
+    if (P[p].release === false) continue;
     const r = resolve(`${p}-v${readFileSync(join(ROOT, p, 'VERSION'), 'utf8').trim()}`);
     assert.equal(r.matrix.include[0].platform, p);
   }
@@ -37,7 +39,7 @@ test('cada plataforma tiene carpeta, VERSION, CHANGELOG y release válidos', () 
 test('plan devbuild: todas las plataformas en una sola versión', () => {
   const { version, matrix } = buildMatrix(P, { run: '7', root: ROOT });
   assert.equal(version, `${readFileSync(join(ROOT, 'VERSION'), 'utf8').trim()}-dev.7`);
-  assert.deepEqual(matrix.include.map((m) => m.platform).sort(), Object.keys(P).sort());
+  assert.deepEqual(matrix.include.map((m) => m.platform).sort(), ['android', 'ios', 'linux', 'macos', 'windows']);
 });
 
 test('package: zip con prefijo y sin carpetas de build', () => {

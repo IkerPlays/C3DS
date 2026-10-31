@@ -3,7 +3,6 @@ name: Release (plataforma)
 on:
   push:
     tags:
-      - 'web-v[0-9]*'
       - 'android-v[0-9]*'
       - 'ios-v[0-9]*'
       - 'windows-v[0-9]*'

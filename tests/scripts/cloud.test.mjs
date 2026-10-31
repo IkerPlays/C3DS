@@ -47,7 +47,7 @@ test('iniciar compilación: sube un zip regenerado en el servidor y lanza el wor
   assert.ok(names.includes('mi-primer-juego/Makefile') && names.includes('mi-primer-juego/source/main.c'));
   assert.ok(!names.some((n) => n.includes('.github')), 'no se sube ningún workflow del usuario');
   const d = g.calls.find((c) => c.path.includes('/dispatches'));
-  assert.deepEqual(d.body, { ref: 'main', inputs: { job_id: r.body.id } });
+  assert.deepEqual(d.body, { ref: 'main', inputs: { job_id: r.body.id, target: '3ds' } });
   assert.ok(g.calls.every((c) => c.auth === 'Bearer ghp_secret'));
   assert.ok(g.calls.some((c) => c.path === '/git/refs'), 'crea la rama si no existe');
 });
@@ -92,4 +92,16 @@ test('errores de GitHub no filtran detalles internos', async () => {
   const boom = async () => ({ ok: false, status: 500, json: async () => ({}), text: async () => 'token=ghp_secret', headers: { get: () => null } });
   const r = await route({ method: 'POST', pathname: '/api/build', body: JSON.stringify(newProject()), env, fetchImpl: boom });
   assert.equal(r.status, 502); assert.ok(!JSON.stringify(r.body).includes('ghp_secret'));
+});
+
+test('destino Windows: sube el juego HTML5 (no código C) y lo indica al workflow', async () => {
+  const g = fakeGithub();
+  const r = await route({ method: 'POST', pathname: '/api/build', search: '?target=windows', body: JSON.stringify(newProject()), env, fetchImpl: g.fetchImpl });
+  assert.equal(r.status, 202); assert.equal(r.body.target, 'windows');
+  const put = g.calls.find((c) => c.method === 'PUT');
+  const names = readZipEntries(new Uint8Array(Buffer.from(put.body.content, 'base64'))).map((e) => e.path);
+  assert.deepEqual(names, ['mi-primer-juego/index.html']);
+  assert.deepEqual(g.calls.find((c) => c.path.includes('/dispatches')).body.inputs, { job_id: r.body.id, target: 'windows' });
+  const bad = await route({ method: 'POST', pathname: '/api/build', search: '?target=rm', body: JSON.stringify(newProject()), env, fetchImpl: g.fetchImpl });
+  assert.equal(bad.status, 400);
 });

@@ -6,14 +6,14 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 
 ## Qué hace hoy
 - **Editor visual** (pestaña *Editor*): escenas, sprites, sonido, variables, reglas “cuando → entonces”, botones táctiles, **vista previa** al instante, guardado automático en el navegador y deshacer/rehacer.
-- **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
+- **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego para **Windows `.exe`** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
 - **Importar y analizar** (en el navegador, sin subir nada): Unity, Godot, Unreal y `.exe`; mide límites de la 3DS, **convierte texturas y audio** (PNG en potencia de 2 ≤1024, WAV) y crea un proyecto del editor con ellos.
 - **Apps**: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor). Aviso de nueva versión.
 
 ## Qué NO hace (todavía) — y por qué
 - **No convierte un proyecto de Unity/Godot/Unreal tal cual**: ningún motor tiene runtime para la 3DS (ARM11, 64–124 MB de RAM, GPU PICA200). Se reutilizan los assets y se rehace la lógica ([guía de portado](#) dentro del zip de assets).
 - **No convierte un `.exe`**: un binario x86/x64 no se puede pasar a ARM11 automáticamente.
-- **Windows `.exe` desde el editor** y **actualizaciones automáticas dentro de las apps**: pendientes (hoy hay HTML5, la app de escritorio y un aviso de versión).
+- **Actualizaciones automáticas dentro de las apps**: pendientes (requieren claves de firma propias); hoy hay un aviso de nueva versión.
 - El `.cia` compila en el CI, pero **no se ha probado en consola real**. Para probar el `.3dsx`/`.cia` usa el emulador [Azahar](https://azahar-emu.org) o una consola con homebrew.
 - macOS no está notarizado, iOS sale sin firmar y Android usa clave de depuración.
 

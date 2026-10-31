@@ -142,3 +142,20 @@ test('importar: detecta Godot y ofrece convertir assets', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('compilación en la nube: sin servicio configurado se explica y no rompe', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await ctx.route('**/api/build**', (r) => r.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'no configurado' }) }));
+  await page.click('#btn-export'); await page.click('#btn-cloud');
+  await page.waitForSelector('.build-status.err');
+  assert.match(await page.textContent('.dlg'), /no está disponible/);
+  assert.ok(errors.every((e) => /503/.test(e)), errors.join('\n')); // el único "error" es la respuesta 503 simulada
+  await ctx.close();
+});
+
+test('el menú Exportar ofrece Windows .exe y no hay descarga de la web', async () => {
+  const { page, ctx } = await openPage(browser, server.url);
+  await page.click('#btn-export');
+  assert.equal(await page.locator('#btn-cloud-win').isVisible(), true);
+  await ctx.close();
+});
