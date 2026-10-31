@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+*.3dsx
+*.cia
+*.elf
+*.smdh
+.DS_Store
+.netlify/

@@ -1,0 +1,8 @@
+{
+  "web":     { "runner": "ubuntu-latest",  "exclude": [] },
+  "android": { "runner": "ubuntu-latest",  "exclude": [] },
+  "ios":     { "runner": "macos-latest",   "exclude": [] },
+  "windows": { "runner": "windows-latest", "exclude": [] },
+  "macos":   { "runner": "macos-latest",   "exclude": [] },
+  "linux":   { "runner": "ubuntu-latest",  "exclude": [] }
+}

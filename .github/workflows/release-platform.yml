@@ -1,0 +1,73 @@
+# Release INDIVIDUAL: push de un tag <plataforma>-vX.Y.Z -> compila solo esa plataforma.
+name: Release (plataforma)
+on:
+  push:
+    tags:
+      - 'web-v[0-9]*'
+      - 'android-v[0-9]*'
+      - 'ios-v[0-9]*'
+      - 'windows-v[0-9]*'
+      - 'macos-v[0-9]*'
+      - 'linux-v[0-9]*'
+permissions:
+  contents: read
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    outputs:
+      platform: ${{ steps.i.outputs.platform }}
+      version: ${{ steps.i.outputs.version }}
+      prerelease: ${{ steps.i.outputs.prerelease }}
+      matrix: ${{ steps.i.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: i
+        run: node scripts/release-info.mjs "$GITHUB_REF_NAME" --notes release-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  build:
+    needs: info
+    strategy:
+      matrix: ${{ fromJSON(needs.info.outputs.matrix) }}
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      runner: ${{ matrix.runner }}
+      version: ${{ needs.info.outputs.version }}
+
+  publish:
+    needs: [info, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: c3ds-*
+          merge-multiple: true
+          path: assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+      - name: Crear release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          PLATFORM: ${{ needs.info.outputs.platform }}
+          PRERELEASE: ${{ needs.info.outputs.prerelease }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          (cd assets && sha256sum *.zip > SHA256SUMS.txt)
+          flags=()
+          [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
+          # Las releases individuales no deben quedar como "Latest" por encima de la global.
+          gh release create "$TAG" assets/* \
+            --repo "$REPO" --verify-tag --latest=false --title "C3DS $PLATFORM ${TAG#${PLATFORM}-}" \
+            --notes-file release-notes.md "${flags[@]}"

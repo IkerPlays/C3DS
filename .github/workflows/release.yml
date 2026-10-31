@@ -1,0 +1,64 @@
+# Release GLOBAL: push de un tag vX.Y.Z -> compila todas las plataformas y publica una release con todo + changelog.
+name: Release (global)
+on:
+  push:
+    tags: ['v[0-9]*']
+permissions:
+  contents: read
+jobs:
+  info:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.i.outputs.version }}
+      prerelease: ${{ steps.i.outputs.prerelease }}
+      matrix: ${{ steps.i.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - id: i
+        run: node scripts/release-info.mjs "$GITHUB_REF_NAME" --notes release-notes.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+
+  build:
+    needs: info
+    strategy:
+      fail-fast: true
+      matrix: ${{ fromJSON(needs.info.outputs.matrix) }}
+    uses: ./.github/workflows/_build.yml
+    with:
+      platform: ${{ matrix.platform }}
+      runner: ${{ matrix.runner }}
+      version: ${{ needs.info.outputs.version }}
+
+  publish:
+    needs: [info, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: c3ds-*
+          merge-multiple: true
+          path: assets
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+      - name: Crear release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          PRERELEASE: ${{ needs.info.outputs.prerelease }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          (cd assets && sha256sum *.zip > SHA256SUMS.txt)
+          flags=()
+          [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
+          gh release create "$TAG" assets/* \
+            --repo "$REPO" --verify-tag --title "C3DS $TAG" --notes-file release-notes.md "${flags[@]}"
