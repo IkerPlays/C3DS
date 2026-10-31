@@ -29,30 +29,36 @@ jobs:
       - run: npx playwright install --with-deps chromium
       - run: npm run test:ui
 
+  # Genera cada plantilla del editor y la compila de verdad a .3dsx y .cia con devkitARM + tex3ds + makerom + bannertool.
   sample:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        template: [coins, pong, dodge, blank]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: node scripts/gen-sample.mjs sample
+      - run: node scripts/gen-sample.mjs sample --template=${{ matrix.template }}
       - uses: actions/upload-artifact@v4
         with:
-          name: sample-3ds-project
+          name: sample-${{ matrix.template }}
           path: sample
           include-hidden-files: true
 
-  # Valida de verdad el generador del editor: compila el proyecto de ejemplo a .3dsx y .cia
-  # con devkitARM + makerom + bannertool (herramientas open source).
   build-3ds-sample:
     needs: sample
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:latest
+    strategy:
+      fail-fast: false
+      matrix:
+        template: [coins, pong, dodge, blank]
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: sample-3ds-project
+          name: sample-${{ matrix.template }}
           path: sample
       - name: Instalar makerom y bannertool
         run: |
@@ -74,7 +80,7 @@ jobs:
       - run: ls -la sample/*.3dsx sample/*.cia
       - uses: actions/upload-artifact@v4
         with:
-          name: sample-3ds-build
+          name: build-${{ matrix.template }}
           path: |
             sample/*.3dsx
             sample/*.cia
