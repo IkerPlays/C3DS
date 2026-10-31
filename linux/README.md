@@ -4,7 +4,7 @@ App Linux. **Pendiente.** Propuesta: mismo stack que Windows/macOS; distribució
 
 ## Versionado y releases
 - Versión actual: ver `VERSION`. Notas: `CHANGELOG.md`.
-- Release individual: tag `linux-vX.Y.Z`. Devbuild: automático al hacer push a `main` con cambios en esta carpeta.
+- Release individual: tag `linux-vX.Y.Z`. Devbuild: automático al hacer push a `main`; incluye todas las plataformas en una sola pre-release `dev-<n>`.
 - Ver [docs/RELEASING.md](../docs/RELEASING.md).
 
 ## Cómo añadir una build real

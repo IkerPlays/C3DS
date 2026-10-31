@@ -4,7 +4,7 @@ App Windows. **Pendiente.** Propuesta: Tauri o Electron, con integración del to
 
 ## Versionado y releases
 - Versión actual: ver `VERSION`. Notas: `CHANGELOG.md`.
-- Release individual: tag `windows-vX.Y.Z`. Devbuild: automático al hacer push a `main` con cambios en esta carpeta.
+- Release individual: tag `windows-vX.Y.Z`. Devbuild: automático al hacer push a `main`; incluye todas las plataformas en una sola pre-release `dev-<n>`.
 - Ver [docs/RELEASING.md](../docs/RELEASING.md).
 
 ## Cómo añadir una build real
