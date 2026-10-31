@@ -16,7 +16,7 @@
 - `circle`: Circle Pad (analógico)
 - `touch`: Seguir el stylus (táctil)
 
-Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, animación por grupo de imágenes y visibilidad inicial.
+Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, animación por grupo de imágenes, tamaño del texto y visibilidad inicial.
 
 ## Eventos (“Cuando…”)
 | Id | Descripción | Campos |
