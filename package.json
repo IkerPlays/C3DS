@@ -1,6 +1,6 @@
 {
   "name": "c3ds",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "C3DS - importa, analiza y crea juegos/apps para 3DS homebrew (.3dsx / .cia)",
   "type": "module",

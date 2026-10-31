@@ -4,6 +4,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-31
+- Mismas mejoras que la web (compartir con enlace, mando, arrastrar y soltar, iconos SVG, versiones anteriores en Descargas).
+
 ## [0.2.0] - 2026-10-31
 - Inicio, Descargas (desde las releases de GitHub), tema claro/oscuro, PWA y plantillas nuevas; el editor gana velocidad/bordes/capas/duplicar escena.
 - Inicio y Descargas, tema claro/oscuro, PWA; editor con plantillas, simulación avanzada, gravedad, animaciones, importación de escenas de Godot y Unity.
