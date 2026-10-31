@@ -104,10 +104,38 @@ export function arcadeProject() {
   return p;
 }
 
+/** Corredor: salta (A) los obstáculos que se acercan; gravedad, aterrizaje y condición “y además”. */
+export function runnerProject() {
+  const p = empty('Corredor');
+  p.variables = [{ name: 'puntos', value: 0 }, { name: 'record', value: 0, persist: true }];
+  const beep = addBeep(p, 'salto', 520);
+  const game = makeScene(p, 'Corre'); const over = makeScene(p, 'Fin');
+  game.bg.top = '#29adff'; game.bg.bottom = '#1d2b53'; over.bg.top = '#7e2553'; over.bg.bottom = '#1d2b53';
+  const ground = makeObject(p, 'rect', { name: 'Suelo', x: 0, y: 216, w: 400, h: 24, color: '#00e436' });
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 50, y: 150, w: 24, h: 32, color: '#ff004d', gravity: 0.6 });
+  const ob = makeObject(p, 'rect', { name: 'Obstáculo', x: 380, y: 184, w: 20, h: 32, color: '#5f574f', vx: -4 });
+  const score = makeObject(p, 'text', { name: 'Puntos', x: 10, y: 8, text: 'Puntos: {puntos}   Récord: {record}', color: '#ffffff' });
+  const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 110, text: 'Pulsa A para saltar', color: '#c2c3c7' });
+  game.objects.push(ground, player, ob, score, help);
+  game.rules.push(
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: ground.id }, then: [{ type: 'landOn', obj: player.id, on: ground.id }] },
+    { id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: ground.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9 }, { type: 'sound', sound: beep }] },
+    { id: nextId(p), when: { type: 'edge', obj: ob.id, edge: 'left' }, then: [{ type: 'setPos', obj: ob.id, x: 380, y: 184 }, { type: 'addVar', var: 'puntos', value: 1 }] },
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: ob.id }, then: [{ type: 'goto', scene: over.id }] },
+  );
+  const fin = makeObject(p, 'text', { name: 'Fin', x: 130, y: 90, text: '¡Tropezaste!  {puntos} puntos', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Reintentar', x: 100, y: 100, text: 'Reintentar' });
+  over.objects.push(fin, again);
+  over.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
+  p.scenes.push(game, over); p.startScene = game.id;
+  return p;
+}
+
 export const TEMPLATES = [
   { id: 'coins', name: 'Recoger monedas', desc: 'Menú con botón táctil, jugador con D-Pad, sprite y sonido.', icon: '🪙', make: () => newProject() },
   { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: '🏓', make: pongProject },
   { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: '☄️', make: dodgeProject },
   { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: '🕹️', make: arcadeProject },
+  { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: '🏃', make: runnerProject },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: '📄', make: blankProject },
 ];

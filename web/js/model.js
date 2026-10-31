@@ -22,7 +22,7 @@ export const animFrames = (p, group) => (group ? p.assets.images.filter((a) => a
 export function nextId(p) { p.seq = (p.seq || 0) + 1; return p.seq; }
 
 export function makeObject(p, type, over = {}) {
-  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, animGroup: null, animFps: 8, visible: true };
+  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, gravity: 0, animGroup: null, animFps: 8, visible: true };
   if (type === 'text') Object.assign(base, { w: 0, h: 0, text: 'Texto' });
   if (type === 'button') Object.assign(base, { screen: 'bottom', w: 120, h: 40, color: '#29adff', text: 'Botón' });
   const o = { ...base, ...over };
@@ -135,8 +135,11 @@ export function validate(p) {
       const w = r.when;
       if (w.type === 'collide') refs.push(w.a, w.b); if (w.type === 'touch') refs.push(w.obj);
       if (w.type === 'var' && !names.has(w.var)) warn('error', `Regla en "${s.name}": variable "${w.var}" no existe.`);
+      if (r.also) { const al = r.also; if (al.type === 'collide') refs.push(al.a, al.b); if (al.type === 'touch') refs.push(al.obj); if (al.type === 'standing') refs.push(al.obj, al.on); if (al.type === 'edge') refs.push(al.obj); if (al.type === 'var' && !names.has(al.var)) warn('error', `Regla en "${s.name}": variable "${al.var}" no existe.`); }
+      if (w.type === 'standing') refs.push(w.obj, w.on); if (w.type === 'edge') refs.push(w.obj);
       for (const a of r.then) {
         if (a.obj != null) refs.push(a.obj);
+        if (a.on != null) refs.push(a.on);
         if (a.type === 'goto' && !sceneIds.has(a.scene)) warn('error', `Regla en "${s.name}": escena de destino no existe.`);
         if ((a.type === 'sound' || a.type === 'stopSound') && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
         if ((a.type === 'setVar' || a.type === 'addVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);

@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, pongProject, dodgeProject, blankProject, arcadeProject } from '../../web/js/templates.js';
+import { TEMPLATES, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
+import { describeRule } from '../../web/js/rules.js';
 import { generateMainC, exportFiles } from '../../web/js/codegen.js';
 
 const inp = (o = {}) => ({ down: new Set(o.down || []), held: new Set(o.held || []), touch: o.touch || null, touchDown: !!o.touchDown });
@@ -76,7 +77,7 @@ test('C generado: velocidad, bordes, control H/V y random por eje', () => {
   assert.match(c, /edge_hit\(1, 1\)/);
   assert.match(c, /o->controls != 3/);
   assert.match(c, /objs\[1\]\.vx = 3\.000f;/);
-  assert.match(c, /3\.000f, 2\.000f, 1,/); // vx, vy iniciales de la pelota
+  assert.match(c, /3\.000f, 2\.000f, 0\.000f, 1,/); // vx, vy y gravedad iniciales de la pelota
   const d = generateMainC(dodgeProject());
   assert.match(d, /random_pos\(\d+, 1\);/);
   assert.match(generateMainC(blankProject()), /#define NUM_OBJS 0/);
@@ -138,4 +139,46 @@ test('validar: grupo de animación inexistente', async () => {
   const { validate } = await import('../../web/js/model.js');
   const p = newProject(); p.scenes[1].objects[1].animGroup = 'nada';
   assert.ok(validate(p).some((x) => /grupo de animación "nada"/.test(x.text)));
+});
+
+test('Corredor: gravedad, aterrizar, saltar solo en el suelo, obstáculo y fin', () => {
+  const p = runnerProject();
+  const g = new Game(p, { rng: () => 0.5 });
+  const player = g.objs.find((o) => o.name === 'Jugador'); const ground = g.objs.find((o) => o.name === 'Suelo'); const ob = g.objs.find((o) => o.name === 'Obstáculo');
+  const inp = (down = []) => ({ down: new Set(down), held: new Set() });
+  ob.x = 390; ob.vx = 0;                                   // quieto lejos
+  for (let i = 0; i < 120; i++) g.step(inp());
+  assert.equal(player.y + player.h, ground.y, 'aterriza sobre el suelo');
+  assert.equal(player.vy, 0.6 > 0 ? player.vy : 0);
+  g.step(inp(['A']));
+  assert.ok(player.vy < 0 || player.y < ground.y - player.h, 'salta desde el suelo');
+  const yAir = player.y;
+  g.step(inp(['A']));
+  assert.ok(player.y >= yAir - 20, 'no hay doble salto en el aire');
+  for (let i = 0; i < 120; i++) g.step(inp());
+  assert.equal(player.y + player.h, ground.y, 'vuelve a caer al suelo');
+  ob.vx = -4; ob.x = 200; ob.y = player.y;                // obstáculo contra el jugador
+  for (let i = 0; i < 80 && g.scene.name === 'Corre'; i++) g.step(inp());
+  assert.equal(g.scene.name, 'Fin');
+});
+
+test('regla con condición adicional (Y además): solo se cumple si ambas son ciertas', () => {
+  const p = newProject();
+  const sc = p.scenes[1];
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'key', key: 'A' }, also: { type: 'var', var: 'puntos', op: '>=', value: 3 }, then: [{ type: 'setVar', var: 'puntos', value: 99 }] });
+  const g = new Game(p); g.enter(sc.id);
+  g.step({ down: new Set(['A']), held: new Set() }); assert.equal(g.vars.puntos, 0);
+  g.vars.puntos = 3; g.step({ down: new Set(), held: new Set() }); assert.equal(g.vars.puntos, 3);
+  g.step({ down: new Set(['A']), held: new Set() }); assert.equal(g.vars.puntos, 99);
+  assert.match(describeRule(sc.rules[0], p, sc), /Al pulsar A y además si puntos es mayor o igual que 3 → puntos = 99/);
+  const c = generateMainC(p);
+  assert.match(c, /if \(\(down & KEY_A\) && vars\[0\] >= 3\)/);
+});
+
+test('C generado: gravedad, apoyar y aterrizar', () => {
+  const c = generateMainC(runnerProject());
+  assert.match(c, /static int standing_on\(int i, int j\)/); assert.match(c, /land_on\(\d+, \d+\);/);
+  assert.match(c, /if \(o->gravity != 0\)/); assert.match(c, /0\.600f/);
+  assert.match(c, /standing_on\(\d+, \d+\)\) \{/);
 });

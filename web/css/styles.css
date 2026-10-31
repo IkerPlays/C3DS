@@ -236,3 +236,4 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .guide span{flex:1;min-width:220px}
 .guide-steps{list-style:none;padding:0;margin:0;display:grid;gap:12px}
 .guide-steps li{display:flex;gap:12px;align-items:flex-start}.guide-steps p{margin:2px 0 0}
+.also{border-left:3px solid var(--acc);padding-left:8px;margin:6px 0}

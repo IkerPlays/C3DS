@@ -72,7 +72,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${o.visible ? 1 : 0}, ${col(o.color)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -84,6 +84,7 @@ export function generateMainC(p) {
       case 'touch': return `touch_in(${A.objIndex.get(w.obj) ?? 0}, touched, tx, ty)`;
       case 'var': return `vars[${A.varIndex.get(w.var) ?? 0}] ${OPC[w.op] || '=='} ${int(w.value)}`;
       case 'edge': return `edge_hit(${A.objIndex.get(w.obj) ?? 0}, ${{ left: 0, right: 1, top: 2, bottom: 3 }[w.edge] ?? 0})`;
+      case 'standing': return `standing_on(${A.objIndex.get(w.obj) ?? 0}, ${A.objIndex.get(w.on) ?? 0})`;
       case 'timer': return `(scene_frames > 0 && scene_frames % ${Math.max(1, Math.round((Number(w.seconds) || 1) * 60))} == 0)`;
       default: return '0';
     }
@@ -99,6 +100,7 @@ export function generateMainC(p) {
       case 'stopSound': return `stop_sound(${A.soundIndex.get(a.sound) ?? 0});`;
       case 'setPos': return `objs[${o}].x = ${int(a.x)}.0f; objs[${o}].y = ${int(a.y)}.0f;`;
       case 'move': return `objs[${o}].x += ${int(a.dx)}.0f; objs[${o}].y += ${int(a.dy)}.0f;`;
+      case 'landOn': return `land_on(${o}, ${A.objIndex.get(a.on) ?? 0});`;
       case 'randomPos': return `random_pos(${o}, ${{ xy: 0, x: 1, y: 2 }[a.axis || 'xy'] ?? 0});`;
       case 'setVel': return `objs[${o}].${a.axis === 'y' ? 'vy' : 'vx'} = ${flt(a.value)};`;
       case 'setText': return `objs[${o}].tmpl = ${tplId(a.text)};`;
@@ -109,7 +111,7 @@ export function generateMainC(p) {
     }
   };
   const sceneRules = p.scenes.map((s, i) => {
-    const body = s.rules.filter((r) => r.enabled !== false).map((r) => `\t\tif (${cond(r.when)}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
+    const body = s.rules.filter((r) => r.enabled !== false).map((r) => `\t\tif (${cond(r.when)}${r.also ? ` && ${cond(r.also)}` : ''}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
     return `\tcase ${i}: // ${s.name.replace(/[^\w ]/g, '_')}\n${body}\n\t\tbreak;`;
   }).join('\n');
 
@@ -141,7 +143,7 @@ enum { T_RECT, T_TEXT, T_SPRITE, T_BUTTON };
 
 typedef struct {
 	int type, scene, screen, image, controls, tmpl, anim_off, anim_n, anim_fps;
-	float x, y, w, h, speed, vx, vy;
+	float x, y, w, h, speed, vx, vy, gravity;
 	int visible;
 	u32 color;
 } Obj;
@@ -174,6 +176,17 @@ static int hit(int a, int b) {
 static int touch_in(int i, int touched, int tx, int ty) {
 	const Obj* o = &objs[i];
 	return touched && o->visible && o->screen == 1 && tx >= o->x && tx < o->x + o->w && ty >= o->y && ty < o->y + o->h;
+}
+
+static int standing_on(int i, int j) {
+	const Obj *a = &objs[i], *b = &objs[j];
+	return a->visible && b->visible && a->screen == b->screen && a->vy >= 0 &&
+		a->y + a->h >= b->y - 1 && a->y + a->h <= b->y + 3 && a->x < b->x + b->w && b->x < a->x + a->w;
+}
+
+static void land_on(int i, int j) {
+	objs[i].y = objs[j].y - objs[i].h;
+	objs[i].vy = 0;
 }
 
 static int edge_hit(int i, int e) {
@@ -314,6 +327,7 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 			if (held & KEY_DUP)    o->y -= o->speed;
 			if (held & KEY_DDOWN)  o->y += o->speed;
 		}
+		if (o->gravity != 0) { o->vy += o->gravity; if (o->vy > 12) o->vy = 12; }
 		o->x += o->vx;
 		o->y += o->vy;
 		if (o->x < 0) o->x = 0;

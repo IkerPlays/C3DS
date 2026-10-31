@@ -14,7 +14,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 - **Motor 3DS**: control con **Circle Pad** y **seguir el stylus**; **música en bucle** y acción “parar sonido”; variables que se **guardan en la SD** (récords); **animación de sprites** con cortador de hojas de sprites.
 - Plantilla **Arcade** (Circle Pad + stylus + música + total guardado + moneda animada). La moneda de la plantilla de ejemplo ahora gira.
 - **Memoria**: estimación de VRAM/audio con aviso si superas los límites de la 3DS; botón 📸 Captura en la vista previa.
-- Tests: 75 unitarios y 22 de interfaz.
+- **Plataformas**: gravedad, evento “apoyado sobre”, acción “aterrizar sobre” y reglas con condición adicional (“Y además”). Plantilla **Corredor** (saltos, obstáculos y récord).
+- Tests: 78 unitarios y 23 de interfaz.
 
 ## [0.1.0] - 2026-10-31
 Primera versión pública (alfa).

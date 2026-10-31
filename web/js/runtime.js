@@ -58,6 +58,7 @@ export class Game {
         if (o.controls !== 'v') mx = ((held.has('RIGHT') ? 1 : 0) - (held.has('LEFT') ? 1 : 0)) * o.speed;
         if (o.controls !== 'h') my = ((held.has('DOWN') ? 1 : 0) - (held.has('UP') ? 1 : 0)) * o.speed;
       }
+      if (o.gravity) o.vy = Math.min(12, num(o.vy) + num(o.gravity));
       mx += num(o.vx); my += num(o.vy);
       if (!mx && !my) continue;
       o.x = Math.max(0, Math.min(s.w - o.w, o.x + mx));
@@ -67,6 +68,7 @@ export class Game {
     for (const r of this.scene.rules) {
       if (r.enabled === false) continue;
       if (!this.test(r.when, down, held, touched, touch)) continue;
+      if (r.also && !this.test(r.also, down, held, touched, touch)) continue;
       for (const a of r.then) {
         const n = this.act(a);
         if (n != null) next = n;
@@ -92,6 +94,10 @@ export class Game {
         const sc = SCREENS[o.screen];
         return { left: o.x <= 0, right: o.x + o.w >= sc.w, top: o.y <= 0, bottom: o.y + o.h >= sc.h }[w.edge] ?? false;
       }
+      case 'standing': {
+        const a = this.obj(w.obj); const b = this.obj(w.on);
+        return !!a && !!b && a.visible && b.visible && a.screen === b.screen && num(a.vy) >= 0 && a.y + a.h >= b.y - 1 && a.y + a.h <= b.y + 3 && a.x < b.x + b.w && b.x < a.x + a.w;
+      }
       case 'timer': { const f = Math.max(1, Math.round(num(w.seconds) * 60)); return this.frames > 0 && this.frames % f === 0; }
       default: return false;
     }
@@ -113,6 +119,7 @@ export class Game {
         if (ax !== 'y') o.x = Math.floor(this.rng() * Math.max(1, s.w - o.w));
         if (ax !== 'x') o.y = Math.floor(this.rng() * Math.max(1, s.h - o.h));
       } break;
+      case 'landOn': { const b = a.on != null ? this.obj(a.on) : null; if (o && b) { o.y = b.y - o.h; o.vy = 0; } break; }
       case 'setVel': if (o) { if (a.axis === 'y') o.vy = num(a.value); else o.vx = num(a.value); } break;
       case 'setText': if (o) o.tpl = a.text; break;
       case 'show': if (o) o.visible = true; break;
