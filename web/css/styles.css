@@ -238,3 +238,14 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .guide-steps li{display:flex;gap:12px;align-items:flex-start}.guide-steps p{margin:2px 0 0}
 .also{border-left:3px solid var(--acc);padding-left:8px;margin:6px 0}
 .thumb-canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);margin-bottom:6px;background:#000}
+
+/* móvil: cabecera compacta, pestañas con desplazamiento horizontal */
+@media(max-width:640px){
+  .app-header{gap:4px 10px;padding:8px 12px}
+  #tabs{order:3;width:100%;flex-wrap:nowrap;overflow-x:auto;margin-left:0;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  #tabs button{white-space:nowrap;padding:7px 12px}
+  .header-tools{margin-left:auto}
+  main{padding:10px}
+  .ed-toolbar{gap:6px}.proj-name{width:100%}
+}
