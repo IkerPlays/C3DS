@@ -4,6 +4,8 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+
+## [0.2.0] - 2026-10-31
 ### Añadido
 - **Exportar tu juego a macOS (`.dmg`) y Linux (`.AppImage` + `.deb`)** desde el editor, además de Windows, con la compilación en la nube (Tauri).
 - **Web**: nueva página de **Inicio** (qué es C3DS, demo en vivo, funciones, cómo funciona, plantillas, estado y honestidad sobre las limitaciones) y pestaña de **Descargas** que lee las releases de GitHub, recomienda el archivo de tu sistema, muestra las novedades, el checksum y los devbuilds.

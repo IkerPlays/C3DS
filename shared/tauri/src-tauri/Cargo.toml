@@ -1,6 +1,6 @@
 [package]
 name = "c3ds"
-version = "0.1.0"
+version = "0.2.0"
 description = "C3DS - importa y crea proyectos para 3DS homebrew"
 edition = "2021"
 
