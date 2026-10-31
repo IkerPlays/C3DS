@@ -165,6 +165,19 @@ export const CIRCLE_KEYS = { i: [0, -1], k: [0, 1], j: [-1, 0], l: [1, 0] };
 
 export const KEY_MAP = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', z: 'A', x: 'B', s: 'X', a: 'Y', q: 'L', w: 'R', Enter: 'START', Shift: 'SELECT' };
 
+/** Mando estándar (API Gamepad) -> botones de la 3DS. Disposición Nintendo: A=derecha, B=abajo, X=arriba, Y=izquierda. */
+export const GAMEPAD_MAP = { 0: 'B', 1: 'A', 2: 'Y', 3: 'X', 4: 'L', 5: 'R', 8: 'SELECT', 9: 'START', 12: 'UP', 13: 'DOWN', 14: 'LEFT', 15: 'RIGHT' };
+
+/** Lee el primer mando conectado: { held:Set<string>, circle:{x,y} } (o null). */
+export function readGamepad(getPads = () => (typeof navigator !== 'undefined' && navigator.getGamepads ? navigator.getGamepads() : [])) {
+  const gp = [...(getPads() || [])].find((g) => g && g.connected);
+  if (!gp) return null;
+  const held = new Set();
+  for (const [i, k] of Object.entries(GAMEPAD_MAP)) if (gp.buttons[i]?.pressed) held.add(k);
+  const dz = (v) => (Math.abs(v) < 0.15 ? 0 : v);
+  return { held, circle: { x: dz(gp.axes[0] || 0), y: dz(gp.axes[1] || 0) } };
+}
+
 /** Ejecuta el juego en 2 canvas a 60 pasos/s. Devuelve el control del simulador (pausa, paso, reinicio, velocidad…). */
 export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   const ctxs = { top: canvases.top.getContext('2d'), bottom: canvases.bottom.getContext('2d') };
@@ -190,7 +203,19 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   let raf = 0; let last = performance.now(); let acc = 0; let alive = true;
   const circleHeld = new Set();
   const circle = () => { let x = 0; let y = 0; for (const k of circleHeld) { x += CIRCLE_KEYS[k][0]; y += CIRCLE_KEYS[k][1]; } return { x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) }; };
-  const tick = () => { game.step({ down, held, touch: touch || (touchDown ? lastTouch : null), touchDown, circle: circle() }); down = new Set(); touchDown = false; };
+  let padPrev = new Set();
+  const tick = () => {
+    const pad = readGamepad();
+    let heldNow = held; let downNow = down; let circ = circle();
+    if (pad) {
+      heldNow = new Set([...held, ...pad.held]);
+      downNow = new Set([...down, ...[...pad.held].filter((k) => !padPrev.has(k))]);
+      padPrev = pad.held;
+      if (pad.circle.x || pad.circle.y) circ = pad.circle;
+    }
+    game.step({ down: downNow, held: heldNow, touch: touch || (touchDown ? lastTouch : null), touchDown, circle: circ });
+    down = new Set(); touchDown = false;
+  };
   const drawBoxes = () => {
     for (const key of ['top', 'bottom']) {
       const ctx = ctxs[key]; ctx.strokeStyle = '#00e436'; ctx.lineWidth = 1;

@@ -36,7 +36,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 ${Object.entries(ACTIONS).map(([k, e]) => row(k, e)).join('\n')}
 
 ## Botones
-${KEYS.join(', ')}. En la vista previa: flechas = D-Pad, Z X S A = A B X Y, Q W = L R, Enter = Start, Mayús = Select, I J K L = Circle Pad, ratón = pantalla táctil.
+${KEYS.join(', ')}. En la vista previa: flechas = D-Pad, Z X S A = A B X Y, Q W = L R, Enter = Start, Mayús = Select, I J K L = Circle Pad, ratón = pantalla táctil; un mando conectado también funciona (A = botón derecho, B = abajo, X = arriba, Y = izquierda; stick izquierdo = Circle Pad).
 
 ## Texto con variables
 En textos y botones, \`{nombre}\` se sustituye por el valor de la variable. Las variables marcadas con 💾 se guardan en la SD (\`sdmc:/3ds/<juego>/save.dat\`) y se cargan al arrancar.

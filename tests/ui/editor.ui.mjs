@@ -490,3 +490,20 @@ test('arrastrar una imagen y un proyecto .json al escenario', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('un mando conectado mueve al jugador en la vista previa', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-lesson=l1]');
+  await page.evaluate(() => {
+    window.__padRight = false;
+    navigator.getGamepads = () => [{ connected: true, buttons: Array.from({ length: 16 }, (_, i) => ({ pressed: i === 15 && window.__padRight })), axes: [0, 0] }];
+  });
+  await page.click('#btn-play'); await page.waitForTimeout(200);
+  const x0 = await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects[0].x);
+  await page.evaluate(() => { window.__padRight = true; });
+  await page.waitForTimeout(400);
+  const moved = await page.locator('#cv-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let minX = 999; for (let y = 0; y < c.height; y++) for (let x = 0; x < c.width; x++) { const i = (y * c.width + x) * 4; if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 77) minX = Math.min(minX, x); } return minX; });
+  assert.ok(moved > x0 + 20, `el cuadrado rojo se movió a la derecha (x0=${x0}, ahora ${moved})`);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

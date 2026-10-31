@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Game, formatText } from '../../web/js/runtime.js';
+import { Game, formatText, readGamepad, GAMEPAD_MAP } from '../../web/js/runtime.js';
 import { newProject, makeObject, makeScene } from '../../web/js/model.js';
 
 const input = (o = {}) => ({ down: new Set(o.down || []), held: new Set(o.held || []), touch: o.touch || null, touchDown: !!o.touchDown });
@@ -85,4 +85,14 @@ test('inicio de escena y objetos fuera de pantalla inferior no reciben toques', 
   g.step(input({ touchDown: true, touch: { x: 10, y: 10 } }));
   assert.equal(g.vars.puntos, 42);
   assert.equal(g.quit, false);
+});
+
+test('mando: botones y stick se traducen a la 3DS', () => {
+  const pad = (buttons = [], axes = [0, 0]) => ({ connected: true, buttons: Array.from({ length: 16 }, (_, i) => ({ pressed: buttons.includes(i) })), axes });
+  assert.equal(readGamepad(() => []), null);
+  assert.equal(readGamepad(() => [null, { connected: false }]), null);
+  const r = readGamepad(() => [pad([1, 9, 14], [0.8, -0.05])]);
+  assert.deepEqual([...r.held].sort(), ['A', 'LEFT', 'START']);
+  assert.deepEqual(r.circle, { x: 0.8, y: 0 }, 'zona muerta en el stick');
+  assert.equal(GAMEPAD_MAP[0], 'B');
 });
