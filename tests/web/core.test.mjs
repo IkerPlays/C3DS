@@ -148,3 +148,9 @@ test('recursos .cia', () => {
   assert.match(generateMakefile(p), /\ncia: \$\(BUILD\)\n\t@bannertool makebanner/);
   assert.match(exportFiles(p).find((f) => f.path.endsWith('build.yml')).content, /make cia/);
 });
+
+test('Makefile: el objetivo por defecto del make interno es el .3dsx', () => {
+  const inner = generateMakefile(newProject()).split('\nelse\n')[1];
+  const first = inner.split('\n').find((l) => /^\$\(OUTPUT\)\.\w+\s*:/.test(l));
+  assert.match(first, /^\$\(OUTPUT\)\.3dsx\s*:/);
+});

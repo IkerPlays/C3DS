@@ -174,10 +174,11 @@ ${T}@makerom -f cia -o $(TARGET).cia -elf $(TARGET).elf -rsf cia/app.rsf -icon $
 ${T}@echo "built ... $(TARGET).cia"
 else
 DEPENDS := $(OFILES:.o=.d)
-$(OUTPUT).smdh : $(APP_ICON)
-${T}@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(APP_ICON) $@
+# La primera regla es el objetivo por defecto: debe ser el .3dsx.
 $(OUTPUT).3dsx : $(OUTPUT).elf $(_3DSXDEPS)
 $(OUTPUT).elf : $(OFILES)
+$(OUTPUT).smdh : $(APP_ICON)
+${T}@smdhtool --create "$(APP_TITLE)" "$(APP_DESCRIPTION)" "$(APP_AUTHOR)" $(APP_ICON) $@
 -include $(DEPENDS)
 endif
 `;
