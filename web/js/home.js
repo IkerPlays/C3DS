@@ -108,6 +108,7 @@ function renderHomeDownload(root, rel, os) {
 }
 
 function renderDownloadsPage(root, data, os, error) {
+  const oldBox = $('#dl-old', root);
   const stableBox = $('#dl-stable', root); const devBox = $('#dl-dev', root); const notesBox = $('#dl-notes', root);
   if (!stableBox) return;
   if (error) {
@@ -115,6 +116,11 @@ function renderDownloadsPage(root, data, os, error) {
     return;
   }
   const { stable, dev } = data;
+  if (oldBox) {
+    const older = (data.all || []).filter((r) => !r.prerelease && r.tag !== stable?.tag);
+    oldBox.hidden = older.length === 0;
+    if (older.length) oldBox.replaceChildren(h('h3', {}, 'Versiones anteriores'), h('ul', { class: 'old-list' }, older.map((r) => h('li', {}, h('a', { href: r.url, target: '_blank', rel: 'noopener' }, `C3DS ${r.version}`), h('span', { class: 'muted' }, ` · ${fmtDate(r.date)} · `), ...r.oses.map((o) => h('a', { class: 'chip-link', href: r.byOs[o][0].url, rel: 'noopener', title: `${OS_INFO[o].label}: ${r.byOs[o][0].kind}` }, icon(OS_INFO[o].icon, 14), ` ${OS_INFO[o].label}`))))));
+  }
   if (!stable) {
     stableBox.replaceChildren(h('div', { class: 'finding info' }, h('b', {}, 'Todavía no hay una versión estable publicada'), h('span', {}, 'Prueba el editor en el navegador o descarga un devbuild.')));
   } else {

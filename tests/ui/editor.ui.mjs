@@ -190,6 +190,8 @@ test('descargas: tarjetas por sistema, recomendada, checksums y devbuild', async
   assert.equal(await page.locator('#dl-stable a.btn[href*="Windows-Setup"]').count(), 1);
   assert.equal(await page.locator('#dl-stable a[href*="/v0.1.0/"]').count() > 5, true);
   assert.match(await page.textContent('#dl-dev'), /Devbuild 0\.1\.0-dev\.9/);
+  assert.match(await page.textContent('#dl-old'), /Versiones anteriores[\s\S]*C3DS 0\.0\.9/);
+  assert.equal(await page.locator('#dl-old .chip-link').count(), 5);
   await page.click('#dl-notes summary');
   assert.match(await page.textContent('#dl-notes .notes'), /Sprites/);
   assert.deepEqual(errors, []);

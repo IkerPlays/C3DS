@@ -261,3 +261,4 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .tpl-title{display:flex;align-items:center;gap:6px}.tpl-title .svg-icon{color:var(--acc2)}
 .chip-link .svg-icon{color:var(--muted)}
 .icon-btn .svg-icon{line-height:0}
+.old-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}.old-list li{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.old-list .chip-link{padding:3px 10px;font-size:.82rem}
