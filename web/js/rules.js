@@ -10,6 +10,7 @@ export const OP_LABEL = { '==': 'es igual a', '!=': 'es distinto de', '>': 'es m
 export const EVENTS = {
   start: { label: 'La escena empieza', fields: [] },
   key: { label: 'Se pulsa un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
+  keyUp: { label: 'Se suelta un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
   keyHeld: { label: 'Se mantiene un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
   collide: { label: 'Dos objetos chocan', fields: [{ k: 'a', t: 'object', label: 'Objeto' }, { k: 'b', t: 'object', label: 'con' }] },
   touchAny: { label: 'Se toca la pantalla táctil (en cualquier sitio)', fields: [] },
@@ -83,7 +84,7 @@ function describeBase(r, p, scene) {
   const snd = (id) => p.assets.sounds.find((x) => x.id === id)?.name ?? '¿?';
   const w = r.when;
   const when = {
-    start: () => 'al empezar la escena', key: () => `al pulsar ${w.key}`, keyHeld: () => `mientras se mantiene ${w.key}`,
+    start: () => 'al empezar la escena', key: () => `al pulsar ${w.key}`, keyHeld: () => `mientras se mantiene ${w.key}`, keyUp: () => `al soltar ${w.key}`,
     collide: () => `si ${obj(w.a)} choca con ${obj(w.b)}`, touch: () => `al tocar ${obj(w.obj)}`,
     var: () => `si ${w.var} ${OP_LABEL[w.op] || w.op} ${w.value}`, edge: () => `si ${obj(w.obj)} toca el borde ${EDGES[w.edge]?.toLowerCase() || ''}`,
     touchAny: () => 'al tocar la pantalla táctil', timer: () => `cada ${w.seconds} s`, standing: () => `si ${obj(w.obj)} está sobre ${obj(w.on)}`,

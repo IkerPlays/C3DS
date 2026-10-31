@@ -51,6 +51,7 @@ export class Game {
   step(input) {
     if (this.quit) return;
     const { down = new Set(), held = new Set(), touch = null, touchDown = false, circle = { x: 0, y: 0 } } = input;
+    this.up = input.up || new Set();
     const touched = touchDown && touch;
     for (const o of this.objs) {
       if (!o.visible) continue;
@@ -91,6 +92,7 @@ export class Game {
     switch (w.type) {
       case 'start': return this.frames === 0;
       case 'key': return down.has(w.key);
+      case 'keyUp': return !!this.up && this.up.has(w.key);
       case 'keyHeld': return held.has(w.key);
       case 'collide': { const a = this.obj(w.a); const b = this.obj(w.b); return !!a && !!b && a.visible && b.visible && a.screen === b.screen && overlap(a, b); }
       case 'touchAny': return !!touched;
@@ -202,10 +204,10 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
     onStopSound: (id) => { try { const a = sounds.get(id); if (a) { a.pause(); a.currentTime = 0; } } catch { /* sin audio */ } },
   });
   let game = mkGame();
-  const held = new Set(); let down = new Set(); let touch = null; let touchDown = false; let lastTouch = null;
+  const held = new Set(); let down = new Set(); let up = new Set(); let touch = null; let touchDown = false; let lastTouch = null;
   let paused = false; let speed = 1; let stepOnce = false; let boxes = false;
   const kd = (e) => { if (/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement?.tagName)) return; if (CIRCLE_KEYS[e.key?.toLowerCase()]) { circleHeld.add(e.key.toLowerCase()); e.preventDefault(); return; } const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (!k) return; e.preventDefault(); if (!held.has(k)) down.add(k); held.add(k); };
-  const ku = (e) => { circleHeld.delete(e.key?.toLowerCase()); const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (k) held.delete(k); };
+  const ku = (e) => { circleHeld.delete(e.key?.toLowerCase()); const k = KEY_MAP[e.key] || KEY_MAP[e.key?.toLowerCase()]; if (k) { if (held.has(k)) up.add(k); held.delete(k); } };
   const bc = canvases.bottom;
   const pos = (e) => { const r = bc.getBoundingClientRect(); return { x: ((e.clientX - r.left) * SCREENS.bottom.w) / r.width, y: ((e.clientY - r.top) * SCREENS.bottom.h) / r.height }; };
   const pd = (e) => { touch = pos(e); lastTouch = touch; touchDown = true; bc.setPointerCapture?.(e.pointerId); };
@@ -219,15 +221,16 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   let padPrev = new Set();
   const tick = () => {
     const pad = readGamepad();
-    let heldNow = held; let downNow = down; let circ = circle();
+    let heldNow = held; let downNow = down; let upNow = up; let circ = circle();
     if (pad) {
       heldNow = new Set([...held, ...pad.held]);
       downNow = new Set([...down, ...[...pad.held].filter((k) => !padPrev.has(k))]);
+      upNow = new Set([...up, ...[...padPrev].filter((k) => !pad.held.has(k))]);
       padPrev = pad.held;
       if (pad.circle.x || pad.circle.y) circ = pad.circle;
     }
-    game.step({ down: downNow, held: heldNow, touch: touch || (touchDown ? lastTouch : null), touchDown, circle: circ });
-    down = new Set(); touchDown = false;
+    game.step({ down: downNow, up: upNow, held: heldNow, touch: touch || (touchDown ? lastTouch : null), touchDown, circle: circ });
+    down = new Set(); up = new Set(); touchDown = false;
   };
   const drawBoxes = () => {
     for (const key of ['top', 'bottom']) {

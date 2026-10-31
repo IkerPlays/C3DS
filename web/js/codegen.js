@@ -83,6 +83,7 @@ export function generateMainC(p) {
       case 'start': return 'scene_frames == 0';
       case 'key': return `(down & ${KEYC[w.key] || 'KEY_A'})`;
       case 'keyHeld': return `(held & ${KEYC[w.key] || 'KEY_A'})`;
+      case 'keyUp': return `(keys_up & ${KEYC[w.key] || 'KEY_A'})`;
       case 'collide': return `hit(${A.objIndex.get(w.a) ?? 0}, ${A.objIndex.get(w.b) ?? 0})`;
       case 'touchAny': return 'touched';
       case 'touch': return `touch_in(${A.objIndex.get(w.obj) ?? 0}, touched, tx, ty)`;
@@ -161,6 +162,7 @@ ${objInit.join('\n') || '\t{ 0 }'}
 };
 static Obj objs[${NO}];
 static int vars[NUM_VARS] = { ${p.variables.map((v) => int(v.value)).join(', ') || '0'} };
+static u32 keys_up = 0;
 static int cur_scene = START_SCENE, next_scene = -1, scene_frames = 0, quit = 0;
 static const u32 scene_bg[NUM_SCENES][2] = {
 ${bg || '\t{ 0, 0 },'}
@@ -420,6 +422,7 @@ ${A.hasImages ? '\tsheet = C2D_SpriteSheetLoad("romfs:/gfx/sprites.t3x");\n\tif 
 	while (aptMainLoop() && !quit) {
 		hidScanInput();
 		u32 down = hidKeysDown(), held = hidKeysHeld();
+		keys_up = hidKeysUp();
 		touchPosition tp;
 		circlePosition cp;
 		hidTouchRead(&tp);

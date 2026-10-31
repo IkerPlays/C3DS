@@ -23,6 +23,7 @@ Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 40
 |---|---|---|
 | `start` | La escena empieza | — |
 | `key` | Se pulsa un botón | Botón (botón) |
+| `keyUp` | Se suelta un botón | Botón (botón) |
 | `keyHeld` | Se mantiene un botón | Botón (botón) |
 | `collide` | Dos objetos chocan | Objeto (objeto), con (objeto) |
 | `touchAny` | Se toca la pantalla táctil (en cualquier sitio) | — |

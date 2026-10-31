@@ -98,3 +98,19 @@ test('setAnim: cambia el grupo de animación (simulador y C)', async () => {
   assert.match(describeRule(sc.rules[0], p, sc), /animación de Moneda = moneda/);
   assert.ok(first);
 });
+
+test('keyUp: se suelta un botón (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'keyUp', key: 'A' }, then: [{ type: 'addVar', var: 'puntos', value: 1 }] });
+  const g = new Game(p); g.enter(sc.id);
+  const base = { down: new Set(), held: new Set(), touch: null, touchDown: false };
+  g.step({ ...base, held: new Set(['A']), down: new Set(['A']) });
+  assert.equal(g.vars.puntos, 0, 'pulsar no cuenta');
+  g.step({ ...base, up: new Set(['A']) });
+  assert.equal(g.vars.puntos, 1, 'soltar cuenta');
+  assert.match(generateMainC(p), /if \(\(keys_up & KEY_A\)\) \{/);
+  assert.match(generateMainC(p), /keys_up = hidKeysUp\(\);/);
+  assert.match(describeRule(sc.rules[0], p, sc), /Al soltar A/);
+});
