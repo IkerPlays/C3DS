@@ -237,3 +237,4 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .guide-steps{list-style:none;padding:0;margin:0;display:grid;gap:12px}
 .guide-steps li{display:flex;gap:12px;align-items:flex-start}.guide-steps p{margin:2px 0 0}
 .also{border-left:3px solid var(--acc);padding-left:8px;margin:6px 0}
+.thumb-canvas{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);margin-bottom:6px;background:#000}

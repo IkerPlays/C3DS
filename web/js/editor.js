@@ -581,6 +581,12 @@ async function exportHtml5() {
     toast('Juego HTML5 exportado (un solo archivo).', 'ok');
   } catch { toast('No se pudo generar el HTML5.', 'error'); }
 }
+function exportItch() {
+  if (exportBlockers()) return;
+  const root = slug(project.name);
+  download(createZip([{ path: 'index.html', content: buildHtml5(project) }]), `${root}-itchio.zip`, 'application/zip');
+  toast('Zip para itch.io listo: súbelo como proyecto “HTML” y marca “This file will be played in the browser”.', 'ok', 7000);
+}
 function exportJson() {
   download(JSON.stringify(project, null, 2), `${slug(project.name)}.c3ds.json`, 'application/json');
 }
@@ -653,6 +659,7 @@ export function mountEditor(root) {
       h('button', { role: 'menuitem', onClick: exportZip }, '📦 Proyecto 3DS (.zip)  →  .3dsx / .cia'),
       h('button', { role: 'menuitem', id: 'btn-cloud', onClick: () => cloudBuild('3ds') }, '☁ Compilar en la nube (.3dsx + .cia)'),
       h('button', { role: 'menuitem', id: 'btn-html5', onClick: exportHtml5 }, '🌐 Juego HTML5 (jugable en navegador)'),
+      h('button', { role: 'menuitem', id: 'btn-itch', onClick: exportItch }, '🎮 HTML5 para itch.io (.zip)'),
       h('button', { role: 'menuitem', onClick: exportJson }, '💾 Copia del proyecto (.c3ds.json)'),
       h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, '🪟 Juego para Windows (.exe, en la nube)'),
       h('button', { role: 'menuitem', id: 'btn-cloud-mac', onClick: () => cloudBuild('macos') }, '🍎 Juego para macOS (.dmg, en la nube)'),

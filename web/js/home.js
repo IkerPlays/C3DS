@@ -36,11 +36,30 @@ function mountDemo(root, isVisible) {
 }
 
 /* ---------- Plantillas ---------- */
+/** Dibuja la pantalla superior de la primera escena de la plantilla (miniatura). */
+function drawThumb(t, canvas) {
+  try {
+    const p = t.make();
+    const g = new Game(p, { rng: () => 0.37 });
+    const best = p.scenes.reduce((a, b) => (b.objects.length > a.objects.length ? b : a), p.scenes[0]);
+    if (best) g.enter(best.id);
+    const images = new Map();
+    let pending = p.assets.images.length;
+    const paint = () => render(g, { top: canvas.getContext('2d'), bottom: document.createElement('canvas').getContext('2d') }, images);
+    if (!pending) paint();
+    for (const a of p.assets.images) { const im = new Image(); im.onload = () => { images.set(a.id, im); if (--pending === 0) paint(); }; im.onerror = () => { if (--pending === 0) paint(); }; im.src = p.blobs[a.id]; }
+  } catch { /* sin miniatura */ }
+}
+
 function mountTemplates(root, openTemplate) {
   const box = $('#tpl-cards', root);
   if (!box) return;
-  box.replaceChildren(...TEMPLATES.filter((t) => t.id !== 'blank').map((t) => h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => openTemplate(t) },
-    h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir en el editor →'))));
+  box.replaceChildren(...TEMPLATES.filter((t) => t.id !== 'blank').map((t) => {
+    const thumb = h('canvas', { class: 'thumb-canvas', width: 400, height: 240, 'aria-hidden': 'true' });
+    drawThumb(t, thumb);
+    return h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => openTemplate(t) },
+      thumb, h('strong', {}, `${t.icon} ${t.name}`), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir en el editor →'));
+  }));
 }
 
 /* ---------- Descargas ---------- */

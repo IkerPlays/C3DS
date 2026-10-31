@@ -413,3 +413,17 @@ SpriteRenderer:
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('exportar zip para itch.io y miniaturas de plantillas', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  const [dl] = await Promise.all([page.waitForEvent('download'), (async () => { await page.click('#btn-export'); await page.click('#btn-itch'); })()]);
+  assert.equal(dl.suggestedFilename(), 'mi-primer-juego-itchio.zip');
+  const path = join(await mkdtemp(join(tmpdir(), 'c3ds-itch-')), 'a.zip'); await dl.saveAs(path);
+  assert.deepEqual(readZipEntries(new Uint8Array(await readFile(path))).map((e) => e.path), ['index.html']);
+  await page.goto(server.url + '#home'); await page.waitForSelector('#tpl-cards .thumb-canvas');
+  await page.waitForTimeout(400);
+  const painted = await page.locator('#tpl-cards [data-tpl=pong] canvas').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; return d.some((v, i) => i % 4 === 0 && v > 200); });
+  assert.ok(painted, 'la miniatura de Pong tiene contenido');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

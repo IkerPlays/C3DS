@@ -18,7 +18,8 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 - **Importar Godot**: las escenas `.tscn` se convierten en escenas del editor (sprites con su textura, textos, rectángulos de color y botones, escalados a las pantallas de la 3DS).
 - **Importar Unity**: las escenas `.unity` (YAML de texto) con sprites 2D se convierten en escenas del editor, usando los `.meta` para encontrar las texturas.
 - `docs/REFERENCIA.md`: referencia del editor generada desde el código (y vigilada por un test).
-- Tests: 85 unitarios y 25 de interfaz.
+- **Exportar HTML5 para itch.io** (`.zip` con `index.html`). Las plantillas del Inicio muestran una miniatura en vivo.
+- Tests: 85 unitarios y 26 de interfaz.
 
 ## [0.1.0] - 2026-10-31
 Primera versión pública (alfa).
