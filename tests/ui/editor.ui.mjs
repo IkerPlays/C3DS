@@ -439,3 +439,21 @@ test('lecciones en el inicio y en el diálogo de proyectos', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('compartir con un enlace: el enlace abre una copia del proyecto', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=pong]');
+  await page.click('#btn-export'); await page.click('#btn-share');
+  const url = await page.inputValue('#share-url');
+  assert.match(url, /#p=[A-Za-z0-9_-]+$/);
+  const other = await ctx.newPage(); const errs = [];
+  other.on('pageerror', (e) => errs.push(e.message));
+  await other.goto(url);
+  await other.waitForFunction(() => window.c3ds?.editor.getProject().name === 'Pong');
+  assert.equal(await other.evaluate(() => location.hash), '#editor', 'la URL se limpia tras abrir el proyecto');
+  assert.equal(await other.locator('#tab-editor').isVisible(), true);
+  const bad = await ctx.newPage(); await bad.goto(server.url + '#p=AAAA');
+  await bad.waitForSelector('.toast.error');
+  assert.deepEqual([errors, errs], [[], []]);
+  await ctx.close();
+});

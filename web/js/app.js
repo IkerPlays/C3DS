@@ -5,6 +5,7 @@ import { mountImporter } from './importer.js';
 import { mountHome, isNativeApp } from './home.js';
 import { mountThemeToggle } from './theme.js';
 import { checkForUpdate } from './update-check.js';
+import { decodeProject, tokenFromHash } from './share.js';
 
 const TABS = ['home', 'editor', 'import', 'downloads', 'limits'];
 
@@ -41,8 +42,20 @@ mountHome($('#tab-home').parentElement, {
   openTemplate: (t) => { editor.setProject(t.make(), { fresh: true }); showTab('editor'); toast(`Plantilla “${t.name}” abierta.`, 'ok'); },
 });
 
-showTab(location.hash.slice(1));
-window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+async function openSharedFromHash() {
+  const token = tokenFromHash(location.hash);
+  if (!token) return false;
+  try {
+    const p = await decodeProject(token);
+    editor.setProject(p, { fresh: true });
+    toast(`Proyecto “${p.name}” abierto desde el enlace.`, 'ok', 5000);
+  } catch (e) { toast(e.message, 'error', 7000); }
+  showTab('editor');
+  return true;
+}
+
+(async () => { if (!(await openSharedFromHash())) showTab(location.hash.slice(1)); })();
+window.addEventListener('hashchange', async () => { if (!(await openSharedFromHash())) showTab(location.hash.slice(1)); });
 
 // Versión y aviso de actualización.
 fetch('VERSION').then((r) => (r.ok ? r.text() : '')).then(async (v) => {

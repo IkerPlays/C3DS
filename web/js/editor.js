@@ -14,6 +14,7 @@ import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
 import { startBuild, buildStatus, buildDownload, STATUS_LABEL } from './cloud.js';
 import { TEMPLATES, LESSONS } from './templates.js';
+import { encodeProject, shareUrl, MAX_LINK_CHARS } from './share.js';
 
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
@@ -589,6 +590,20 @@ function exportItch() {
   download(createZip([{ path: 'index.html', content: buildHtml5(project) }]), `${root}-itchio.zip`, 'application/zip');
   toast('Zip para itch.io listo: súbelo como proyecto “HTML” y marca “This file will be played in the browser”.', 'ok', 7000);
 }
+async function shareLink() {
+  let token;
+  try { token = await encodeProject(project); } catch { return toast('No se pudo generar el enlace.', 'error'); }
+  const url = shareUrl(location.href, token);
+  const input = h('input', { type: 'text', readonly: true, value: url, id: 'share-url', onFocus: (e) => e.target.select() });
+  const tooBig = url.length > MAX_LINK_CHARS;
+  dialog('Compartir con un enlace', h('div', {},
+    h('p', { class: 'muted small' }, 'Quien abra el enlace verá una copia del proyecto en su editor (todo va dentro del enlace; no se sube a ningún servidor).'),
+    input,
+    tooBig ? h('p', { class: 'err small' }, `El enlace es muy largo (${Math.round(url.length / 1000)} KB): puede truncarse al pegarlo en chats. Mejor usa “Copia del proyecto (.c3ds.json)”.`) : h('p', { class: 'muted small' }, `${Math.round(url.length / 1000 * 10) / 10} KB`)),
+  [{ label: 'Cerrar' }, { label: 'Copiar enlace', kind: 'primary', onClick: async () => { try { await navigator.clipboard.writeText(url); toast('Enlace copiado.', 'ok'); } catch { input.select(); toast('Copia el enlace con Ctrl+C.', 'info'); return false; } } }]);
+  input.select();
+}
+
 function exportJson() {
   download(JSON.stringify(project, null, 2), `${slug(project.name)}.c3ds.json`, 'application/json');
 }
@@ -662,6 +677,7 @@ export function mountEditor(root) {
       h('button', { role: 'menuitem', id: 'btn-cloud', onClick: () => cloudBuild('3ds') }, '☁ Compilar en la nube (.3dsx + .cia)'),
       h('button', { role: 'menuitem', id: 'btn-html5', onClick: exportHtml5 }, '🌐 Juego HTML5 (jugable en navegador)'),
       h('button', { role: 'menuitem', id: 'btn-itch', onClick: exportItch }, '🎮 HTML5 para itch.io (.zip)'),
+      h('button', { role: 'menuitem', id: 'btn-share', onClick: shareLink }, '🔗 Compartir con un enlace'),
       h('button', { role: 'menuitem', onClick: exportJson }, '💾 Copia del proyecto (.c3ds.json)'),
       h('button', { role: 'menuitem', id: 'btn-cloud-win', onClick: () => cloudBuild('windows') }, '🪟 Juego para Windows (.exe, en la nube)'),
       h('button', { role: 'menuitem', id: 'btn-cloud-mac', onClick: () => cloudBuild('macos') }, '🍎 Juego para macOS (.dmg, en la nube)'),
