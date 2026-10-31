@@ -4,6 +4,8 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+
+## [0.4.0] - 2026-10-31
 - Reglas: evento **“Se suelta un botón”** (simulador, C con `hidKeysUp` y mando).
 - Arreglo: el inspector de objetos mostraba la palabra “null” entre campos.
 - Objetos **sólidos** (muros, suelos, plataformas) que bloquean el paso, en simulador y en C; plantilla **Laberinto**.
