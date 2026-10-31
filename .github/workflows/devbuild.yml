@@ -48,6 +48,7 @@ jobs:
       version: ${{ needs.plan.outputs.version }}
 
   publish:
+    timeout-minutes: 40
     needs: [plan, build]
     # Publica aunque falle alguna plataforma (fail-fast desactivado), con lo que se haya compilado.
     if: ${{ !cancelled() && needs.build.result != 'skipped' }}
@@ -84,18 +85,27 @@ jobs:
             git log --no-merges --pretty='- %s (%h)' $range | head -30
           } > notes.md
           (cd release-files && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
-          # A veces GitHub responde 403 "Resource not accessible by integration" al crear la release cuando hay
-          # varios devbuilds seguidos: se reintenta y, si persiste, se muestran datos para diagnosticar (sin secretos).
+          # GitHub rechaza con 403 "Resource not accessible by integration" crear una release poco después de otra
+          # (los fallos de dev-4, dev-7 y dev-9 ocurrieron a <10 min de la release anterior; el token sí tenía
+          # Contents: write). Se espera hasta que pasen GAP segundos desde la última publicación de un devbuild.
+          GAP=660
+          last=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 30 --json tagName,publishedAt \
+            --jq '[.[] | select(.tagName | test("^dev-[0-9]+$"))] | sort_by(.publishedAt) | reverse | .[0].publishedAt // empty')
+          if [ -n "$last" ]; then
+            elapsed=$(( $(date +%s) - $(date -d "$last" +%s) ))
+            if [ "$elapsed" -lt "$GAP" ]; then
+              echo "Última release de devbuild hace ${elapsed}s: se espera $((GAP - elapsed))s para evitar el límite de GitHub"
+              sleep $((GAP - elapsed))
+            fi
+          fi
           ok=0
-          for attempt in 1 2 3 4; do
+          for attempt in 1 2 3; do
             if gh release create "$tag" release-files/* --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
                  --prerelease --latest=false --title "Devbuild #$GITHUB_RUN_NUMBER ($VERSION)" --notes-file notes.md; then ok=1; break; fi
             echo "::warning::Intento $attempt de crear $tag falló"
-            gh api "repos/$GITHUB_REPOSITORY" --jq '{permissions: .permissions, archived: .archived}' || true
-            gh api rate_limit --jq '.resources.core' || true
             # Si la release llegó a crearse a pesar del error, se da por buena.
             gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 && { ok=1; break; }
-            sleep $((attempt * 20))
+            sleep $((attempt * 90))
           done
           [ "$ok" = 1 ] || { echo "::error::No se pudo crear la release $tag"; exit 1; }
           # Conserva solo las KEEP más recientes.
