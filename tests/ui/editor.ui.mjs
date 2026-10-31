@@ -427,3 +427,15 @@ test('exportar zip para itch.io y miniaturas de plantillas', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('lecciones en el inicio y en el diálogo de proyectos', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#home' });
+  assert.equal(await page.locator('#lesson-cards .lesson').count(), 5);
+  await page.click('#lesson-cards [data-lesson=l3]');
+  await page.waitForSelector('#cv-top');
+  assert.match(await page.inputValue('.proj-name'), /Lección 3/);
+  await page.click('#btn-projects');
+  assert.equal(await page.locator('.dlg [data-lesson]').count(), 5);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

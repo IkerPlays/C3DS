@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -181,4 +181,27 @@ test('C generado: gravedad, apoyar y aterrizar', () => {
   assert.match(c, /static int standing_on\(int i, int j\)/); assert.match(c, /land_on\(\d+, \d+\);/);
   assert.match(c, /if \(o->gravity != 0\)/); assert.match(c, /0\.600f/);
   assert.match(c, /standing_on\(\d+, \d+\)\) \{/);
+});
+
+test('lecciones: válidas, exportables y jugables', () => {
+  assert.equal(LESSONS.length, 5);
+  for (const l of LESSONS) {
+    const p = l.make();
+    assert.deepEqual(validate(p).filter((x) => x.level === 'error'), [], l.id);
+    assert.ok(exportFiles(p).some((f) => f.path.endsWith('source/main.c')), l.id);
+    const g = new Game(p, { rng: () => 0.5 });
+    for (let i = 0; i < 30; i++) g.step({ down: new Set(), held: new Set(['RIGHT']) });
+  }
+  // L3: 5 toques cambian el mensaje
+  const p = LESSONS[2].make(); const g = new Game(p);
+  const b = g.objs.find((o) => o.type === 'button');
+  for (let i = 0; i < 5; i++) g.step({ down: new Set(), held: new Set(), touch: { x: b.x + 5, y: b.y + 5 }, touchDown: true });
+  g.step({ down: new Set(), held: new Set() });
+  assert.equal(g.vars.clics, 5);
+  assert.match(g.text(g.objs.find((o) => o.name === 'Mensaje')), /Ya llevas 5/);
+  // L4: ir y volver
+  const q = LESSONS[3].make(); const h = new Game(q);
+  const go = h.objs.find((o) => o.type === 'button');
+  h.step({ down: new Set(), held: new Set(), touch: { x: go.x + 5, y: go.y + 5 }, touchDown: true });
+  assert.equal(h.scene.name, 'Segunda');
 });

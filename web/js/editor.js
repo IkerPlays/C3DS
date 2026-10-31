@@ -13,7 +13,7 @@ import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
 import { startBuild, buildStatus, buildDownload, STATUS_LABEL } from './cloud.js';
-import { TEMPLATES } from './templates.js';
+import { TEMPLATES, LESSONS } from './templates.js';
 
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
@@ -538,6 +538,8 @@ function openProjects() {
     body.replaceChildren(
       h('h4', {}, 'Nuevo proyecto desde una plantilla'),
       h('div', { class: 'tpl-grid' }, TEMPLATES.map((t) => h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
+      h('h4', {}, 'Lecciones'),
+      h('div', { class: 'tpl-grid' }, LESSONS.map((t) => h('button', { class: 'card tpl', 'data-lesson': t.id, onClick: () => { setProject(t.make(), { fresh: true }); d.close(); } }, h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted small' }, t.desc)))),
       h('div', { class: 'row-btns' },
         h('label', { class: 'btn' }, 'Abrir archivo .c3ds.json…', h('input', { type: 'file', accept: '.json,application/json', hidden: true, onChange: async (e) => { const f = e.target.files[0]; if (!f) return; try { const p = migrate(JSON.parse(await f.text())); p.localId = newLocalId(); if (validate(p).some((x) => /^Falta/.test(x.text))) toast('El archivo no contiene todos los recursos.', 'error'); setProject(p, { fresh: true }); d.close(); } catch (err) { toast(`Archivo no válido: ${err.message}`, 'error'); } } }))),
       h('h4', {}, 'Guardados en este navegador'),

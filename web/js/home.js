@@ -2,7 +2,7 @@
 import { h, $, toast } from './ui.js';
 import { Game, render } from './runtime.js';
 import { newProject } from './model.js';
-import { TEMPLATES } from './templates.js';
+import { TEMPLATES, LESSONS } from './templates.js';
 import { fetchReleases, detectOS, primaryAsset, humanSize, renderNotes, OS_INFO, REPO } from './downloads.js';
 
 export const isNativeApp = () => !!(window.__TAURI_INTERNALS__ || window.__TAURI__ || window.Capacitor);
@@ -60,6 +60,13 @@ function mountTemplates(root, openTemplate) {
     return h('button', { class: 'card tpl', 'data-tpl': t.id, onClick: () => openTemplate(t) },
       thumb, h('strong', {}, `${t.icon} ${t.name}`), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir en el editor →'));
   }));
+}
+
+function mountLessons(root, openTemplate) {
+  const box = $('#lesson-cards', root);
+  if (!box) return;
+  box.replaceChildren(...LESSONS.map((t) => h('button', { class: 'card tpl lesson', 'data-lesson': t.id, onClick: () => openTemplate(t) },
+    h('span', { class: 'card-icon' }, t.icon), h('strong', {}, t.name), h('span', { class: 'muted' }, t.desc), h('span', { class: 'card-cta' }, 'Abrir lección →'))));
 }
 
 /* ---------- Descargas ---------- */
@@ -127,6 +134,7 @@ function renderDownloadsPage(root, data, os, error) {
 
 export async function mountHome(root, { openTemplate }) {
   mountTemplates(root, openTemplate);
+  mountLessons(root, openTemplate);
   mountDemo(root, () => !$('#tab-home', document)?.hidden);
   const os = detectOS(navigator.userAgent, navigator.platform || '', navigator.maxTouchPoints || 0);
   if (isNativeApp()) {

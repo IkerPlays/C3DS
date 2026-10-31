@@ -131,6 +131,85 @@ export function runnerProject() {
   return p;
 }
 
+/* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
+function lesson(name, build) {
+  const p = empty(name);
+  const sc = makeScene(p, 'Lección');
+  sc.bg.top = '#1d2b53'; sc.bg.bottom = '#0e1020';
+  p.scenes.push(sc); p.startScene = sc.id;
+  build(p, sc);
+  return p;
+}
+const note = (p, sc, text, y = 200) => sc.objects.push(makeObject(p, 'text', { name: 'Instrucciones', screen: 'bottom', x: 12, y, text, color: '#c2c3c7' }));
+
+export const lessonMove = () => lesson('Lección 1 - Mover', (p, sc) => {
+  sc.objects.push(makeObject(p, 'rect', { name: 'Jugador', x: 180, y: 100, w: 40, h: 40, color: '#ff004d', controls: true, speed: 3 }));
+  note(p, sc, 'Prueba ▶ y usa el D-Pad.', 20);
+  note(p, sc, 'Selecciona el rectángulo: cambia “Control” a Circle Pad o solo horizontal.', 50);
+});
+
+export const lessonCollide = () => lesson('Lección 2 - Colisiones', (p, sc) => {
+  p.variables = [{ name: 'monedas', value: 0 }];
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 40, y: 100, w: 30, h: 30, color: '#29adff', controls: true, speed: 3 });
+  const coin = makeObject(p, 'rect', { name: 'Moneda', x: 300, y: 100, w: 20, h: 20, color: '#ffec27' });
+  const hud = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {monedas}', color: '#ffffff' });
+  sc.objects.push(player, coin, hud);
+  sc.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: coin.id }, then: [{ type: 'addVar', var: 'monedas', value: 1 }, { type: 'randomPos', obj: coin.id, axis: 'xy' }] });
+  note(p, sc, 'Regla: cuando el jugador choca con la moneda → suma 1 y la mueve.', 20);
+});
+
+export const lessonVariables = () => lesson('Lección 3 - Variables', (p, sc) => {
+  p.variables = [{ name: 'clics', value: 0 }];
+  const b = makeObject(p, 'button', { name: 'Botón +1', x: 90, y: 90, w: 140, h: 50, text: '¡Pulsa!' });
+  const t = makeObject(p, 'text', { name: 'Contador', x: 150, y: 100, text: 'Clics: {clics}', color: '#ffffff' });
+  const msg = makeObject(p, 'text', { name: 'Mensaje', x: 120, y: 140, text: '', color: '#00e436' });
+  sc.objects.push(b, t, msg);
+  sc.rules.push(
+    { id: nextId(p), when: { type: 'touch', obj: b.id }, then: [{ type: 'addVar', var: 'clics', value: 1 }] },
+    { id: nextId(p), when: { type: 'var', var: 'clics', op: '>=', value: 5 }, then: [{ type: 'setText', obj: msg.id, text: '¡Ya llevas {clics}!' }] },
+  );
+  note(p, sc, 'Toca el botón de abajo (pantalla táctil). Con 5 clics cambia el mensaje.', 20);
+});
+
+export const lessonScenes = () => {
+  const p = lesson('Lección 4 - Escenas', () => {});
+  const a = p.scenes[0]; a.name = 'Inicio'; a.bg.top = '#1d2b53';
+  const b = makeScene(p, 'Segunda'); b.bg.top = '#7e2553'; b.bg.bottom = '#0e1020';
+  const go = makeObject(p, 'button', { name: 'Ir a la segunda', x: 80, y: 100, w: 160, h: 50, text: 'Ir a “Segunda”' });
+  const back = makeObject(p, 'button', { name: 'Volver', x: 80, y: 100, w: 160, h: 50, text: 'Volver' });
+  a.objects.push(makeObject(p, 'text', { name: 'Título', x: 150, y: 100, text: 'Escena: Inicio', color: '#ffffff' }), go);
+  b.objects.push(makeObject(p, 'text', { name: 'Título', x: 140, y: 100, text: 'Escena: Segunda', color: '#ffffff' }), back);
+  a.rules.push({ id: nextId(p), when: { type: 'touch', obj: go.id }, then: [{ type: 'goto', scene: b.id }] });
+  b.rules.push({ id: nextId(p), when: { type: 'touch', obj: back.id }, then: [{ type: 'goto', scene: a.id }] });
+  p.scenes.push(b);
+  return p;
+};
+
+export const lessonSound = () => lesson('Lección 5 - Sonido', (p, sc) => {
+  const beep = addBeep(p, 'pitido', 700);
+  const musId = nextId(p);
+  p.assets.sounds.push({ id: musId, name: 'musica', seconds: 2, loop: true });
+  p.blobs[musId] = toDataURL(melodyWav([392, 494, 587, 494, 392, 330, 392, 0]), 'audio/wav');
+  const b1 = makeObject(p, 'button', { name: 'Pitido', x: 20, y: 40, w: 130, h: 50, text: 'Pitido' });
+  const b2 = makeObject(p, 'button', { name: 'Música', x: 170, y: 40, w: 130, h: 50, text: 'Música ♪' });
+  const b3 = makeObject(p, 'button', { name: 'Parar', x: 90, y: 110, w: 140, h: 50, text: 'Parar música' });
+  sc.objects.push(b1, b2, b3);
+  sc.rules.push(
+    { id: nextId(p), when: { type: 'touch', obj: b1.id }, then: [{ type: 'sound', sound: beep }] },
+    { id: nextId(p), when: { type: 'touch', obj: b2.id }, then: [{ type: 'sound', sound: musId }] },
+    { id: nextId(p), when: { type: 'touch', obj: b3.id }, then: [{ type: 'stopSound', sound: musId }] },
+  );
+  note(p, sc, 'Las canciones usan “bucle” (🔁 en la lista de sonidos).', 200);
+});
+
+export const LESSONS = [
+  { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: '🕹️', make: lessonMove },
+  { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: '💥', make: lessonCollide },
+  { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: '🔢', make: lessonVariables },
+  { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: '🎬', make: lessonScenes },
+  { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: '🔊', make: lessonSound },
+];
+
 export const TEMPLATES = [
   { id: 'coins', name: 'Recoger monedas', desc: 'Menú con botón táctil, jugador con D-Pad, sprite y sonido.', icon: '🪙', make: () => newProject() },
   { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: '🏓', make: pongProject },
