@@ -124,6 +124,7 @@ export class Game {
       case 'landOn': { const b = a.on != null ? this.obj(a.on) : null; if (o && b) { o.y = b.y - o.h; o.vy = 0; } break; }
       case 'setVel': if (o) { if (a.axis === 'y') o.vy = num(a.value); else o.vx = num(a.value); } break;
       case 'setText': if (o) o.tpl = a.text; break;
+      case 'setAnim': if (o && o.type === 'sprite') o.animGroup = a.group || null; break;
       case 'setColor': if (o && /^#[0-9a-f]{6}$/i.test(a.color)) o.color = a.color; break;
       case 'show': if (o) o.visible = true; break;
       case 'hide': if (o) o.visible = false; break;

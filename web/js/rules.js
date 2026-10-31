@@ -34,6 +34,7 @@ export const ACTIONS = {
   setVel: { label: 'Cambiar velocidad (px/frame)', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'axis', t: 'axis', label: 'Eje' }, { k: 'value', t: 'number', label: 'Valor', step: 0.5 }] },
   setText: { label: 'Cambiar texto (usa {variable})', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'text', t: 'text', label: 'Texto' }] },
   setColor: { label: 'Cambiar el color de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'color', t: 'color', label: 'Color' }] },
+  setAnim: { label: 'Cambiar animación de un sprite', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'group', t: 'group', label: 'Grupo' }] },
   show: { label: 'Mostrar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   hide: { label: 'Ocultar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   quit: { label: 'Salir del juego', fields: [] },
@@ -52,6 +53,7 @@ export function defaultFor(field, ctx) {
     case 'scene': return p.scenes.find((s) => s.id !== scene.id)?.id ?? p.scenes[0]?.id ?? null;
     case 'sound': return p.assets.sounds[0]?.id ?? null;
     case 'color': return '#ff004d';
+    case 'group': return p.assets.images.find((a) => a.group)?.group ?? '';
     case 'edge': return 'left';
     case 'axis': return 'x';
     case 'randAxis': return 'xy';
@@ -91,6 +93,7 @@ function describeBase(r, p, scene) {
     randVar: () => `${a.var} = azar(${a.min}…${a.max})`,
     sound: () => `sonar “${snd(a.sound)}”`, stopSound: () => `parar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
     randomPos: () => `${obj(a.obj)} al azar`, landOn: () => `${obj(a.obj)} aterriza sobre ${obj(a.on)}`, setVel: () => `vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`,
+    setAnim: () => `animación de ${obj(a.obj)} = ${a.group || 'ninguna'}`,
     setText: () => `texto de ${obj(a.obj)}`, setColor: () => `color de ${obj(a.obj)} = ${a.color}`, show: () => `mostrar ${obj(a.obj)}`, hide: () => `ocultar ${obj(a.obj)}`, quit: () => 'salir',
   }[a.type]?.() ?? '…');
   return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || 'nada'}`;

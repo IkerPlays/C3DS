@@ -79,3 +79,22 @@ test('randVar: simulador y C', async () => {
   assert.match(generateMainC(p), /vars\[0\] = 3 \+ rand\(\) % 5;/);
   assert.match(describeRule(sc.rules[0], p, sc), /puntos = azar\(3…7\)/);
 });
+
+test('setAnim: cambia el grupo de animación (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { spriteImage } = await import('../../web/js/runtime.js');
+  const p = newProject();
+  const sc = p.scenes[1];
+  const coin = sc.objects.find((o) => o.animGroup === 'moneda');
+  const first = p.assets.images.find((a) => a.group === 'moneda').id;
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'start' }, then: [{ type: 'setAnim', obj: coin.id, group: '' }] });
+  const g = new Game(p); g.enter(sc.id);
+  g.step({ down: new Set(), held: new Set(), touch: { x: 0, y: 0 }, touchDown: false });
+  assert.equal(g.objs.find((o) => o.id === coin.id).animGroup, null);
+  assert.match(generateMainC(p), /anim_n = 0;/);
+  sc.rules[0].then[0].group = 'moneda';
+  assert.match(generateMainC(p), /anim_off = 0; objs\[\d+\]\.anim_n = 4;/);
+  assert.match(describeRule(sc.rules[0], p, sc), /animación de Moneda = moneda/);
+  assert.ok(first);
+});

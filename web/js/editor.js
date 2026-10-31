@@ -414,6 +414,7 @@ function fieldEditor(f, obj, ctx) {
     case 'scene': return selectInput(project.scenes.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
     case 'sound': return selectInput(project.assets.sounds.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
     case 'color': return h('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(obj[f.k]) ? obj[f.k] : '#ffffff', onInput: (e) => { obj[f.k] = e.target.value; live(); } });
+    case 'group': return selectInput([['', '(ninguna)'], ...[...new Set(project.assets.images.map((i) => i.group).filter(Boolean))].map((g) => [g, g])], obj[f.k] || '', set);
     case 'edge': return selectInput(Object.entries(EDGES), obj[f.k], set);
     case 'axis': return selectInput(Object.entries(AXES), obj[f.k], set);
     case 'randAxis': return selectInput(Object.entries(RAND_AXES), obj[f.k] || 'xy', set);

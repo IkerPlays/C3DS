@@ -7,7 +7,7 @@ import { EVENTS, ACTIONS, EDGES, AXES } from '../web/js/rules.js';
 import { CONTROL_MODES, LIMITS, KEYS, OBJECT_TYPES } from '../web/js/model.js';
 import { TEMPLATES } from '../web/js/templates.js';
 
-const FIELD = { key: 'botón', object: 'objeto', var: 'variable', op: 'comparación', number: 'número', text: 'texto', scene: 'escena', sound: 'sonido', edge: 'borde', axis: 'eje', randAxis: 'eje (X, Y o ambos)' };
+const FIELD = { key: 'botón', object: 'objeto', var: 'variable', op: 'comparación', number: 'número', text: 'texto', scene: 'escena', sound: 'sonido', edge: 'borde', axis: 'eje', randAxis: 'eje (X, Y o ambos)', group: 'grupo de animación' };
 const row = (key, e) => `| \`${key}\` | ${e.label} | ${e.fields.map((f) => `${f.label || f.k} (${FIELD[f.t] || f.t})`).join(', ') || '—'} |`;
 
 export function render() {

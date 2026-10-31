@@ -52,13 +52,16 @@ export function analyze(p) {
   const soundIndex = new Map(p.assets.sounds.map((a, i) => [a.id, i]));
   const varIndex = new Map(p.variables.map((v, i) => [v.name, i]));
   // Tabla de animaciones: por cada objeto animado, sus fotogramas (índices de imagen) en una tabla global.
-  const animTable = []; const animOf = new Map();
-  for (const o of objs) {
-    const frames = o.type === 'sprite' && o.animGroup ? animFrames(p, o.animGroup).map((a) => imageIndex.get(a.id)) : [];
-    if (frames.length) { animOf.set(o.id, { off: animTable.length, n: frames.length }); animTable.push(...frames); }
-  }
+  const animTable = []; const animOf = new Map(); const groupOf = new Map();
+  const addGroup = (g) => {
+    if (!g || groupOf.has(g)) return;
+    const frames = animFrames(p, g).map((a) => imageIndex.get(a.id));
+    if (frames.length) { groupOf.set(g, { off: animTable.length, n: frames.length }); animTable.push(...frames); }
+  };
+  for (const o of objs) { if (o.type === 'sprite' && o.animGroup) { addGroup(o.animGroup); if (groupOf.has(o.animGroup)) animOf.set(o.id, groupOf.get(o.animGroup)); } }
+  for (const s of p.scenes) for (const r of s.rules) for (const a of r.then) if (a.type === 'setAnim') addGroup(a.group);
   const persistVars = p.variables.map((v, i) => (v.persist ? i : -1)).filter((i) => i >= 0);
-  return { objs, objIndex, sceneIndex, imageIndex, soundIndex, varIndex, animTable, animOf, persistVars, hasImages: p.assets.images.length > 0, hasSounds: p.assets.sounds.length > 0 };
+  return { objs, objIndex, sceneIndex, imageIndex, soundIndex, varIndex, animTable, animOf, groupOf, persistVars, hasImages: p.assets.images.length > 0, hasSounds: p.assets.sounds.length > 0 };
 }
 
 const KEYC = { A: 'KEY_A', B: 'KEY_B', X: 'KEY_X', Y: 'KEY_Y', L: 'KEY_L', R: 'KEY_R', START: 'KEY_START', SELECT: 'KEY_SELECT', UP: 'KEY_DUP', DOWN: 'KEY_DDOWN', LEFT: 'KEY_DLEFT', RIGHT: 'KEY_DRIGHT' };
@@ -106,6 +109,7 @@ export function generateMainC(p) {
       case 'randomPos': return `random_pos(${o}, ${{ xy: 0, x: 1, y: 2 }[a.axis || 'xy'] ?? 0});`;
       case 'setVel': return `objs[${o}].${a.axis === 'y' ? 'vy' : 'vx'} = ${flt(a.value)};`;
       case 'setText': return `objs[${o}].tmpl = ${tplId(a.text)};`;
+      case 'setAnim': { const g = A.groupOf.get(a.group); return g ? `objs[${o}].anim_off = ${g.off}; objs[${o}].anim_n = ${g.n};` : `objs[${o}].anim_n = 0;`; }
       case 'setColor': return `objs[${o}].color = ${col(a.color)};`;
       case 'show': return `objs[${o}].visible = 1;`;
       case 'hide': return `objs[${o}].visible = 0;`;
