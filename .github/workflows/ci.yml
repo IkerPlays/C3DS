@@ -1,12 +1,14 @@
 name: CI
 on:
   push:
+    branches-ignore: [cloud-builds]   # esa rama solo guarda proyectos temporales de la compilación en la nube
   pull_request:
 permissions:
   contents: read
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # En main no se cancelan los runs: cada commit se valida entero (macOS, Linux, Windows tardan varios minutos).
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 jobs:
   test:
     runs-on: ubuntu-latest
