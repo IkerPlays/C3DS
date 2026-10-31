@@ -26,7 +26,7 @@ Igual, pero con `<plataforma>/VERSION`, `<plataforma>/CHANGELOG.md` y el tag `an
 Cada push a `main` que toque cualquier plataforma (o `scripts/`, `VERSION`) publica **una sola** pre-release `dev-<n>` con los archivos de **todas** las plataformas, igual que la release estable global, y la lista de commits. Se conservan las 10 últimas. También se puede lanzar a mano (Actions → Devbuild → Run workflow). Su versión es `X.Y.Z-dev.<n>.<sha>` (`VERSION` de la raíz). Si una plataforma falla se publica igualmente con las demás y la nota lo avisa.
 
 ## Añadir una build real a una plataforma
-Crea `<plataforma>/build.sh`; se ejecuta en el runner de esa plataforma (ver `platforms.json`) con `C3DS_VERSION` definida y debe dejar los binarios en `<plataforma>/dist/`. Si no existe, la release contiene un zip con las fuentes (estado actual de las apps nativas).
+Crea `<plataforma>/build.sh`; se ejecuta en el runner de esa plataforma (ver `platforms.json`) con `C3DS_VERSION` definida y debe dejar los binarios en `<plataforma>/dist/`. Hoy: Windows/macOS/Linux con Tauri v2 (`scripts/build-tauri.sh`), Android/iOS con Capacitor (`scripts/build-capacitor.sh`). Los archivos deben llamarse `c3ds-<plataforma>-<versión>*` (el packager lo valida) y se publican tal cual en la release. Si no existe `build.sh` (caso de `web`), se publica un zip con las fuentes.
 
 ## Web (Netlify)
 `netlify.toml` publica la carpeta `web/` sin build. Conecta el repositorio en Netlify y se despliega solo en cada push a `main`. La release de la plataforma `web` es solo un zip del mismo sitio.

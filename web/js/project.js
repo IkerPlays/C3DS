@@ -1,3 +1,5 @@
+import { ciaAssets, MAKEROM_URL, MAKEROM_SHA256, BANNERTOOL_URL, BANNERTOOL_SHA256 } from './cia.js';
+
 // Modelo del proyecto del editor + generación de un proyecto homebrew para 3DS (libctru + citro2d).
 export const SCREENS = { top: { w: 400, h: 240 }, bottom: { w: 320, h: 240 } };
 export const MAX_ENTITIES = 256;
@@ -161,7 +163,15 @@ $(BUILD):
 ${T}@mkdir -p $@
 ${T}@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 clean:
-${T}@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf
+${T}@rm -fr $(BUILD) $(TARGET).3dsx $(TARGET).smdh $(TARGET).elf $(TARGET).cia
+
+# .cia: requiere makerom y bannertool en el PATH (ver README).
+.PHONY: cia
+cia: $(BUILD)
+${T}@bannertool makebanner -i cia/banner.png -a cia/audio.wav -o $(BUILD)/banner.bnr
+${T}@bannertool makesmdh -s "$(APP_TITLE)" -l "$(APP_DESCRIPTION)" -p "$(APP_AUTHOR)" -i cia/icon.png -o $(BUILD)/icon.icn
+${T}@makerom -f cia -o $(TARGET).cia -elf $(TARGET).elf -rsf cia/app.rsf -icon $(BUILD)/icon.icn -banner $(BUILD)/banner.bnr -exefslogo -target t
+${T}@echo "built ... $(TARGET).cia"
 else
 DEPENDS := $(OFILES:.o=.d)
 $(OUTPUT).smdh : $(APP_ICON)
@@ -175,20 +185,33 @@ endif
 
 export function generateWorkflow() {
   return `name: Build 3DS
-on: [push, workflow_dispatch]
+on:
+  push:
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
     container: devkitpro/devkitarm:latest
     steps:
       - uses: actions/checkout@v4
+      - name: Instalar makerom y bannertool (para el .cia)
+        run: |
+          set -e
+          wget -q ${MAKEROM_URL}
+          wget -q ${BANNERTOOL_URL}
+          echo "${MAKEROM_SHA256}  makerom-v0.18-ubuntu_x86_64.zip" | sha256sum -c -
+          echo "${BANNERTOOL_SHA256}  bannertool.zip" | sha256sum -c -
+          unzip -o makerom-v0.18-ubuntu_x86_64.zip makerom -d /usr/local/bin
+          unzip -oj bannertool.zip linux-x86_64/bannertool -d /usr/local/bin
+          chmod +x /usr/local/bin/makerom /usr/local/bin/bannertool
       - run: make
+      - run: make cia
       - uses: actions/upload-artifact@v4
         with:
-          name: game-3dsx
+          name: game-3ds
           path: |
             game.3dsx
-            game.smdh
+            game.cia
 `;
 }
 
@@ -205,8 +228,10 @@ Proyecto generado con C3DS para Nintendo 3DS homebrew.
 
 También puedes subir esta carpeta a GitHub: el workflow incluido compila el .3dsx.
 
-## .cia
-La generación de .cia (makerom + bannertool, con banner/icono/audio propios) se añadirá en una fase posterior.
+## Compilar .cia
+Además necesitas [makerom](https://github.com/3DSGuy/Project_CTR) y [bannertool](https://github.com/diasurgical/bannertool) en el PATH. Después: \`make cia\` -> \`game.cia\` (instálalo con FBI). El workflow incluido los descarga y verifica su SHA-256.
+
+Personaliza \`cia/banner.png\` (256×128), \`cia/icon.png\` (48×48) y \`cia/audio.wav\`; el UniqueId y el ProductCode están en \`cia/app.rsf\`.
 `;
   return [
     { path: `${root}/source/main.c`, content: generateMainC(p) },
@@ -214,5 +239,6 @@ La generación de .cia (makerom + bannertool, con banner/icono/audio propios) se
     { path: `${root}/project.c3ds.json`, content: JSON.stringify(p, null, 2) },
     { path: `${root}/README.md`, content: readme },
     { path: `${root}/.github/workflows/build.yml`, content: generateWorkflow() },
+    ...ciaAssets(p).map((f) => ({ ...f, path: `${root}/${f.path}` })),
   ];
 }

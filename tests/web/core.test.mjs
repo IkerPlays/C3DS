@@ -114,3 +114,37 @@ test('escape y validación', () => {
   assert.ok(!/[^\\]"; system/.test(generateMainC(evil)));
   assert.ok(generateMainC(evil).includes('\\"; system(\\"x\\")'));
 });
+
+import { encodePNG } from '../../web/js/png.js';
+import { generateRsf, gradientPNG, silentWav, uniqueId, ciaAssets, MAKEROM_SHA256 } from '../../web/js/cia.js';
+import { inflateSync } from 'node:zlib';
+
+test('PNG válido y decodificable', () => {
+  const px = new Uint8Array(3 * 2 * 4).map((_, i) => i * 7);
+  const png = encodePNG(3, 2, px);
+  assert.deepEqual([...png.slice(1, 4)], [0x50, 0x4e, 0x47]);
+  const dv = new DataView(png.buffer);
+  assert.equal(dv.getUint32(16), 3); assert.equal(dv.getUint32(20), 2);
+  const idatLen = dv.getUint32(33);
+  const raw = inflateSync(png.slice(41, 41 + idatLen));
+  assert.equal(raw.length, 2 * (1 + 12));
+  assert.deepEqual([...raw.slice(1, 13)], [...px.slice(0, 12)]);
+  assert.throws(() => encodePNG(2, 2, new Uint8Array(3)));
+  assert.equal(new DataView(gradientPNG(256, 128, '#112233').buffer).getUint32(16), 256);
+});
+
+test('recursos .cia', () => {
+  const p = newProject();
+  const rsf = generateRsf(p);
+  assert.match(rsf, /ProductCode\s+: CTR-P-[A-Z0-9]{4}\n/);
+  assert.match(rsf, /UniqueId\s+: 0xf[0-9a-f]{4}\n/);
+  assert.equal(uniqueId('a'), uniqueId('a')); assert.notEqual(uniqueId('a'), uniqueId('b'));
+  const id = uniqueId('Zzz'); assert.ok(id >= 0xf0000 && id <= 0xfefff);
+  const w = silentWav(1, 8000); assert.equal(w.length, 44 + 16000); assert.equal(String.fromCharCode(...w.slice(0, 4)), 'RIFF');
+  assert.deepEqual(ciaAssets(p).map((f) => f.path), ['cia/app.rsf', 'cia/banner.png', 'cia/icon.png', 'cia/audio.wav']);
+  assert.match(MAKEROM_SHA256, /^[0-9a-f]{64}$/);
+  const names = exportFiles(p).map((f) => f.path);
+  assert.ok(names.includes('mi-juego-c3ds/cia/app.rsf'));
+  assert.match(generateMakefile(p), /\ncia: \$\(BUILD\)\n\t@bannertool makebanner/);
+  assert.match(exportFiles(p).find((f) => f.path.endsWith('build.yml')).content, /make cia/);
+});

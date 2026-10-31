@@ -64,7 +64,7 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          (cd assets && sha256sum *.zip > SHA256SUMS.txt)
+          (cd assets && sha256sum -- * > /tmp/SHA256SUMS.txt && mv /tmp/SHA256SUMS.txt .)
           flags=()
           [ "$PRERELEASE" = "true" ] && flags+=(--prerelease)
           # Las releases individuales no deben quedar como "Latest" por encima de la global.

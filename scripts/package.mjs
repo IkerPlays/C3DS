@@ -3,8 +3,10 @@
 //   node scripts/package.mjs <plataforma> <versión> [outDir]
 // Contrato para plataformas con compilación real:
 //   si existe <plataforma>/build.sh se ejecuta (variable C3DS_VERSION) y debe dejar
-//   su resultado en <plataforma>/dist/. Si no existe, se empaquetan las fuentes.
-import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
+//   sus binarios finales en <plataforma>/dist/ con nombre c3ds-<plataforma>-<versión>*
+//   (.exe, .apk, .dmg...); se publican tal cual, sin zip. Si no existe build.sh,
+//   se publica un zip con las fuentes.
+import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, existsSync, copyFileSync } from 'node:fs';
 import { join, dirname, relative, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
@@ -37,18 +39,24 @@ export function packagePlatform(platform, version, outDir = 'dist', root = ROOT)
     const r = spawnSync('bash', [build], { cwd: pdir, stdio: 'inherit', env: { ...process.env, C3DS_VERSION: version } });
     if (r.status !== 0) throw new Error(`${platform}/build.sh falló (código ${r.status})`);
   }
-  const built = join(pdir, 'dist');
-  const useBuilt = existsSync(built);
-  const base = useBuilt ? built : pdir;
-  const skip = new Set([...(platforms[platform].exclude || []), ...(useBuilt ? [] : ['dist', 'build'])]);
-  const files = collectFiles(base, skip).filter((f) => useBuilt || !/^(dist|build)\//.test(f.path));
-  if (!files.length) throw new Error(`${platform}: no hay archivos que empaquetar`);
   const prefix = `c3ds-${platform}-${version}`;
-  const zip = createZip(files.map((f) => ({ path: `${prefix}/${f.path}`, content: new Uint8Array(readFileSync(f.full)) })));
   mkdirSync(outDir, { recursive: true });
+  const built = join(pdir, 'dist');
+  if (existsSync(build)) {
+    const names = existsSync(built) ? readdirSync(built).filter((n) => statSync(join(built, n)).isFile()) : [];
+    if (!names.length) throw new Error(`${platform}/build.sh no dejó archivos en ${platform}/dist/`);
+    const bad = names.filter((n) => !n.startsWith(prefix));
+    if (bad.length) throw new Error(`Nombres inválidos en ${platform}/dist/ (deben empezar por ${prefix}): ${bad.join(', ')}`);
+    for (const n of names) copyFileSync(join(built, n), join(outDir, n));
+    return { target: names.map((n) => join(outDir, n)), count: names.length, kind: 'build' };
+  }
+  const skip = new Set([...(platforms[platform].exclude || []), 'dist', 'build', '.build']);
+  const files = collectFiles(pdir, skip);
+  if (!files.length) throw new Error(`${platform}: no hay archivos que empaquetar`);
+  const zip = createZip(files.map((f) => ({ path: `${prefix}/${f.path}`, content: new Uint8Array(readFileSync(f.full)) })));
   const target = join(outDir, `${prefix}.zip`);
   writeFileSync(target, zip);
-  return { target, count: files.length, kind: useBuilt ? 'build' : 'source' };
+  return { target: [target], count: files.length, kind: 'source' };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
@@ -56,6 +64,6 @@ if (import.meta.url === pathToFileURL(process.argv[1] ?? '').href) {
   if (!platform || !version) { console.error('uso: package.mjs <plataforma> <versión> [outDir]'); process.exit(2); }
   try {
     const r = packagePlatform(platform, version, outDir);
-    console.log(`${r.target} (${r.count} archivos, ${r.kind})`);
+    console.log(`${r.target.join('\n')}\n(${r.count} archivos, ${r.kind})`);
   } catch (e) { console.error(`::error::${e.message}`); process.exit(1); }
 }

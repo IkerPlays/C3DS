@@ -1,7 +1,6 @@
 name: CI
 on:
   push:
-    branches-ignore: [main]
   pull_request:
 permissions:
   contents: read
@@ -17,3 +16,53 @@ jobs:
         with:
           node-version: 22
       - run: npm test
+
+  sample:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/gen-sample.mjs sample
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample-3ds-project
+          path: sample
+          include-hidden-files: true
+
+  # Valida de verdad el generador del editor: compila el proyecto de ejemplo a .3dsx y .cia
+  # con devkitARM + makerom + bannertool (herramientas open source).
+  build-3ds-sample:
+    needs: sample
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitarm:latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: sample-3ds-project
+          path: sample
+      - name: Instalar makerom y bannertool
+        run: |
+          set -e
+          (command -v wget && command -v unzip) >/dev/null || (apt-get update && apt-get install -y wget unzip)
+          wget -q https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18/makerom-v0.18-ubuntu_x86_64.zip
+          wget -q https://github.com/diasurgical/bannertool/releases/download/1.2.0/bannertool.zip
+          echo "c6f8aafba8f1cdb403929719c95173cada707cd9ceacfa2bec5118f8f96c6f8a  makerom-v0.18-ubuntu_x86_64.zip" | sha256sum -c -
+          echo "69768596f836acb3e3aeaa66e47c6ba560dde813c6dfcd33c8afc25fe29b7524  bannertool.zip" | sha256sum -c -
+          unzip -o makerom-v0.18-ubuntu_x86_64.zip makerom -d /usr/local/bin
+          unzip -oj bannertool.zip linux-x86_64/bannertool -d /usr/local/bin
+          chmod +x /usr/local/bin/makerom /usr/local/bin/bannertool
+      - name: make (.3dsx)
+        working-directory: sample
+        run: make
+      - name: make cia (.cia)
+        working-directory: sample
+        run: make cia
+      - run: ls -la sample/game.3dsx sample/game.cia
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sample-3ds-build
+          path: |
+            sample/game.3dsx
+            sample/game.cia

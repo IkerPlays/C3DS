@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { readFileSync, existsSync, mkdtempSync, rmSync, mkdirSync, writeFileSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { parseTag, resolve, loadPlatforms } from '../../scripts/release-info.mjs';
@@ -44,9 +44,27 @@ test('package: zip con prefijo y sin carpetas de build', () => {
   const out = mkdtempSync(join(tmpdir(), 'c3ds-'));
   try {
     const r = packagePlatform('web', '0.0.0-test', out);
-    const names = readZipEntries(new Uint8Array(readFileSync(r.target))).map((e) => e.path);
+    const names = readZipEntries(new Uint8Array(readFileSync(r.target[0]))).map((e) => e.path);
     assert.ok(names.includes('c3ds-web-0.0.0-test/index.html'));
     assert.ok(names.every((n) => n.startsWith('c3ds-web-0.0.0-test/') && !n.includes('node_modules')));
     assert.throws(() => packagePlatform('ps5', '1.0.0', out), /desconocida/);
   } finally { rmSync(out, { recursive: true, force: true }); }
+});
+
+test('package: plataforma con build.sh publica binarios tal cual y valida nombres', () => {
+  const root = mkdtempSync(join(tmpdir(), 'c3ds-root-'));
+  const out = join(root, 'out');
+  try {
+    mkdirSync(join(root, 'scripts'), { recursive: true });
+    writeFileSync(join(root, 'scripts/platforms.json'), JSON.stringify({ fake: { runner: 'x', exclude: [] } }));
+    mkdirSync(join(root, 'fake'));
+    writeFileSync(join(root, 'fake/build.sh'), 'mkdir -p dist && echo hi > "dist/c3ds-fake-$C3DS_VERSION.apk"\n');
+    const r = packagePlatform('fake', '1.0.0', out, root);
+    assert.equal(r.kind, 'build');
+    assert.deepEqual(readdirSync(out), ['c3ds-fake-1.0.0.apk']);
+    writeFileSync(join(root, 'fake/build.sh'), 'rm -rf dist; mkdir -p dist && echo hi > dist/otro.apk\n');
+    assert.throws(() => packagePlatform('fake', '1.0.0', out, root), /Nombres inválidos/);
+    writeFileSync(join(root, 'fake/build.sh'), 'exit 3\n');
+    assert.throws(() => packagePlatform('fake', '1.0.0', out, root), /falló/);
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });
