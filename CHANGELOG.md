@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Reglas: evento **“Se toca la pantalla táctil”** y acción **“Cambiar el color de un objeto”**.
 - **Mando** (API Gamepad) en la vista previa: botones con disposición Nintendo y stick como Circle Pad.
 - **Arrastrar y soltar** imágenes, sonidos o un `.c3ds.json` sobre el escenario del editor.
 - Descargas: lista de **versiones anteriores** con enlaces por sistema.

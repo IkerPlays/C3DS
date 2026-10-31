@@ -25,6 +25,7 @@ Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 40
 | `key` | Se pulsa un botón | Botón (botón) |
 | `keyHeld` | Se mantiene un botón | Botón (botón) |
 | `collide` | Dos objetos chocan | Objeto (objeto), con (objeto) |
+| `touchAny` | Se toca la pantalla táctil (en cualquier sitio) | — |
 | `touch` | Se toca un objeto (pantalla inferior) | Objeto (objeto) |
 | `var` | Una variable cumple una condición | Variable (variable), op (comparación), Valor (número) |
 | `edge` | Un objeto toca el borde de la pantalla | Objeto (objeto), Borde (borde) |
@@ -47,6 +48,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 | `landOn` | Apoyar objeto sobre otro (aterrizar) | Objeto (objeto), sobre (objeto) |
 | `setVel` | Cambiar velocidad (px/frame) | Objeto (objeto), Eje (eje), Valor (número) |
 | `setText` | Cambiar texto (usa {variable}) | Objeto (objeto), Texto (texto) |
+| `setColor` | Cambiar el color de un objeto | Objeto (objeto), Color (color) |
 | `show` | Mostrar objeto | Objeto (objeto) |
 | `hide` | Ocultar objeto | Objeto (objeto) |
 | `quit` | Salir del juego | — |

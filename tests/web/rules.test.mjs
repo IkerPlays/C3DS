@@ -47,3 +47,21 @@ test('docs/REFERENCIA.md está sincronizado con el código', async () => {
   const { readFileSync } = await import('node:fs');
   assert.equal(readFileSync(new URL('../../docs/REFERENCIA.md', import.meta.url), 'utf8'), render(), 'ejecuta: npm run gen:docs');
 });
+
+test('touchAny y setColor: simulador y C', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'touchAny' }, then: [{ type: 'setColor', obj: sc.objects[0].id, color: '#00ff00' }] });
+  const g = new Game(p); g.enter(sc.id);
+  g.step({ down: new Set(), held: new Set(), touch: { x: 1, y: 1 }, touchDown: false });
+  assert.equal(g.objs[0].color, '#ff004d');
+  g.step({ down: new Set(), held: new Set(), touch: { x: 1, y: 1 }, touchDown: true });
+  assert.equal(g.objs[0].color, '#00ff00');
+  const c = generateMainC(p);
+  assert.match(c, /if \(touched\) \{/); assert.match(c, /objs\[2\]\.color = 0xFF00FF00;/);
+  assert.match(describeRule(sc.rules[0], p, sc), /Al tocar la pantalla táctil → color de Jugador = #00ff00/);
+  sc.rules[0].then[0].color = 'rojo';
+  const { validate } = await import('../../web/js/model.js');
+  assert.ok(validate(p).some((x) => /color inválido/.test(x.text)));
+});

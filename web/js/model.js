@@ -140,6 +140,7 @@ export function validate(p) {
       for (const a of r.then) {
         if (a.obj != null) refs.push(a.obj);
         if (a.on != null) refs.push(a.on);
+        if (a.type === 'setColor' && !isHex(a.color)) warn('error', `Regla en "${s.name}": color inválido.`);
         if (a.type === 'goto' && !sceneIds.has(a.scene)) warn('error', `Regla en "${s.name}": escena de destino no existe.`);
         if ((a.type === 'sound' || a.type === 'stopSound') && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
         if ((a.type === 'setVar' || a.type === 'addVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);

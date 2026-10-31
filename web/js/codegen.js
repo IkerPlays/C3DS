@@ -81,6 +81,7 @@ export function generateMainC(p) {
       case 'key': return `(down & ${KEYC[w.key] || 'KEY_A'})`;
       case 'keyHeld': return `(held & ${KEYC[w.key] || 'KEY_A'})`;
       case 'collide': return `hit(${A.objIndex.get(w.a) ?? 0}, ${A.objIndex.get(w.b) ?? 0})`;
+      case 'touchAny': return 'touched';
       case 'touch': return `touch_in(${A.objIndex.get(w.obj) ?? 0}, touched, tx, ty)`;
       case 'var': return `vars[${A.varIndex.get(w.var) ?? 0}] ${OPC[w.op] || '=='} ${int(w.value)}`;
       case 'edge': return `edge_hit(${A.objIndex.get(w.obj) ?? 0}, ${{ left: 0, right: 1, top: 2, bottom: 3 }[w.edge] ?? 0})`;
@@ -104,6 +105,7 @@ export function generateMainC(p) {
       case 'randomPos': return `random_pos(${o}, ${{ xy: 0, x: 1, y: 2 }[a.axis || 'xy'] ?? 0});`;
       case 'setVel': return `objs[${o}].${a.axis === 'y' ? 'vy' : 'vx'} = ${flt(a.value)};`;
       case 'setText': return `objs[${o}].tmpl = ${tplId(a.text)};`;
+      case 'setColor': return `objs[${o}].color = ${col(a.color)};`;
       case 'show': return `objs[${o}].visible = 1;`;
       case 'hide': return `objs[${o}].visible = 0;`;
       case 'quit': return 'quit = 1;';
