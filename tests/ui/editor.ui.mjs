@@ -507,3 +507,18 @@ test('un mando conectado mueve al jugador en la vista previa', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('objeto sólido: casilla en el inspector y el laberinto bloquea al jugador en la vista previa', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=maze]');
+  await page.waitForSelector('#cv-top');
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li:has-text("Muro 1")').click();
+  const solid = page.locator('.insp label.check:has-text("Sólido") input');
+  assert.ok(!/null|undefined/.test(await page.locator('.insp').innerText()), 'el inspector no muestra "null"');
+  assert.equal(await solid.isChecked(), true, 'los muros de la plantilla son sólidos');
+  await solid.uncheck();
+  await page.waitForTimeout(300);
+  await solid.check();
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

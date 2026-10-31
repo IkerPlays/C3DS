@@ -19,6 +19,8 @@ import { encodeProject, shareUrl, MAX_LINK_CHARS } from './share.js';
 
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
+/** append que ignora null/false (los condicionales del inspector). */
+const appendKids = (el, ...kids) => el.append(...kids.flat().filter((k) => k != null && k !== false));
 const cv = {}; let grid = true; let zoom = 1.25;
 const refs = {};
 let saveState = 'saved';
@@ -360,7 +362,7 @@ function renderRight() {
   if (!o) { body.append(h('p', { class: 'empty' }, 'Selecciona un objeto en el escenario o en la lista.')); return; }
   refs.inspFields = {};
   const f = (key, label, el, cls) => { refs.inspFields[key] = el; return field(label, el, cls); };
-  body.append(
+  appendKids(body,
     f('name', 'Nombre', textInput(() => o.name, (v) => { o.name = v; }, { max: 30 })),
     h('p', { class: 'muted small' }, `Tipo: ${OBJECT_TYPES[o.type]}`),
     f('screen', 'Pantalla', selectInput([['top', 'Superior 400×240'], ['bottom', 'Inferior 320×240 (táctil)']], o.screen, (v) => { o.screen = v; changed(); })),
@@ -395,7 +397,7 @@ function syncInspector() {
 
 function renderSceneTab(body) {
   const sc = scene();
-  body.append(
+  appendKids(body,
     field('Nombre', textInput(() => sc.name, (v) => { sc.name = v || 'Escena'; renderLeftSoon(); }, { max: 24 })),
     field('Fondo superior', colorInput(() => sc.bg.top, (v) => { sc.bg.top = v; })),
     field('Fondo inferior', colorInput(() => sc.bg.bottom, (v) => { sc.bg.bottom = v; })),
@@ -634,7 +636,7 @@ async function cloudBuild(target = '3ds') {
         link.append(h('a', { class: 'btn primary', href: dl.url }, target !== '3ds' ? `Descargar la app de ${TARGET_NAME[target]} (zip)` : `Descargar ${slug(project.name)}.3dsx + .cia (zip)`), h('p', { class: 'muted small' }, 'El enlace caduca en unos minutos.'));
         return;
       }
-      if (s.status === 'failed') { link.append(h('p', { class: 'err' }, 'La compilación falló. Revisa el proyecto o usa “Exportar .zip” y compila en local.'), s.failedStep ? h('p', { class: 'muted small' }, `Paso que falló: ${s.failedStep}`) : null, s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'Ver registro en GitHub') : null); return; }
+      if (s.status === 'failed') { appendKids(link, h('p', { class: 'err' }, 'La compilación falló. Revisa el proyecto o usa “Exportar .zip” y compila en local.'), s.failedStep ? h('p', { class: 'muted small' }, `Paso que falló: ${s.failedStep}`) : null, s.url ? h('a', { href: s.url, target: '_blank', rel: 'noopener' }, 'Ver registro en GitHub') : null); return; }
     }
     status.textContent = 'Tarda demasiado. Inténtalo más tarde.';
   } catch (e) {
