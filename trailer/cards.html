@@ -70,37 +70,45 @@
 <section class="scene" id="intro">
   <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
   <div class="title shine" id="t-intro"></div>
-  <div class="tag fade" style="animation-delay:1.5s">Crea juegos para tu Nintendo 3DS</div>
-  <div class="sub fade" style="animation-delay:2.4s">Visual · Sin código · En tu navegador</div>
+  <div class="tag fade" style="animation-delay:1.5s" data-k="introTag">Crea juegos para tu Nintendo 3DS</div>
+  <div class="sub fade" style="animation-delay:2.4s" data-k="introSub">Visual · Sin código · En tu navegador</div>
 </section>
 
 <section class="scene" id="platforms">
-  <h2 class="fade"><span class="grad">Un proyecto.</span> Todas las plataformas.</h2>
+  <h2 class="fade"><span class="grad" data-k="h2a">Un proyecto.</span> <span data-k="h2b">Todas las plataformas.</span></h2>
   <div class="tiles" id="tiles"></div>
   <div class="checks">
-    <span style="animation-delay:5.2s"><i>✔</i> Gratis</span>
-    <span style="animation-delay:5.7s"><i>✔</i> Código abierto</span>
-    <span style="animation-delay:6.2s"><i>✔</i> Sin cuenta</span>
+    <span style="animation-delay:5.2s"><i>✔</i> <b data-k="c1">Gratis</b></span>
+    <span style="animation-delay:5.7s"><i>✔</i> <b data-k="c2">Código abierto</b></span>
+    <span style="animation-delay:6.2s"><i>✔</i> <b data-k="c3">Sin cuenta</b></span>
   </div>
 </section>
 
 <section class="scene" id="outro">
   <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
   <div class="title shine" id="t-outro"></div>
-  <div class="cta fade" style="animation-delay:.9s">Crea tu primer juego de <span class="grad">3DS</span> hoy</div>
+  <div class="cta fade" style="animation-delay:.9s"><span data-k="ctaA">Crea tu primer juego de</span> <span class="grad">3DS</span> <span data-k="ctaB">hoy</span></div>
   <div class="url fade" style="animation-delay:1.7s">github.com/IkerPlays/C3DS</div>
-  <div class="small fade" style="animation-delay:2.4s">Gratis · Código abierto</div>
+  <div class="small fade" style="animation-delay:2.4s" data-k="small">Gratis · Código abierto</div>
 </section>
 
 <section class="scene" id="thumb">
   <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#ff4d6d"/><path d="M9 9h14M9 16h12M9 23h14M21 9v14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
-  <iframe class="shot" src="/trailer/montage.html?still=0" allowtransparency="true"></iframe>
-  <div class="wrap"><h1>Crea juegos<br>para tu <span class="grad">3DS</span></h1><p>Sin escribir código · Gratis</p></div>
+  <iframe class="shot" src="/trailer/montage.html?still=0&clean=1" allowtransparency="true"></iframe>
+  <div class="wrap"><h1><span data-k="th1">Crea juegos</span><br><span data-k="th2">para tu</span> <span class="grad">3DS</span></h1><p data-k="thp">Sin escribir código · Gratis</p></div>
 </section>
 
 <script type="module">
   import { iconSvg } from '/js/icons.js';
   const card = (location.hash || '#intro').slice(1);
+  const EN = new URLSearchParams(location.search).get('lang') === 'en';
+  const EN_TXT = {
+    introTag: 'Make games for your Nintendo 3DS', introSub: 'Visual · No code · In your browser',
+    h2a: 'One project.', h2b: 'Every platform.', c1: 'Free', c2: 'Open source', c3: 'No account',
+    ctaA: 'Make your first', ctaB: 'game today', small: 'Free · Open source',
+    th1: 'Make games', th2: 'for your', thp: 'No coding needed · Free',
+  };
+  if (EN) { document.documentElement.lang = 'en'; document.querySelectorAll('[data-k]').forEach((el) => { el.textContent = EN_TXT[el.dataset.k]; }); }
   document.body.dataset.card = card;
 
   const word = (id, text, step = 0.09, base = 0.5) => {
@@ -119,8 +127,8 @@
     ['linux', 'Linux', '.AppImage · .deb', null],
     ['android', 'Android', '.apk', null],
     ['ios', 'iOS', '.ipa', null],
-    ['web', 'HTML5', 'Navegador · itch.io', null],
-    ['import', 'Godot · Unity', 'Importa tus escenas', null],
+    ['web', 'HTML5', EN ? 'Browser · itch.io' : 'Navegador · itch.io', null],
+    ['import', 'Godot · Unity', EN ? 'Import your scenes' : 'Importa tus escenas', null],
   ];
   const host = document.getElementById('tiles');
   tiles.forEach(([key, name, ext, svg, hero], i) => {

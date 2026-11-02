@@ -1,13 +1,14 @@
 // Miniatura de YouTube (1280x720) a partir de la tarjeta "thumb".
-// Uso: node trailer/thumbnail.mjs <salida.png>
+// Uso: node trailer/thumbnail.mjs <salida.png> [es|en]
 import { chromium } from 'playwright';
 import { execFileSync } from 'node:child_process';
 import { startServer } from './lib.mjs';
 const out = process.argv[2] || 'thumbnail.png';
+const lang = process.argv[3] === 'en' ? '?lang=en' : '';
 const server = await startServer();
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 const page = await (await browser.newContext({ viewport: { width: 1920, height: 1080 } })).newPage();
-await page.goto(server.url + '/trailer/cards.html#thumb');
+await page.goto(server.url + `/trailer/cards.html${lang}#thumb`);
 await page.waitForSelector('body[data-ready]');
 await page.waitForTimeout(1500);
 await page.screenshot({ path: out + '.big.png' });

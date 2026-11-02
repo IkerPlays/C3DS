@@ -5,33 +5,36 @@ import { mkdir, rename, readdir, writeFile, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { startServer, launch, openScene, actor, W, H } from './lib.mjs';
 
+const EN = process.env.TRAILER_LANG === 'en';
+const L = (es, en) => (EN ? en : es);
+const q = EN ? '?lang=en' : '';
 const OUT = process.argv[2];
 const ONLY = process.argv.slice(3);
 if (!OUT) { console.error('uso: node trailer/make.mjs <salida> [escena ...]'); process.exit(1); }
 
 /** Escenas en orden. `dur` = segundos exactos que durará en el vídeo final (bloques de compases de 2 s). */
 const SCENES = [
-  { name: '01-intro', dur: 4, path: '/trailer/cards.html#intro', dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(4500); } },
+  { name: '01-intro', dur: 4, path: `/trailer/cards.html${q}#intro`, dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(4500); } },
 
   { name: '02-hook', dur: 6, speed: 1.3, scheme: 'light', path: '/#home', ready: '#demo-top', async run({ a, page }) {
     await a.wait(200);
-    await a.cap('Sin instalar nada', 'Diseña juegos de 3DS desde el navegador');
+    await a.cap(L('Sin instalar nada', 'No install needed'), L('Diseña juegos de 3DS desde el navegador', 'Design 3DS games right in your browser'));
     await a.glide(1380, 520, 700);
     await a.wait(1500);
     await a.capOff();
     await a.click('#theme-btn', { ms: 700 });      // auto -> claro
     await a.wait(250);
     await a.click('#theme-btn', { ms: 200 });      // -> oscuro
-    await a.cap('Tema claro y oscuro', 'Se adapta a tu pantalla');
+    await a.cap(L('Tema claro y oscuro', 'Light and dark theme'), L('Se adapta a tu pantalla', 'Adapts to your screen'));
     await a.wait(900);
     await a.capOff();
     await a.smoothScroll(900, 1100);
-    await a.cap('Todo incluido', 'Editor visual · Simulador · Plantillas');
+    await a.cap(L('Todo incluido', 'Everything included'), L('Editor visual · Simulador · Plantillas', 'Visual editor · Simulator · Templates'));
     await a.wait(1000);
   } },
 
   { name: '03-plantillas', dur: 6, path: '/#editor', ready: '#cv-top', async run({ a, page }) {
-    await a.cap('Empieza rápido', 'Elige una plantilla y ya tienes un juego');
+    await a.cap(L('Empieza rápido', 'Start fast'), L('Elige una plantilla y ya tienes un juego', 'Pick a template and you already have a game'));
     await a.click('#btn-projects', { ms: 800 });
     await a.wait(700);
     for (const id of ['coins', 'pong', 'arcade']) { await a.hover(`.dlg [data-tpl=${id}]`, 420); await a.wait(120); }
@@ -45,7 +48,7 @@ const SCENES = [
 
   { name: '04-editor', dur: 10, speed: 1.55, path: '/#editor', ready: '#cv-top', setup: 'runner', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
-    await a.cap('Editor visual', 'Arrastra, suelta y ajusta cada objeto');
+    await a.cap(L('Editor visual', 'Visual editor'), L('Arrastra, suelta y ajusta cada objeto', 'Drag, drop and tweak every object'));
     await a.wait(600);
     const item = (name) => page.locator('.ed-left .panel-sec').nth(1).locator('li', { hasText: name }).first();
     const itemBox = async (name) => (await item(name).boundingBox());
@@ -63,7 +66,7 @@ const SCENES = [
     await a.ring('.insp .field:has(span:text-is("Gravedad"))', { soft: true });
     await a.wait(700);
     await a.ringOff();
-    await a.cap('Física incluida', 'Gravedad, velocidad y objetos sólidos');
+    await a.cap(L('Física incluida', 'Physics built in'), L('Gravedad, velocidad y objetos sólidos', 'Gravity, speed and solid objects'));
     b = await itemBox('Suelo'); await a.clickAt(b.x + 70, b.y + b.height / 2, 700);
     await a.wait(500);
     await a.ring('.insp label.check:has-text("Sólido")', { soft: true });
@@ -80,7 +83,7 @@ const SCENES = [
 
   { name: '05-logica', dur: 10, speed: 1.85, path: '/#editor', ready: '#cv-top', setup: 'runner', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
-    await a.cap('Lógica visual', '“Cuando pase esto → haz esto”');
+    await a.cap(L('Lógica visual', 'Visual logic'), L('“Cuando pase esto → haz esto”', '“When this happens → do that”'));
     await a.click('.ed-right [role=tab]:has-text("Lógica")', { ms: 800 });
     await a.wait(700);
     await a.ring('.rule', { i: 1, soft: true });
@@ -88,7 +91,7 @@ const SCENES = [
     await a.ringOff();
     await a.hover('.rule', 500, 2);
     await a.wait(700);
-    await a.cap('Pruébalo al instante', 'Simulador con depuración integrada');
+    await a.cap(L('Pruébalo al instante', 'Try it instantly'), L('Simulador con depuración integrada', 'Simulator with built-in debugging'));
     await a.click('#btn-play', { ms: 700 });
     await a.wait(900);
     // Un "jugador" automático salta los obstáculos (A = tecla Z), para que se vea una partida de verdad.
@@ -108,14 +111,14 @@ const SCENES = [
     await a.wait(1500);
   } },
 
-  { name: '06-montaje', dur: 8, path: '/trailer/montage.html', dress: false, ready: 'body[data-ready]', async run({ a, page }) {
+  { name: '06-montaje', dur: 8, path: `/trailer/montage.html${q}`, dress: false, ready: 'body[data-ready]', async run({ a, page }) {
     await page.evaluate(() => window.__go(1000));
     await a.wait(8400);
   } },
 
   { name: '07-recursos', dur: 8, speed: 1.35, path: '/#editor', ready: '#cv-top', setup: 'arcade', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
-    await a.cap('Sprites y animación', 'Importa imágenes, córtalas y anímalas');
+    await a.cap(L('Sprites y animación', 'Sprites and animation'), L('Importa imágenes, córtalas y anímalas', 'Import images, slice them and animate them'));
     await a.ring('.ed-left .panel-sec:has(h4:text-is("Imágenes"))', { soft: true });
     await a.wait(1600);
     await a.ringOff();
@@ -123,20 +126,20 @@ const SCENES = [
     await a.wait(1500);
     await page.keyboard.press('Escape'); await a.wait(300);
     const close = page.locator('.dlg button:has-text("Cerrar")'); if (await close.count()) await a.click('.dlg button:has-text("Cerrar")', { ms: 400 });
-    await a.cap('Sonido y variables', 'Efectos, música en bucle y récords guardados');
+    await a.cap(L('Sonido y variables', 'Sound and variables'), L('Efectos, música en bucle y récords guardados', 'Effects, looping music and saved high scores'));
     await a.ring('.ed-left .panel-sec:has(h4:text-is("Sonidos"))', { soft: true });
     await a.wait(1500);
     await a.ring('.ed-left .panel-sec:has(h4:text-is("Variables"))', { soft: true });
     await a.wait(1500);
     await a.ringOff();
     await a.click('.ed-right [role=tab]:has-text("Escena")', { ms: 700 });
-    await a.cap('Escenas', 'Menús, niveles y pantalla final');
+    await a.cap(L('Escenas', 'Scenes'), L('Menús, niveles y pantalla final', 'Menus, levels and a game-over screen'));
     await a.wait(900);
   } },
 
   { name: '08-exportar', dur: 8, path: '/#editor', ready: '#cv-top', setup: 'runner', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
-    await a.cap('Un clic', '.3dsx y .cia para tu 3DS · HTML5 · Windows · macOS · Linux');
+    await a.cap(L('Un clic', 'One click'), L('.3dsx y .cia para tu 3DS · HTML5 · Windows · macOS · Linux', '.3dsx and .cia for your 3DS · HTML5 · Windows · macOS · Linux'));
     await a.click('#btn-export', { ms: 800 });
     await a.wait(500);
     for (const id of ['btn-cloud', 'btn-html5', 'btn-cloud-win', 'btn-cloud-mac', 'btn-cloud-linux', 'btn-share']) { await a.hover('#' + id, 520); await a.wait(260); }
@@ -145,13 +148,13 @@ const SCENES = [
 
   { name: '09-descargas', dur: 5, path: '/#downloads', ready: '#tab-downloads', async run({ a, page }) {
     await a.wait(500);
-    await a.cap('Descárgalo', 'Apps para Windows, macOS, Linux, Android e iOS');
+    await a.cap(L('Descárgalo', 'Download it'), L('Apps para Windows, macOS, Linux, Android e iOS', 'Apps for Windows, macOS, Linux, Android and iOS'));
     await a.smoothScroll(330, 1500);
     await a.wait(2500);
   } },
 
   { name: '10-importar', dur: 5, speed: 1.15, path: '/#import', ready: '#tab-import', async run({ a, page }) {
-    await a.cap('Importa tus proyectos', 'Godot y Unity: escenas, sprites y assets');
+    await a.cap(L('Importa tus proyectos', 'Import your projects'), L('Godot y Unity: escenas, sprites y assets', 'Godot and Unity: scenes, sprites and assets'));
     await a.wait(700);
     await a.hover('#drop label.btn', 600);
     await page.setInputFiles('#pick-dir', await godotFixture());
@@ -165,8 +168,8 @@ const SCENES = [
     await a.wait(1200);
   } },
 
-  { name: '11-plataformas', dur: 8, path: '/trailer/cards.html#platforms', dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(8400); } },
-  { name: '12-final', dur: 6, path: '/trailer/cards.html#outro', dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(6400); } },
+  { name: '11-plataformas', dur: 8, path: `/trailer/cards.html${q}#platforms`, dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(8400); } },
+  { name: '12-final', dur: 6, path: `/trailer/cards.html${q}#outro`, dress: false, ready: 'body[data-ready]', async run({ a }) { await a.wait(6400); } },
 ];
 
 /** Estado inicial de las escenas del editor (para empezar con la plantilla cargada). */

@@ -100,6 +100,9 @@
       bot: (g) => { const h = new Set(); const p = find(g, 'Jugador'); const c = find(g, 'Moneda'); if (p && c) dir(h, center(p), center(c), 3); return { held: h }; } },
   ];
 
+  const EN = new URLSearchParams(location.search).get('lang') === 'en';
+  const EN_SLOTS = {"coins": ["Coin Collector", "Template 1", "Animated sprites, sound and visual rules.", ["D-Pad", "Sprites", "Sound"]], "pong": ["Pong", "Template 2", "Bounces, speed and a scoreboard.", ["Physics", "Edges", "Variables"]], "dodge": ["Dodge", "Template 3", "Falling blocks and a game-over screen.", ["Scenes", "Collisions", "Retry"]], "arcade": ["Arcade", "Template 4", "Circle Pad, stylus and looping music.", ["Circle Pad", "Stylus", "Music"]], "runner": ["Runner", "Template 5", "Gravity, jumps and a saved high score.", ["Gravity", "Jumping", "Saving"]], "topos": ["Whack-a-mole", "Template 6", "Touch screen, timer and countdown.", ["Touch", "Timer", "Random"]], "maze": ["Maze", "Template 7", "Solid objects: walls block the way.", ["Solids", "Collisions", "Goal"]], "l2": ["Guided lessons", "Learn", "5 mini-projects to learn each idea.", ["Move", "Collisions", "Variables", "Scenes", "Sound"]]};
+  if (EN) for (const sl of SLOTS) { const [name, kick, desc, chips] = EN_SLOTS[sl.id]; Object.assign(sl, { name, kick, desc, chips }); }
   const top = document.getElementById('top'); const bottom = document.getElementById('bottom');
   const ctxs = { top: top.getContext('2d'), bottom: bottom.getContext('2d') };
   const $ = (id) => document.getElementById(id);
@@ -108,6 +111,7 @@
   const load = (i) => {
     const s = SLOTS[i]; const project = s.make();
     if (project.scenes[s.start]) project.startScene = project.scenes[s.start].id;
+    if (new URLSearchParams(location.search).get('clean')) for (const sc of project.scenes) for (const o of sc.objects) if (o.type === 'text') o.text = ''; // miniatura sin textos del juego
     const g = new Game(project, { rng: Math.random });
     const images = new Map();
     for (const a of project.assets.images) { const im = new Image(); im.src = project.blobs[a.id]; images.set(a.id, im); }

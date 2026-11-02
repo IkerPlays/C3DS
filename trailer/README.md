@@ -19,6 +19,14 @@ node trailer/assemble.mjs /tmp/trailer/clips /tmp/trailer/musica.wav trailer/out
 node trailer/thumbnail.mjs trailer/out/C3DS-trailer-miniatura.png
 ```
 
+Para la versión en inglés, antes de `make.mjs` y `thumbnail.mjs` hay que indicar el idioma (los subtítulos, las tarjetas y el montaje de plantillas cambian; la interfaz de la app sigue en español porque aún no tiene versión en inglés):
+
+```bash
+TRAILER_LANG=en node trailer/make.mjs /tmp/trailer/clips-en
+node trailer/assemble.mjs /tmp/trailer/clips-en /tmp/trailer/musica.wav trailer/out/C3DS-trailer-en.mp4
+node trailer/thumbnail.mjs trailer/out/C3DS-trailer-thumbnail-en.png en
+```
+
 `trailer/out/` no se sube al repositorio.
 
 ## Guion (84 s, 1920×1080, 30 fps)

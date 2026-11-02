@@ -96,7 +96,7 @@ export const RELEASES = [
 /** Abre una escena: contexto con vídeo, red simulada y capa de dirección. */
 export async function openScene(browser, server, { dir, path = '/#editor', ready = null, dress = true, scheme = 'dark' }) {
   const ctx = await browser.newContext({
-    viewport: { width: W, height: H }, recordVideo: { dir, size: { width: W, height: H } }, serviceWorkers: 'block', acceptDownloads: true, locale: 'es-ES',
+    viewport: { width: W, height: H }, recordVideo: { dir, size: { width: W, height: H } }, serviceWorkers: 'block', acceptDownloads: true, locale: process.env.TRAILER_LANG === 'en' ? 'en-US' : 'es-ES',
     colorScheme: scheme,
   });
   await ctx.route('https://api.github.com/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().url().includes('/releases?') ? RELEASES : { tag_name: 'v0.4.0', html_url: 'https://github.com/IkerPlays/C3DS/releases' }) }));
