@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Tráiler y miniatura también en inglés (`TRAILER_LANG=en`).
 - **Tráiler** generado por código (`trailer/`): graba la app real, música original sintetizada y montaje con ffmpeg.
 - Arreglo: el campo de nombre de las variables se veía casi vacío en el panel izquierdo.
 
