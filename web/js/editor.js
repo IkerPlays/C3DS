@@ -750,7 +750,7 @@ export function mountEditor(root) {
   let p;
   try { p = saved ? migrate(saved) : null; } catch { p = null; }
   setProject(p || newProject(), { fresh: !p });
-  return { getProject: () => project, setProject, addImages, addSounds, openProjects };
+  return { getProject: () => project, getGame: () => runner?.game ?? null, setProject, addImages, addSounds, openProjects };
 }
 
 function padBtn(key, label) {
