@@ -743,3 +743,13 @@ test('atajo Ctrl+Intro: arranca y detiene la vista previa', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('zoom por defecto “Ajustar”: las dos pantallas caben en la ventana', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { viewport: { width: 1366, height: 768 } });
+  await page.waitForTimeout(400);
+  assert.equal(await page.locator('label.check:has-text("Zoom") select').inputValue(), 'fit');
+  const b = await page.locator('#cv-bottom').boundingBox();
+  assert.ok(b.y + b.height <= 768, `la pantalla inferior termina en y=${Math.round(b.y + b.height)}`);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

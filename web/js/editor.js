@@ -23,12 +23,12 @@ let project; let history; let sceneId; let selectedId = null; let tab = 'object'
 const images = new Map(); const sounds = new Map();
 /** append que ignora null/false (los condicionales del inspector). */
 const appendKids = (el, ...kids) => el.append(...kids.flat().filter((k) => k != null && k !== false));
-const cv = {}; let grid = true; let zoom = 1.25; let zoomMode = 1.25; // zoomMode: número o 'fit'
+const cv = {}; let grid = true; let zoom = 1.25; let zoomMode = 'fit'; // zoomMode: número o 'fit'
 const fitZoom = () => {
   const wrap = refs.stageWrap; if (!wrap) return 1.25;
   const top = wrap.getBoundingClientRect().top + window.scrollY;
-  const availH = window.innerHeight - 150; const availW = wrap.clientWidth - 48;
-  const z = Math.min(availH / 560, availW / 410);
+  const availH = window.innerHeight - 380; const availW = wrap.clientWidth - 48; // 380 = cabecera, barra y rótulos de las dos pantallas
+  const z = Math.min(availH / 480, availW / 410);
   return Math.max(0.75, Math.min(2.5, Math.round(z * 20) / 20));
 };
 function applyZoom(root) { zoom = zoomMode === 'fit' ? fitZoom() : zoomMode; root.style.setProperty('--zoom', zoom); }
@@ -774,7 +774,9 @@ export function mountEditor(root) {
     refs.guide,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));
   applyZoom(root);
-  window.addEventListener('resize', () => { if (zoomMode === 'fit') applyZoom(root); });
+  const refit = () => { if (zoomMode === 'fit') applyZoom(root); };
+  window.addEventListener('resize', refit);
+  if (typeof ResizeObserver !== 'undefined') new ResizeObserver(refit).observe(refs.stageWrap); // también cuando la pestaña Editor pasa a verse
   // Arrastrar archivos al escenario: imágenes, sonidos o un proyecto .c3ds.json.
   const dropZone = refs.stageWrap;
   dropZone.addEventListener('dragover', (e) => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); dropZone.classList.add('drop-over'); } });
