@@ -18,6 +18,7 @@ import { TEMPLATES, LESSONS } from './templates.js';
 import { icon } from './icons.js';
 import { encodeProject, shareUrl, MAX_LINK_CHARS } from './share.js';
 
+const extraSel = new Set(); // objetos seleccionados además del principal (Mayús + clic)
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
 /** append que ignora null/false (los condicionales del inspector). */
@@ -36,6 +37,8 @@ let saveState = 'saved';
 
 /* ---------- Estado y cambios ---------- */
 const scene = () => findScene(project, sceneId) || project.scenes[0];
+/** Todos los objetos seleccionados de la escena actual (el principal primero). */
+const selectedAll = () => { const sc = scene(); const first = selected(); return [first, ...sc.objects.filter((o) => extraSel.has(o.id) && o.id !== selectedId)].filter(Boolean); };
 const selected = () => (selectedId == null ? null : scene().objects.find((o) => o.id === selectedId) || null);
 
 const autosave = debounce(() => {
@@ -94,6 +97,7 @@ function drawStage() {
   for (const key of ['top', 'bottom']) {
     const ctx = ctxs[key];
     if (grid) { ctx.fillStyle = 'rgba(255,255,255,.07)'; for (let x = 0; x < SCREENS[key].w; x += 20) ctx.fillRect(x, 0, 1, SCREENS[key].h); for (let y = 0; y < SCREENS[key].h; y += 20) ctx.fillRect(0, y, SCREENS[key].w, 1); }
+    for (const q of selectedAll().slice(1)) if (q.screen === key) { const bq = objBox(ctx, q); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(bq.x - 1.5, bq.y - 1.5, bq.w + 3, bq.h + 3); ctx.setLineDash([]); }
     const sel = selected();
     if (sel && sel.screen === key) {
       const b = objBox(ctx, sel);
@@ -121,8 +125,14 @@ function bindStage() {
         if (Math.abs(p.x - (b.x + b.w)) < 8 && Math.abs(p.y - (b.y + b.h)) < 8) { drag = { mode: 'resize', ox: p.x - sel.w, oy: p.y - sel.h }; c.setPointerCapture(ev.pointerId); return; }
       }
       const hit = [...scene().objects].reverse().find((o) => { if (o.screen !== key) return false; const b = objBox(ctx, o); return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; });
-      selectObject(hit?.id ?? null);
-      if (hit) { drag = { mode: 'move', dx: p.x - hit.x, dy: p.y - hit.y }; c.setPointerCapture(ev.pointerId); }
+      if (ev.shiftKey && hit) toggleSelect(hit.id);
+      else if (hit && (hit.id === selectedId || extraSel.has(hit.id)) && selectedAll().length > 1) { /* arrastrar el grupo */ }
+      else selectObject(hit?.id ?? null);
+      if (hit && selected()) {
+        const prim = selected();
+        drag = { mode: 'move', dx: p.x - prim.x, dy: p.y - prim.y, start: new Map(selectedAll().map((q) => [q.id, { x: q.x, y: q.y }])), px: prim.x, py: prim.y };
+        c.setPointerCapture(ev.pointerId);
+      }
     });
     c.addEventListener('pointerleave', () => { if (refs.coords) refs.coords.textContent = ''; });
     c.addEventListener('pointermove', (ev) => {
@@ -130,7 +140,11 @@ function bindStage() {
       const o = selected();
       if (!drag || !o) { const p = pointer(key, ev); c.style.cursor = scene().objects.some((q) => q.screen === key && (() => { const b = objBox(c.getContext('2d'), q); return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; })()) ? 'move' : 'default'; return; }
       const p = pointer(key, ev);
-      if (drag.mode === 'move') { o.x = snap(p.x - drag.dx); o.y = snap(p.y - drag.dy); } else { o.w = Math.max(4, snap(p.x - drag.ox)); o.h = Math.max(4, snap(p.y - drag.oy)); }
+      if (drag.mode === 'move') {
+        o.x = snap(p.x - drag.dx); o.y = snap(p.y - drag.dy);
+        const ddx = o.x - drag.px; const ddy = o.y - drag.py;
+        for (const q of selectedAll().slice(1)) { const st = drag.start.get(q.id); if (st) { q.x = st.x + ddx; q.y = st.y + ddy; } }
+      } else { o.w = Math.max(4, snap(p.x - drag.ox)); o.h = Math.max(4, snap(p.y - drag.oy)); }
       syncInspector(); live();
     });
     const end = () => { if (drag) { drag = null; changed(); } };
@@ -139,7 +153,13 @@ function bindStage() {
 }
 
 /* ---------- Selección y mutaciones ---------- */
-function selectObject(id) { selectedId = id; if (id != null) tab = 'object'; renderLeft(); renderRight(); drawStage(); }
+function toggleSelect(id) {
+  if (selectedId == null) return selectObject(id);
+  if (id === selectedId) { const next = [...extraSel][0]; extraSel.delete(next); selectedId = next ?? null; }
+  else if (extraSel.has(id)) extraSel.delete(id); else extraSel.add(id);
+  tab = 'object'; renderLeft(); renderRight(); drawStage();
+}
+function selectObject(id) { extraSel.clear(); selectedId = id; if (id != null) tab = 'object'; renderLeft(); renderRight(); drawStage(); }
 
 function addObject(type) {
   const sc = scene();
@@ -156,12 +176,14 @@ function addObject(type) {
 }
 
 function deleteSelected() {
-  const o = selected(); if (!o) return;
+  const all = selectedAll(); if (!all.length) return;
   const sc = scene();
-  sc.objects = sc.objects.filter((x) => x.id !== o.id);
-  for (const q of sc.objects) if (q.follow === o.id) q.follow = null;
-  for (const s of project.scenes) s.rules = s.rules.filter((r) => !refsObject(r, o.id));
-  selectedId = null; changed({ structure: true });
+  for (const o of all) {
+    sc.objects = sc.objects.filter((x) => x.id !== o.id);
+    for (const q of sc.objects) if (q.follow === o.id) q.follow = null;
+    for (const s of project.scenes) s.rules = s.rules.filter((r) => !refsObject(r, o.id));
+  }
+  extraSel.clear(); selectedId = null; changed({ structure: true });
 }
 function refsObject(r, id) {
   const w = (e) => !!e && (e.a === id || e.b === id || e.obj === id || e.on === id);
@@ -181,9 +203,12 @@ function pasteObject() {
 }
 
 function duplicateSelected() {
-  const o = selected(); if (!o) return;
-  const c = { ...o, id: nextId(project), name: `${o.name} copia`, x: o.x + 10, y: o.y + 10 };
-  scene().objects.push(c); selectedId = c.id; changed({ structure: true });
+  const all = selectedAll(); if (!all.length) return;
+  if (scene().objects.length + all.length > LIMITS.objectsPerScene) return toast(`Máximo ${LIMITS.objectsPerScene} objetos por escena.`, 'error');
+  const copies = all.map((o) => ({ ...JSON.parse(JSON.stringify(o)), id: nextId(project), name: `${o.name} copia`, x: o.x + 10, y: o.y + 10 }));
+  scene().objects.push(...copies);
+  extraSel.clear(); selectedId = copies[0].id; for (const c of copies.slice(1)) extraSel.add(c.id);
+  changed({ structure: true });
 }
 
 function moveSelected(where) {
@@ -326,8 +351,8 @@ function renderLeft() {
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Objetos'),
       h('div', { class: 'addrow' }, Object.entries(OBJECT_TYPES).map(([t, l]) => h('button', { class: 'mini', title: `Añadir ${l.toLowerCase()}`, onClick: () => addObject(t) }, { rect: icon('rect', 16), text: 'T', sprite: icon('image', 16), button: icon('btnobj', 16) }[t])))),
-    h('ul', { class: 'list' }, sc.objects.length ? [...sc.objects].reverse().map((o) => h('li', { class: o.id === selectedId ? 'active' : '' },
-      h('button', { class: 'row', onClick: () => selectObject(o.id) }, h('span', { class: 'chip', style: { background: o.color } }), o.name, h('small', {}, o.screen === 'top' ? 'sup' : 'inf')))) : h('li', { class: 'empty' }, 'Sin objetos. Añade uno con los botones de arriba.'))));
+    h('ul', { class: 'list' }, sc.objects.length ? [...sc.objects].reverse().map((o) => h('li', { class: o.id === selectedId || extraSel.has(o.id) ? 'active' : '' },
+      h('button', { class: 'row', onClick: (ev) => (ev.shiftKey ? toggleSelect(o.id) : selectObject(o.id)) }, h('span', { class: 'chip', style: { background: o.color } }), o.name, h('small', {}, o.screen === 'top' ? 'sup' : 'inf')))) : h('li', { class: 'empty' }, 'Sin objetos. Añade uno con los botones de arriba.'))));
   // Recursos
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Imágenes'), h('button', { class: 'mini', id: 'btn-slicer', title: 'Cortar una hoja de sprites en fotogramas', onClick: openSlicer }, icon('scissors', 16)), h('label', { class: 'mini', title: 'Añadir imágenes (PNG, JPG, WebP…)' }, '+', h('input', { type: 'file', accept: 'image/*', multiple: true, hidden: true, onChange: (e) => { addImages([...e.target.files]); e.target.value = ''; } }))),
@@ -376,6 +401,7 @@ function renderRight() {
   refs.inspFields = {};
   const f = (key, label, el, cls) => { refs.inspFields[key] = el; return field(label, el, cls); };
   appendKids(body,
+    extraSel.size ? h('p', { class: 'muted small sel-note' }, `${selectedAll().length} objetos seleccionados (Mayús + clic para añadir o quitar). El panel edita solo el primero.`) : null,
     f('name', 'Nombre', textInput(() => o.name, (v) => { o.name = v; }, { max: 30 })),
     h('p', { class: 'muted small' }, `Tipo: ${OBJECT_TYPES[o.type]}`),
     f('screen', 'Pantalla', selectInput([['top', 'Superior 400×240'], ['bottom', 'Inferior 320×240 (táctil)']], o.screen, (v) => { o.screen = v; changed(); })),
@@ -580,7 +606,7 @@ function openProjects() {
 
 /* ---------- Ayuda ---------- */
 function showShortcuts() {
-  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
+  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Mayús + clic', 'Seleccionar varios objetos (mover, duplicar y borrar a la vez)'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
     ['Flechas', 'En la vista previa: D-Pad'], ['Z X S A', 'A B X Y'], ['Enter / Shift', 'Start / Select'], ['Ratón', 'Pantalla táctil (inferior)']];
   dialog('Atajos y controles', h('div', {}, h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])), h('p', {}, h('button', { class: 'btn small', id: 'btn-reference', onClick: showReference }, 'Ver todos los eventos y acciones'))));
 }
@@ -764,7 +790,7 @@ export function mountEditor(root) {
     else if (!runner && !inField && selected()) {
       const o = selected(); const step = e.shiftKey ? 10 : 1;
       if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSelected(); }
-      else if (e.key.startsWith('Arrow')) { e.preventDefault(); o.x += { ArrowLeft: -step, ArrowRight: step }[e.key] || 0; o.y += { ArrowUp: -step, ArrowDown: step }[e.key] || 0; syncInspector(); live(); }
+      else if (e.key.startsWith('Arrow')) { e.preventDefault(); for (const q of selectedAll()) { q.x += { ArrowLeft: -step, ArrowRight: step }[e.key] || 0; q.y += { ArrowUp: -step, ArrowDown: step }[e.key] || 0; } syncInspector(); live(); }
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplicateSelected(); }
       else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') { e.preventDefault(); copySelected(); }
     }

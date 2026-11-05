@@ -4,6 +4,8 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Editor: **selección múltiple** (Mayús + clic en el escenario o en la lista) para mover, duplicar y borrar varios objetos a la vez.
+- Ayuda: lista de todos los eventos y acciones (generada desde el código).
 - Textos de **varias líneas**: escribe `\n` en el texto (simulador y C).
 - Test que vigila que la interfaz en inglés no deje textos en español.
 - Lógica: botón para **duplicar una regla**.

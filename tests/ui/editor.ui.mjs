@@ -636,3 +636,24 @@ test('ayuda: referencia de todos los eventos y acciones', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('selección múltiple: Mayús + clic, mover, duplicar y borrar varios a la vez', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=runner]');
+  await page.waitForSelector('#cv-top');
+  const list = page.locator('.ed-left .panel-sec').nth(1);
+  const pos = () => page.evaluate(() => { const p = window.c3ds.editor.getProject(); const o = (n) => p.scenes[0].objects.find((x) => x.name === n); return { j: o('Jugador').x, ob: o('Obstáculo').x, n: p.scenes[0].objects.length }; });
+  const before = await pos();
+  await list.locator('li', { hasText: 'Jugador' }).click();
+  await list.locator('li', { hasText: 'Obstáculo' }).click({ modifiers: ['Shift'] });
+  assert.match(await page.textContent('.sel-note'), /2 objetos seleccionados/);
+  await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
+  const moved = await pos();
+  assert.equal(moved.j, before.j + 2); assert.equal(moved.ob, before.ob + 2, 'los dos se mueven a la vez');
+  await page.keyboard.press('Control+d');
+  assert.equal((await pos()).n, before.n + 2, 'se duplican los dos');
+  await page.keyboard.press('Delete');
+  assert.equal((await pos()).n, before.n, 'se borran las dos copias');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
