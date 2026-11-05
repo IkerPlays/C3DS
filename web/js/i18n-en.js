@@ -178,6 +178,7 @@ export const EN = {
   'Elige una imagen: se recorta al centro y se reduce a 48×48': 'Pick an image: it is cropped to the center and scaled down to 48×48',
   'Estos datos salen en el icono y el título del .cia. El icono se reduce a 48×48.': 'These appear in the .cia icon and title. The icon is scaled down to 48×48.',
   'Mosaico: columnas': 'Tiles: columns', 'Mosaico: filas': 'Tiles: rows',
+  'Voltear un sprite (espejo horizontal)': 'Flip a sprite (horizontal mirror)', 'Espejo': 'Mirror', 'Normal': 'Normal', 'Espejo (volteado)': 'Mirrored (flipped)', 'Espejo (voltear horizontalmente)': 'Mirror (flip horizontally)',
   'Duplicar regla': 'Duplicate rule', 'Ajustar': 'Fit', 'Alineación': 'Alignment', 'Izquierda': 'Left', 'Centrada (X es el centro)': 'Centered (X is the center)', 'Cambiar la opacidad de un objeto': 'Change an object’s opacity', 'Opacidad (0 a 1)': 'Opacity (0 to 1)', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
   'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',

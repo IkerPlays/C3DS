@@ -114,7 +114,7 @@ test('objetos sólidos bloquean el paso y dejan apoyarse', async () => {
   assert.equal(h.y + h.h, 200, 'se apoya exactamente en el suelo');
   const c = generateMainC(p);
   assert.match(c, /static int blocked\(int i\)/); assert.match(c, /int solid, follow;/);
-  assert.match(c, /0xFF[0-9A-F]{6}, 1, -1, 1\.000f, 1\.000f, 0, 1, 1 \}, \/\/ \d+/);
+  assert.match(c, /0xFF[0-9A-F]{6}, 1, -1, 1\.000f, 1\.000f, 0, 1, 1, 0 \}, \/\/ \d+/);
 });
 
 test('seguir a otro objeto y opacidad (simulador y C)', async () => {
@@ -134,7 +134,7 @@ test('seguir a otro objeto y opacidad (simulador y C)', async () => {
   assert.ok(Math.abs(c.x - 300) < 0.6 && Math.abs(c.y - 100) < 0.6, 'llega al objetivo');
   const code = generateMainC(p);
   assert.match(code, /static u32 with_alpha/); assert.match(code, /float fspeed, opacity;/); assert.match(code, /sqrtf\(fdx \* fdx/);
-  assert.match(code, /0xFFFFFFFF, 0, 2, 2\.000f, 0\.500f, 0, 1, 1 \}/);
+  assert.match(code, /0xFFFFFFFF, 0, 2, 2\.000f, 0\.500f, 0, 1, 1, 0 \}/);
   chaser.follow = 9999;
   assert.ok(validate(p).some((x) => /sigue a un objeto/.test(x.text)));
   chaser.follow = target.id; chaser.opacity = 2;

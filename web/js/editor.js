@@ -8,7 +8,7 @@ import {
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases } from './runtime.js';
-import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction, describeRule } from './rules.js';
+import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, FLIPS, defaultWhen, defaultAction, describeRule } from './rules.js';
 import { imageToAsset, audioToWav, sliceSheet, iconToDataURL } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
@@ -415,6 +415,7 @@ function renderRight() {
     o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”. Escribe \\n para saltar de línea.') : null,
     o.type === 'sprite' ? f('animGroup', 'Animación', selectInput([['', 'Sin animación'], ...[...new Set(project.assets.images.map((a) => a.group).filter(Boolean))].map((g) => [g, `${g} (${animFrames(project, g).length} fotogramas)`])], o.animGroup || '', (v) => { o.animGroup = v || null; changed({ structure: true }); })) : null,
     o.type === 'sprite' && o.animGroup ? f('animFps', 'Fotogramas/s', numInput(() => o.animFps || 8, (v) => { o.animFps = Math.max(1, Math.min(60, v)); }, { min: 1, max: 60 })) : null,
+    o.type === 'sprite' ? h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!o.flipX, id: 'chk-flip', onChange: (e) => { o.flipX = e.target.checked; changed(); } }), 'Espejo (voltear horizontalmente)') : null,
     o.type === 'sprite' ? h('div', { class: 'grid2' }, f('tileCols', 'Mosaico: columnas', numInput(() => o.tileCols || 1, (v) => { o.tileCols = Math.max(1, Math.min(32, Math.round(v))); }, { min: 1, max: 32 })), f('tileRows', 'Mosaico: filas', numInput(() => o.tileRows || 1, (v) => { o.tileRows = Math.max(1, Math.min(32, Math.round(v))); }, { min: 1, max: 32 }))) : null,
     o.type === 'sprite' ? f('image', 'Imagen', selectInput(project.assets.images.map((a) => [a.id, a.name]), o.image, (v) => { o.image = Number(v); changed(); })) : null,
     o.type === 'rect' || o.type === 'sprite' ? f('controls', 'Control', selectInput(Object.entries(CONTROL_MODES), String(o.controls), (v) => { o.controls = v === 'true' ? true : v === 'false' ? false : v; changed({ structure: true }); })) : null,
@@ -471,6 +472,7 @@ function fieldEditor(f, obj, ctx) {
     case 'sound': return selectInput(project.assets.sounds.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
     case 'color': return h('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(obj[f.k]) ? obj[f.k] : '#ffffff', onInput: (e) => { obj[f.k] = e.target.value; live(); } });
     case 'group': return selectInput([['', '(ninguna)'], ...[...new Set(project.assets.images.map((i) => i.group).filter(Boolean))].map((g) => [g, g])], obj[f.k] || '', set);
+    case 'flip': return selectInput(Object.entries(FLIPS), String(obj[f.k] === true), (v) => set(v === 'true'));
     case 'edge': return selectInput(Object.entries(EDGES), obj[f.k], set);
     case 'axis': return selectInput(Object.entries(AXES), obj[f.k], set);
     case 'randAxis': return selectInput(Object.entries(RAND_AXES), obj[f.k] || 'xy', set);

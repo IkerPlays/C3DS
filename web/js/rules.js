@@ -4,6 +4,7 @@ import { tr } from './i18n.js';
 
 export const EDGES = { left: 'Izquierdo', right: 'Derecho', top: 'Superior', bottom: 'Inferior' };
 export const AXES = { x: 'Horizontal (X)', y: 'Vertical (Y)' };
+export const FLIPS = { false: 'Normal', true: 'Espejo (volteado)' };
 export const RAND_AXES = { xy: 'Cualquier posición', x: 'Solo en X', y: 'Solo en Y' };
 export const OPS = ['==', '!=', '>', '>=', '<', '<='];
 export const OP_LABEL = { '==': 'es igual a', '!=': 'es distinto de', '>': 'es mayor que', '>=': 'es mayor o igual que', '<': 'es menor que', '<=': 'es menor o igual que' };
@@ -38,6 +39,7 @@ export const ACTIONS = {
   setColor: { label: 'Cambiar el color de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'color', t: 'color', label: 'Color' }] },
   setAnim: { label: 'Cambiar animación de un sprite', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'group', t: 'group', label: 'Grupo' }] },
   setOpacity: { label: 'Cambiar la opacidad de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'value', t: 'number', label: 'Opacidad (0 a 1)', step: 0.1, min: 0, max: 1 }] },
+  setFlip: { label: 'Voltear un sprite (espejo horizontal)', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'flip', t: 'flip', label: 'Espejo' }] },
   show: { label: 'Mostrar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   hide: { label: 'Ocultar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   quit: { label: 'Salir del juego', fields: [] },
@@ -56,6 +58,7 @@ export function defaultFor(field, ctx) {
     case 'scene': return p.scenes.find((s) => s.id !== scene.id)?.id ?? p.scenes[0]?.id ?? null;
     case 'sound': return p.assets.sounds[0]?.id ?? null;
     case 'color': return '#ff004d';
+    case 'flip': return true;
     case 'group': return p.assets.images.find((a) => a.group)?.group ?? '';
     case 'edge': return 'left';
     case 'axis': return 'x';
@@ -108,6 +111,7 @@ function describeBase(r, p, scene) {
     setAnim: () => T(`animación de ${obj(a.obj)} = ${a.group || 'ninguna'}`, `animation of ${obj(a.obj)} = ${a.group || 'none'}`),
     setText: () => T(`texto de ${obj(a.obj)}`, `text of ${obj(a.obj)}`), setColor: () => T(`color de ${obj(a.obj)} = ${a.color}`, `color of ${obj(a.obj)} = ${a.color}`),
     setOpacity: () => T(`opacidad de ${obj(a.obj)} = ${a.value}`, `opacity of ${obj(a.obj)} = ${a.value}`),
+    setFlip: () => T(`${a.flip ? 'voltear' : 'enderezar'} ${obj(a.obj)}`, `${a.flip ? 'flip' : 'unflip'} ${obj(a.obj)}`),
     show: () => T(`mostrar ${obj(a.obj)}`, `show ${obj(a.obj)}`), hide: () => T(`ocultar ${obj(a.obj)}`, `hide ${obj(a.obj)}`), quit: () => T('salir', 'quit'),
   }[a.type]?.() ?? '…');
   return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || T('nada', 'nothing')}`;

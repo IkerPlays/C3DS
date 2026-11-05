@@ -53,6 +53,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 | `setColor` | Cambiar el color de un objeto | Objeto (objeto), Color (color) |
 | `setAnim` | Cambiar animación de un sprite | Sprite (objeto), Grupo (grupo de animación) |
 | `setOpacity` | Cambiar la opacidad de un objeto | Objeto (objeto), Opacidad (0 a 1) (número) |
+| `setFlip` | Voltear un sprite (espejo horizontal) | Sprite (objeto), Espejo (normal o espejo) |
 | `show` | Mostrar objeto | Objeto (objeto) |
 | `hide` | Ocultar objeto | Objeto (objeto) |
 | `quit` | Salir del juego | — |

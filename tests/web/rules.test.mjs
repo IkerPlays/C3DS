@@ -127,7 +127,7 @@ test('setOpacity y alineación centrada: simulador y C', async () => {
   g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
   assert.equal(g.objs.find((o) => o.id === t.id).opacity, 0.25);
   const c = generateMainC(p);
-  assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /, 1, 1 \}, \/\/ \d+/);
+  assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /, 1, 1, 0 \}, \/\/ \d+/);
   assert.match(describeRule(sc.rules[0], p, sc), /opacidad de Titulo = 0\.25/);
 });
 
@@ -142,4 +142,19 @@ test('textos de varias líneas: \\n en el simulador y en el C', async () => {
   const { fmt } = textTemplate('A\\nB {puntos}', new Map([['puntos', 0]]));
   assert.equal(fmt, 'A\nB %d');
   assert.match(generateMainC(p), /Linea 1\\012Puntos: %d/);
+});
+
+test('setFlip: espejo horizontal de un sprite (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  const coin = sc.objects.find((o) => o.type === 'sprite');
+  sc.rules.length = 0;
+  sc.rules.push({ id: 1, when: { type: 'start' }, then: [{ type: 'setFlip', obj: coin.id, flip: true }] });
+  const g = new Game(p); g.enter(sc.id);
+  assert.equal(g.objs.find((o) => o.id === coin.id).flipX, false);
+  g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.equal(g.objs.find((o) => o.id === coin.id).flipX, true);
+  const c = generateMainC(p);
+  assert.match(c, /\.flip = 1;/); assert.match(c, /o->flip \? -tw : tw/); assert.match(c, /int align, cols, rows, flip;/);
+  assert.match(describeRule(sc.rules[0], p, sc), /voltear Moneda/);
 });
