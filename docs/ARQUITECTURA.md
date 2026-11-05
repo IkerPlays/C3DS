@@ -14,12 +14,15 @@ C3DS es una web estática (sin build) más una función de Netlify. Todo el cód
 | `importer.js`, `godot.js`, `unity.js`, `detect.js`, `analyze.js`, `pe.js` | Análisis y conversión de proyectos ajenos. |
 | `html5.js`, `runtime-source.js` | Exportación HTML5 (el motor se incrusta como texto; **se regenera con `npm run gen:runtime`**). |
 | `home.js`, `downloads.js`, `icons.js`, `theme.js` | Inicio, descargas desde las releases de GitHub, iconos SVG y tema. |
+| `i18n.js`, `i18n-en.js`, `localize.js` | Interfaz en inglés: `i18n.js` traduce el DOM con el diccionario de `i18n-en.js` (textos y patrones con números); `localize.js` traduce los proyectos de ejemplo (variables, objetos, escenas, recursos y textos). Los datos de los proyectos de los usuarios no se traducen. Texto nuevo de interfaz → añadirlo al diccionario (un test falla si queda español con acentos en la interfaz en inglés). |
+| `trailer/` | El tráiler de YouTube se genera con código (Playwright + numpy + ffmpeg); ver `trailer/README.md`. |
 
 ## Flujo de un cambio de comportamiento
 1. `model.js` / `rules.js`: nuevo campo, evento o acción.
 2. `runtime.js`: cómo se simula. 3. `codegen.js`: el mismo comportamiento en C.
 4. `editor.js`: cómo se edita. 5. Tests en `tests/web/` (y `tests/ui/` si hay interfaz).
 6. `npm run gen:runtime && npm run gen:docs`, `CHANGELOG.md`.
+7. Si añade texto de interfaz: entrada en `web/js/i18n-en.js`.
 
 ## Pruebas
 - `npm test`: unitarias (Node). Incluye comprobaciones de que `runtime-source.js` y `docs/REFERENCIA.md` están sincronizados.
