@@ -103,7 +103,7 @@ export const EN = {
   'Visible al empezar': 'Visible at start', 'Orden de capas': 'Layer order', '⤒ Frente': '⤒ Front', '⤓ Fondo': '⤓ Back', 'Traer al frente': 'Bring to front', 'Enviar al fondo': 'Send to back',
   'Subir una capa': 'Bring forward', 'Bajar una capa': 'Send backward', 'Duplicar': 'Duplicate', 'Eliminar': 'Delete', 'Duplicar el objeto seleccionado': 'Duplicate the selected object', 'Eliminar el objeto seleccionado': 'Delete the selected object',
   'Imagen': 'Image', 'Animación': 'Animation', 'Sin animación': 'No animation', 'Fotogramas/s': 'Frames/s', 'Texto': 'Text', 'Tamaño texto': 'Text size',
-  'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”.': 'Use {variable} to show its value, e.g. “Score: {score}”.',
+  'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”. Escribe \\n para saltar de línea.': 'Use {variable} to show its value, e.g. “Score: {score}”. Type \\n for a line break.',
   // ---- lógica ----
   'Reglas: “Cuando pase esto → haz esto”. Se evalúan 60 veces por segundo.': 'Rules: “When this happens → do that”. They are evaluated 60 times per second.',
   'CUANDO': 'WHEN', 'ENTONCES': 'THEN', 'Y ADEMÁS': 'AND ALSO', '+ Acción': '+ Action', '+ Nueva regla': '+ New rule', '+ Y además…': '+ And also…', 'Quitar condición': 'Remove condition', 'Exigir además otra condición': 'Require another condition as well',

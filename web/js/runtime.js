@@ -153,7 +153,7 @@ export class Game {
     return null;
   }
 
-  text(o) { return formatText(o.tpl, this.vars); }
+  text(o) { return formatText(o.tpl, this.vars).replace(/\\n/g, '\n'); }
 }
 
 /** Imagen actual de un sprite (con animación por grupo si la tiene). */
@@ -178,7 +178,7 @@ export function render(game, ctxs, images) {
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
       else if (o.type === 'sprite') { const im = images.get(spriteImage(game, o)); if (im) ctx.drawImage(im, o.x, o.y, o.w, o.h); else ctx.fillRect(o.x, o.y, o.w, o.h); }
-      else if (o.type === 'text') { ctx.textAlign = o.align === 'center' ? 'center' : 'left'; ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x, o.y); ctx.textAlign = 'left'; ctx.font = '14px "DejaVu Sans Mono", monospace'; }
+      else if (o.type === 'text') { ctx.textAlign = o.align === 'center' ? 'center' : 'left'; ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; { const k = o.size || 1; game.text(o).split('\n').forEach((line, li) => ctx.fillText(line, o.x, o.y + li * 16 * k)); } ctx.textAlign = 'left'; ctx.font = '14px "DejaVu Sans Mono", monospace'; }
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; const k = o.size || 1; ctx.font = `${14 * k}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8 * k); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
     }
     ctx.globalAlpha = 1;

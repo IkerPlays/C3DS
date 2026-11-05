@@ -130,3 +130,16 @@ test('setOpacity y alineación centrada: simulador y C', async () => {
   assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /1 \}, \/\/ \d+/);
   assert.match(describeRule(sc.rules[0], p, sc), /opacidad de Titulo = 0\.25/);
 });
+
+test('textos de varias líneas: \\n en el simulador y en el C', async () => {
+  const { generateMainC, textTemplate } = await import('../../web/js/codegen.js');
+  const { makeObject } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  const t = makeObject(p, 'text', { name: 'Multi', text: 'Linea 1\\nPuntos: {puntos}' });
+  sc.objects.push(t);
+  const g = new Game(p); g.enter(sc.id);
+  assert.equal(g.text(g.objs.find((o) => o.id === t.id)), 'Linea 1\nPuntos: 0');
+  const { fmt } = textTemplate('A\\nB {puntos}', new Map([['puntos', 0]]));
+  assert.equal(fmt, 'A\nB %d');
+  assert.match(generateMainC(p), /Linea 1\\012Puntos: %d/);
+});

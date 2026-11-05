@@ -596,3 +596,33 @@ test('reglas: duplicar una regla la copia justo debajo', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('interfaz en inglés: ninguna pantalla principal conserva textos con acentos españoles', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url + '/?lang=en', { hash: '#home' });
+  const leftovers = new Set();
+  const scan = async (label) => {
+    const found = await page.evaluate(() => {
+      const out = [];
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      while (w.nextNode()) { const n = w.currentNode; if (/^(SCRIPT|STYLE)$/.test(n.parentElement.tagName)) continue; const t = n.nodeValue.replace(/\s+/g, ' ').trim(); if (t) out.push(t); }
+      for (const el of document.querySelectorAll('[title],[aria-label],[placeholder]')) for (const a of ['title', 'aria-label', 'placeholder']) { const v = el.getAttribute(a); if (v) out.push(v); }
+      return out;
+    });
+    for (const t of found) if (/[áéíóúñ¿¡]/i.test(t) && !/^Language: English \(click for Español\)$/.test(t)) leftovers.add(`${label}: ${t}`);
+  };
+  await scan('inicio');
+  for (const tab of ['editor', 'import', 'downloads', 'limits']) { await page.click(`[data-tab=${tab}]`); await page.waitForTimeout(300); await scan(tab); }
+  await page.click('[data-tab=editor]');
+  await page.click('#btn-projects'); await page.waitForTimeout(200); await scan('proyectos');
+  await page.keyboard.press('Escape'); await page.evaluate(() => document.querySelector('.dlg')?.closest('dialog')?.close?.());
+  for (const mk of ['runner', 'arcade', 'topos', 'platformer']) {
+    await page.evaluate(async (m) => { const t = await import('/js/templates.js'); window.c3ds.editor.setProject(t.TEMPLATES.find((x) => x.id === m).make(), { fresh: true }); }, mk);
+    await page.waitForTimeout(250);
+    for (const tabName of ['Logic', 'Scene', 'Object']) { await page.locator('.ed-right [role=tab]', { hasText: tabName }).click(); await scan(`${mk}/${tabName}`); }
+    const items = page.locator('.ed-left .panel-sec').nth(1).locator('li'); const n = await items.count();
+    for (let i = 0; i < Math.min(n, 4); i++) { await items.nth(i).click(); await scan(`${mk}/objeto ${i}`); }
+  }
+  assert.deepEqual([...leftovers], [], 'quedan textos en español');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

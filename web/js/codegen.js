@@ -31,6 +31,7 @@ export const makeSafe = (s) => String(s).normalize('NFC').replace(/[^\p{L}\p{N}\
 
 /** Plantilla de texto "Puntos: {puntos}" -> { fmt:'Puntos: %d', args:['vars[0]'] } */
 export function textTemplate(tpl, varIndex) {
+  tpl = String(tpl).replace(/\\n/g, '\n'); // \n escrito en el texto = salto de línea
   const args = [];
   let fmt = '';
   let last = 0;

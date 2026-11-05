@@ -386,7 +386,7 @@ function renderRight() {
     o.type === 'text' || o.type === 'button' ? f('text', 'Texto', textInput(() => o.text, (v) => { o.text = v; })) : null,
     o.type === 'text' ? f('align', 'Alineación', selectInput([['left', 'Izquierda'], ['center', 'Centrada (X es el centro)']], o.align || 'left', (v) => { o.align = v; changed(); })) : null,
     o.type === 'text' || o.type === 'button' ? f('size', 'Tamaño texto', numInput(() => o.size || 1, (v) => { o.size = Math.max(0.4, Math.min(3, v)); }, { min: 0.4, max: 3, step: 0.1 })) : null,
-    o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”.') : null,
+    o.type === 'text' || o.type === 'button' ? h('p', { class: 'muted small' }, 'Usa {variable} para mostrar su valor, p. ej. “Puntos: {puntos}”. Escribe \\n para saltar de línea.') : null,
     o.type === 'sprite' ? f('animGroup', 'Animación', selectInput([['', 'Sin animación'], ...[...new Set(project.assets.images.map((a) => a.group).filter(Boolean))].map((g) => [g, `${g} (${animFrames(project, g).length} fotogramas)`])], o.animGroup || '', (v) => { o.animGroup = v || null; changed({ structure: true }); })) : null,
     o.type === 'sprite' && o.animGroup ? f('animFps', 'Fotogramas/s', numInput(() => o.animFps || 8, (v) => { o.animFps = Math.max(1, Math.min(60, v)); }, { min: 1, max: 60 })) : null,
     o.type === 'sprite' ? f('image', 'Imagen', selectInput(project.assets.images.map((a) => [a.id, a.name]), o.image, (v) => { o.image = Number(v); changed(); })) : null,
