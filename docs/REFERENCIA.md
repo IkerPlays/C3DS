@@ -42,6 +42,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 | `setVar` | Poner variable a | Variable (variable), Valor (número) |
 | `addVar` | Sumar a variable | Variable (variable), Cantidad (número) |
 | `randVar` | Poner variable a un número al azar | Variable (variable), Mínimo (número), Máximo (número) |
+| `maxVar` | Guardar el máximo en una variable (récord) | Variable (récord) (variable), Comparar con (variable) |
 | `sound` | Reproducir sonido | Sonido (sonido) |
 | `stopSound` | Parar sonido / música | Sonido (sonido) |
 | `setPos` | Colocar objeto en | Objeto (objeto), X (número), Y (número) |

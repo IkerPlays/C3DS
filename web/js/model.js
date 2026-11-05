@@ -149,7 +149,7 @@ export function validate(p) {
         if (a.type === 'setAnim' && a.group && !animFrames(p, a.group).length) warn('error', `Regla en "${s.name}": el grupo de animación "${a.group}" no tiene imágenes.`);
         if (a.type === 'goto' && !sceneIds.has(a.scene)) warn('error', `Regla en "${s.name}": escena de destino no existe.`);
         if ((a.type === 'sound' || a.type === 'stopSound') && !sndIds.has(a.sound)) warn('error', `Regla en "${s.name}": sonido no existe.`);
-        if ((a.type === 'setVar' || a.type === 'addVar' || a.type === 'randVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);
+        if ((a.type === 'setVar' || a.type === 'addVar' || a.type === 'randVar' || a.type === 'maxVar') && !names.has(a.var)) warn('error', `Regla en "${s.name}": variable "${a.var}" no existe.`);
       }
       if (refs.some((id) => !objIds.has(id))) warn('error', `Regla en "${s.name}": hace referencia a un objeto que ya no existe.`);
     }

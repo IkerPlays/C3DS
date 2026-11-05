@@ -295,3 +295,20 @@ test('mosaico de sprites: plataformas con ladrillos (simulador y C)', async () =
   ground.tileCols = 64; ground.tileRows = 64;
   assert.ok(validate(p).some((x) => /mosaico/.test(x.text)));
 });
+
+test('récord: Corredor y Pong guardan el máximo (maxVar) en simulador y C', () => {
+  const r = runnerProject(); const g = new Game(r, { rng: () => 0.5 });
+  const pl = g.objs.find((o) => o.name === 'Jugador'); const ob = g.objs.find((o) => o.name === 'Obstáculo');
+  g.vars.puntos = 7;
+  ob.x = pl.x; ob.y = pl.y; ob.vx = 0;
+  g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.equal(g.scene.name, 'Fin');
+  assert.equal(g.vars.record, 7, 'el récord sube');
+  g.vars.puntos = 3; g.vars.record = 7;
+  assert.match(generateMainC(r), /if \(vars\[0\] > vars\[1\]\) vars\[1\] = vars\[0\];/);
+  const p = pongProject(); const h = new Game(p, { rng: () => 0.5 });
+  const ball = h.objs.find((o) => o.name === 'Pelota');
+  h.vars.puntos = 4; ball.x = 0; ball.vx = -3;
+  h.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.equal(h.vars.mejor, 4, 'la mejor racha se guarda'); assert.equal(h.vars.puntos, 0);
+});

@@ -28,6 +28,7 @@ export const ACTIONS = {
   setVar: { label: 'Poner variable a', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Valor' }] },
   addVar: { label: 'Sumar a variable', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'value', t: 'number', label: 'Cantidad' }] },
   randVar: { label: 'Poner variable a un número al azar', fields: [{ k: 'var', t: 'var', label: 'Variable' }, { k: 'min', t: 'number', label: 'Mínimo' }, { k: 'max', t: 'number', label: 'Máximo' }] },
+  maxVar: { label: 'Guardar el máximo en una variable (récord)', fields: [{ k: 'var', t: 'var', label: 'Variable (récord)' }, { k: 'from', t: 'var', label: 'Comparar con' }] },
   sound: { label: 'Reproducir sonido', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
   stopSound: { label: 'Parar sonido / música', fields: [{ k: 'sound', t: 'sound', label: 'Sonido' }] },
   setPos: { label: 'Colocar objeto en', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'x', t: 'number', label: 'X' }, { k: 'y', t: 'number', label: 'Y' }] },
@@ -104,6 +105,7 @@ function describeBase(r, p, scene) {
   const act = (a) => ({
     goto: () => T(`ir a “${sc(a.scene)}”`, `go to “${sc(a.scene)}”`), setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
     randVar: () => T(`${a.var} = azar(${a.min}…${a.max})`, `${a.var} = random(${a.min}…${a.max})`),
+    maxVar: () => T(`${a.var} = máx(${a.var}, ${a.from})`, `${a.var} = max(${a.var}, ${a.from})`),
     sound: () => T(`sonar “${snd(a.sound)}”`, `play “${snd(a.sound)}”`), stopSound: () => T(`parar “${snd(a.sound)}”`, `stop “${snd(a.sound)}”`),
     setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => T(`mover ${obj(a.obj)} (${a.dx}, ${a.dy})`, `move ${obj(a.obj)} (${a.dx}, ${a.dy})`),
     randomPos: () => T(`${obj(a.obj)} al azar`, `${obj(a.obj)} at random`), landOn: () => T(`${obj(a.obj)} aterriza sobre ${obj(a.on)}`, `${obj(a.obj)} lands on ${obj(a.on)}`),

@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Arreglo: el **récord** de Corredor y la **mejor racha** de Pong nunca se actualizaban. Nueva acción **“Guardar el máximo en una variable”** (simulador, C y referencia).
 - Dos lecciones nuevas: **6 · Gravedad y sólidos** y **7 · Perseguir**.
 - Sprites: **espejo horizontal** (propiedad y acción “Voltear un sprite”), en simulador y C.
 - Sprites: **mosaico** (repite la imagen en columnas × filas) para suelos y muros, en simulador y C. La plantilla Plataformas usa ladrillos.

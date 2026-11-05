@@ -60,7 +60,7 @@ export function pongProject() {
     { id: nextId(p), when: { type: 'edge', obj: ball.id, edge: 'bottom' }, then: [{ type: 'setVel', obj: ball.id, axis: 'y', value: -2 }] },
     { id: nextId(p), when: { type: 'var', var: 'puntos', op: '>', value: 0 }, then: [] },
     { id: nextId(p), when: { type: 'edge', obj: ball.id, edge: 'left' }, then: [
-      { type: 'setPos', obj: ball.id, x: 200, y: 110 }, { type: 'setVel', obj: ball.id, axis: 'x', value: 3 }, { type: 'setVel', obj: ball.id, axis: 'y', value: 2 }, { type: 'setVar', var: 'puntos', value: 0 },
+      { type: 'setPos', obj: ball.id, x: 200, y: 110 }, { type: 'setVel', obj: ball.id, axis: 'x', value: 3 }, { type: 'setVel', obj: ball.id, axis: 'y', value: 2 }, { type: 'maxVar', var: 'mejor', from: 'puntos' }, { type: 'setVar', var: 'puntos', value: 0 },
     ] },
   );
   s.rules = s.rules.filter((r) => r.then.length);
@@ -137,7 +137,7 @@ export function runnerProject() {
     { id: nextId(p), when: { type: 'collide', a: player.id, b: ground.id }, then: [{ type: 'landOn', obj: player.id, on: ground.id }] },
     { id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: ground.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9 }, { type: 'sound', sound: beep }] },
     { id: nextId(p), when: { type: 'edge', obj: ob.id, edge: 'left' }, then: [{ type: 'setPos', obj: ob.id, x: 380, y: 184 }, { type: 'addVar', var: 'puntos', value: 1 }] },
-    { id: nextId(p), when: { type: 'collide', a: player.id, b: ob.id }, then: [{ type: 'goto', scene: over.id }] },
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: ob.id }, then: [{ type: 'maxVar', var: 'record', from: 'puntos' }, { type: 'goto', scene: over.id }] },
   );
   const fin = makeObject(p, 'text', { name: 'Fin', x: 130, y: 90, text: '¡Tropezaste!  {puntos} puntos', color: '#ffffff' });
   const again = makeObject(p, 'button', { name: 'Reintentar', x: 100, y: 100, text: 'Reintentar' });
