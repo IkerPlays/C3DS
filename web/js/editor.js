@@ -625,7 +625,7 @@ function showShortcuts() {
 
 /** Lista de lo que se puede usar en las reglas (generada a partir de rules.js, así nunca se queda anticuada). */
 function showReference() {
-  const list = (schema) => h('ul', { class: 'ref-list' }, Object.values(schema).map((e) => h('li', {}, h('strong', {}, e.label), e.fields.length ? h('span', { class: 'muted small' }, ` — ${e.fields.map((f) => f.label).filter(Boolean).join(', ')}`) : null)));
+  const list = (schema) => h('ul', { class: 'ref-list' }, Object.values(schema).map((e) => h('li', {}, h('strong', {}, e.label), e.fields.length ? h('span', { class: 'muted small' }, ' — ', e.fields.filter((f) => f.label).map((f, i) => [i ? ', ' : '', h('span', {}, f.label)])) : null)));
   dialog('Eventos y acciones', h('div', { id: 'reference' }, h('h4', {}, 'CUANDO (eventos)'), list(EVENTS), h('h4', {}, 'ENTONCES (acciones)'), list(ACTIONS)));
 }
 

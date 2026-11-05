@@ -687,3 +687,13 @@ test('mosaico: el suelo de la plantilla Plataformas se dibuja repetido en la vis
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('referencia de reglas en inglés: también los nombres de los campos', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url + '/?lang=en', { hash: '#home' });
+  await page.click('[data-tab=editor]'); await page.click('#btn-help'); await page.click('#btn-reference');
+  const text = await page.textContent('#reference');
+  assert.ok(text.includes('Object') && text.includes('Compare with'), 'campos en inglés');
+  assert.ok(!/Objeto|Variable \(récord\)|Comparar/.test(text), 'sin español: ' + text.slice(0, 120));
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

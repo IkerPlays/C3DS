@@ -9,7 +9,7 @@ export function h(tag, props = {}, ...kids) {
     else if (['value', 'checked', 'disabled', 'selected', 'hidden', 'textContent', 'innerHTML'].includes(k)) e[k] = v;
     else e.setAttribute(k, v === true ? '' : v);
   }
-  for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  for (const kid of kids.flat(Infinity)) if (kid != null && kid !== false) e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
   // Accesibilidad: un botón/etiqueta solo con icono usa su título como nombre accesible.
   if ((tag === 'button' || tag === 'label') && props?.title && !props['aria-label'] && !(e.textContent || '').trim()) e.setAttribute('aria-label', props.title);
   return e;
