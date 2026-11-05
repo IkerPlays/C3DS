@@ -196,7 +196,7 @@ export function chaseProject() {
     { id: nextId(p), when: { type: 'collide', a: player.id, b: coin.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'randomPos', obj: coin.id, axis: 'xy' }, { type: 'setVel', obj: enemy.id, axis: 'x', value: 0 }] },
     { id: nextId(p), when: { type: 'collide', a: player.id, b: enemy.id }, then: [{ type: 'goto', scene: over.id }] },
   );
-  const fin = makeObject(p, 'text', { name: 'Fin', x: 130, y: 90, text: '¡Te alcanzaron!  {puntos} puntos', color: '#ffffff' });
+  const fin = makeObject(p, 'text', { name: 'Fin', x: 200, y: 90, align: 'center', text: '¡Te alcanzaron!  {puntos} puntos', color: '#ffffff' });
   const again = makeObject(p, 'button', { name: 'Reintentar', x: 100, y: 100, text: 'Reintentar' });
   over.objects.push(fin, again);
   over.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });

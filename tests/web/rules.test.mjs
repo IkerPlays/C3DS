@@ -114,3 +114,19 @@ test('keyUp: se suelta un botón (simulador y C)', async () => {
   assert.match(generateMainC(p), /keys_up = hidKeysUp\(\);/);
   assert.match(describeRule(sc.rules[0], p, sc), /Al soltar A/);
 });
+
+test('setOpacity y alineación centrada: simulador y C', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { makeObject } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.rules.length = 0;
+  const t = makeObject(p, 'text', { name: 'Titulo', x: 200, y: 10, text: 'Hola', align: 'center' });
+  sc.objects.push(t);
+  sc.rules.push({ id: 1, when: { type: 'start' }, then: [{ type: 'setOpacity', obj: t.id, value: 0.25 }] });
+  const g = new Game(p); g.enter(sc.id);
+  g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.equal(g.objs.find((o) => o.id === t.id).opacity, 0.25);
+  const c = generateMainC(p);
+  assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /1 \}, \/\/ \d+/);
+  assert.match(describeRule(sc.rules[0], p, sc), /opacidad de Titulo = 0\.25/);
+});

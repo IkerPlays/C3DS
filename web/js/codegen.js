@@ -75,7 +75,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -111,6 +111,7 @@ export function generateMainC(p) {
       case 'setVel': return `objs[${o}].${a.axis === 'y' ? 'vy' : 'vx'} = ${flt(a.value)};`;
       case 'setText': return `objs[${o}].tmpl = ${tplId(a.text)};`;
       case 'setAnim': { const g = A.groupOf.get(a.group); return g ? `objs[${o}].anim_off = ${g.off}; objs[${o}].anim_n = ${g.n};` : `objs[${o}].anim_n = 0;`; }
+      case 'setOpacity': return `objs[${o}].opacity = ${flt(Math.max(0, Math.min(1, Number(a.value) || 0)), 3)};`;
       case 'setColor': return `objs[${o}].color = ${col(a.color)};`;
       case 'show': return `objs[${o}].visible = 1;`;
       case 'hide': return `objs[${o}].visible = 0;`;
@@ -157,6 +158,7 @@ typedef struct {
 	u32 color;
 	int solid, follow;
 	float fspeed, opacity;
+	int align;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -391,11 +393,11 @@ static u32 with_alpha(u32 c, float a) {
 	return (c & 0x00FFFFFFu) | ((u32)(a * 255.0f) << 24);
 }
 
-static void draw_text(const char* s, float x, float y, u32 color, float size) {
+static void draw_text(const char* s, float x, float y, u32 color, float size, int center) {
 	C2D_Text t;
 	C2D_TextParse(&t, text_buf, s);
 	C2D_TextOptimize(&t);
-	C2D_DrawText(&t, C2D_WithColor, x, y, 0.0f, 0.55f * size, 0.55f * size, color);
+	C2D_DrawText(&t, C2D_WithColor | (center ? C2D_AlignCenter : 0), x, y, 0.0f, 0.55f * size, 0.55f * size, color);
 }
 
 static void draw_screen(int screen) {
@@ -411,11 +413,11 @@ ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames
 			  C2D_ImageTint tint; C2D_AlphaImageTint(&tint, o->opacity);
 			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, &tint, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
 			break;
-		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, with_alpha(o->color, o->opacity), o->tsize); break;
+		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, with_alpha(o->color, o->opacity), o->tsize, o->align); break;
 		case T_BUTTON:
 			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));
 			format_text(o->tmpl, buf, sizeof buf);
-			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, with_alpha(0xFF000000, o->opacity), o->tsize);
+			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, with_alpha(0xFF000000, o->opacity), o->tsize, 0);
 			break;
 		}
 	}

@@ -171,7 +171,7 @@ export const EN = {
   'Se buscó ProjectSettings/ (Unity), project.godot (Godot), *.uproject (Unreal) o un único .exe.': 'Looked for ProjectSettings/ (Unity), project.godot (Godot), *.uproject (Unreal) or a single .exe.',
   'Shaders incompatibles': 'Incompatible shaders', 'Modelos 3D': '3D models', 'Texturas fuera de límites': 'Textures out of limits', 'Texturas sin comprobar': 'Unchecked textures',
   'Solo se miden dimensiones de PNG; el resto se validará al convertir.': 'Only PNG dimensions are measured; the rest will be validated on conversion.', 'Proyecto muy grande': 'Very large project',
-  'Ajustar': 'Fit', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
+  'Ajustar': 'Fit', 'Alineación': 'Alignment', 'Izquierda': 'Left', 'Centrada (X es el centro)': 'Centered (X is the center)', 'Cambiar la opacidad de un objeto': 'Change an object’s opacity', 'Opacidad (0 a 1)': 'Opacity (0 to 1)', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
   'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',
   'C3DS - Crea juegos para Nintendo 3DS': 'C3DS - Make games for the Nintendo 3DS', 'Importar · C3DS': 'Import · C3DS', 'Descargas · C3DS': 'Downloads · C3DS', 'Límites 3DS · C3DS': '3DS limits · C3DS',

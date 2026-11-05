@@ -37,6 +37,7 @@ export const ACTIONS = {
   setText: { label: 'Cambiar texto (usa {variable})', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'text', t: 'text', label: 'Texto' }] },
   setColor: { label: 'Cambiar el color de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'color', t: 'color', label: 'Color' }] },
   setAnim: { label: 'Cambiar animación de un sprite', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'group', t: 'group', label: 'Grupo' }] },
+  setOpacity: { label: 'Cambiar la opacidad de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'value', t: 'number', label: 'Opacidad (0 a 1)', step: 0.1, min: 0, max: 1 }] },
   show: { label: 'Mostrar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   hide: { label: 'Ocultar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   quit: { label: 'Salir del juego', fields: [] },
@@ -50,7 +51,7 @@ export function defaultFor(field, ctx) {
     case 'object': return scene.objects[0]?.id ?? null;
     case 'var': return p.variables[0]?.name ?? '';
     case 'op': return '==';
-    case 'number': return field.k === 'seconds' ? 1 : field.k === 'max' ? 10 : field.k === 'value' && field.label === 'Cantidad' ? 1 : 0;
+    case 'number': return field.label.startsWith('Opacidad') ? 1 : field.k === 'seconds' ? 1 : field.k === 'max' ? 10 : field.k === 'value' && field.label === 'Cantidad' ? 1 : 0;
     case 'text': return 'Texto';
     case 'scene': return p.scenes.find((s) => s.id !== scene.id)?.id ?? p.scenes[0]?.id ?? null;
     case 'sound': return p.assets.sounds[0]?.id ?? null;
@@ -106,6 +107,7 @@ function describeBase(r, p, scene) {
     setVel: () => T(`vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`, `speed ${a.axis === 'y' ? 'Y' : 'X'} of ${obj(a.obj)} = ${a.value}`),
     setAnim: () => T(`animación de ${obj(a.obj)} = ${a.group || 'ninguna'}`, `animation of ${obj(a.obj)} = ${a.group || 'none'}`),
     setText: () => T(`texto de ${obj(a.obj)}`, `text of ${obj(a.obj)}`), setColor: () => T(`color de ${obj(a.obj)} = ${a.color}`, `color of ${obj(a.obj)} = ${a.color}`),
+    setOpacity: () => T(`opacidad de ${obj(a.obj)} = ${a.value}`, `opacity of ${obj(a.obj)} = ${a.value}`),
     show: () => T(`mostrar ${obj(a.obj)}`, `show ${obj(a.obj)}`), hide: () => T(`ocultar ${obj(a.obj)}`, `hide ${obj(a.obj)}`), quit: () => T('salir', 'quit'),
   }[a.type]?.() ?? '…');
   return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || T('nada', 'nothing')}`;

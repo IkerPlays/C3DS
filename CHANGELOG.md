@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Reglas: acción **“Cambiar la opacidad de un objeto”**. Textos con **alineación centrada** (también en el C con `C2D_AlignCenter`).
 - Editor: zoom **“Ajustar”** (el escenario se adapta a la ventana). Se respeta “reducir movimiento” del sistema.
 - Objetos: propiedad **“Sigue a”** (persecución con velocidad propia) y **opacidad**, en simulador y en el C de la 3DS. Plantilla **Persecución**.
 - Con la interfaz en inglés, las **plantillas, lecciones y el proyecto inicial** también salen en inglés (variables, objetos, escenas, recursos y textos, renombrados de forma coherente).
