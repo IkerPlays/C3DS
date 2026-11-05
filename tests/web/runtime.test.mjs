@@ -113,6 +113,30 @@ test('objetos sólidos bloquean el paso y dejan apoyarse', async () => {
   assert.ok(h.x + h.w <= 100, 'el muro lo detiene: x=' + h.x);
   assert.equal(h.y + h.h, 200, 'se apoya exactamente en el suelo');
   const c = generateMainC(p);
-  assert.match(c, /static int blocked\(int i\)/); assert.match(c, /int solid;/);
-  assert.match(c, /0xFF[0-9A-F]{6}, 1 \}, \/\/ \d+/);
+  assert.match(c, /static int blocked\(int i\)/); assert.match(c, /int solid, follow;/);
+  assert.match(c, /0xFF[0-9A-F]{6}, 1, -1, 1\.000f, 1\.000f \}, \/\/ \d+/);
+});
+
+test('seguir a otro objeto y opacidad (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { validate } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.objects.length = 0; sc.rules.length = 0;
+  const target = makeObject(p, 'rect', { name: 'Objetivo', x: 300, y: 100, w: 20, h: 20 });
+  const chaser = makeObject(p, 'rect', { name: 'Perseguidor', x: 20, y: 100, w: 20, h: 20, follow: target.id, followSpeed: 2, opacity: 0.5 });
+  sc.objects.push(target, chaser);
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p); g.enter(sc.id);
+  const c = g.objs.find((o) => o.name === 'Perseguidor');
+  for (let i = 0; i < 20; i++) g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.ok(Math.abs(c.x - 60) < 0.01, 'avanza 2 px por frame hacia el objetivo: x=' + c.x);
+  for (let i = 0; i < 300; i++) g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
+  assert.ok(Math.abs(c.x - 300) < 0.6 && Math.abs(c.y - 100) < 0.6, 'llega al objetivo');
+  const code = generateMainC(p);
+  assert.match(code, /static u32 with_alpha/); assert.match(code, /float fspeed, opacity;/); assert.match(code, /sqrtf\(fdx \* fdx/);
+  assert.match(code, /0xFFFFFFFF, 0, 2, 2\.000f, 0\.500f \}/);
+  chaser.follow = 9999;
+  assert.ok(validate(p).some((x) => /sigue a un objeto/.test(x.text)));
+  chaser.follow = target.id; chaser.opacity = 2;
+  assert.ok(validate(p).some((x) => /opacidad/.test(x.text)));
 });

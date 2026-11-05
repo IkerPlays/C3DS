@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -228,4 +228,14 @@ test('Laberinto: los muros bloquean y la meta lleva a la pantalla final', () => 
   for (let i = 0; i < 100; i++) g.step({ down: new Set(), held, touch: null, touchDown: false });
   assert.equal(pl.x, 120, 'el segundo muro (abajo) lo detiene');
   assert.match(generateMainC(p), /blocked\(i\) >= 0/);
+});
+
+test('Persecución: el enemigo te alcanza si te quedas quieto y se ve en el C', () => {
+  const p = chaseProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p, { rng: () => 0.9 });
+  const inp = { down: new Set(), held: new Set(), touch: null, touchDown: false };
+  for (let i = 0; i < 400; i++) g.step(inp);
+  assert.equal(g.scene.name, 'Fin');
+  assert.match(generateMainC(p), /sqrtf\(fdx \* fdx/);
 });

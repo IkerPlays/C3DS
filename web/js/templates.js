@@ -179,6 +179,31 @@ export function mazeProject() {
   return p;
 }
 
+/** Persecución: un enemigo te sigue (propiedad "Sigue a"); recoge monedas sin que te alcance. */
+export function chaseProject() {
+  const p = empty('Persecución');
+  p.variables = [{ name: 'puntos', value: 0 }];
+  const coinSnd = addBeep(p, 'moneda', 880);
+  const game = makeScene(p, 'Juego'); const over = makeScene(p, 'Fin');
+  game.bg.top = '#1d2b53'; game.bg.bottom = '#0e1020'; over.bg.top = '#7e2553'; over.bg.bottom = '#1d2b53';
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 60, y: 110, w: 22, h: 22, color: '#29adff', controls: true, speed: 3 });
+  const enemy = makeObject(p, 'rect', { name: 'Enemigo', x: 340, y: 190, w: 26, h: 26, color: '#ff004d', follow: player.id, followSpeed: 1.1, opacity: 0.9 });
+  const coin = makeObject(p, 'rect', { name: 'Moneda', x: 200, y: 60, w: 16, h: 16, color: '#ffec27' });
+  const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Puntos: {puntos}', color: '#ffffff' });
+  const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 110, text: 'No dejes que el rojo te alcance', color: '#c2c3c7' });
+  game.objects.push(coin, player, enemy, score, help);
+  game.rules.push(
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: coin.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'randomPos', obj: coin.id, axis: 'xy' }, { type: 'setVel', obj: enemy.id, axis: 'x', value: 0 }] },
+    { id: nextId(p), when: { type: 'collide', a: player.id, b: enemy.id }, then: [{ type: 'goto', scene: over.id }] },
+  );
+  const fin = makeObject(p, 'text', { name: 'Fin', x: 130, y: 90, text: '¡Te alcanzaron!  {puntos} puntos', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Reintentar', x: 100, y: 100, text: 'Reintentar' });
+  over.objects.push(fin, again);
+  over.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
+  p.scenes.push(game, over); p.startScene = game.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -266,5 +291,6 @@ export const TEMPLATES = [
   { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: () => maybeLocalize(runnerProject()) },
   { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: () => maybeLocalize(toposProject()) },
   { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: () => maybeLocalize(mazeProject()) },
+  { id: 'chase', name: 'Persecución (enemigo que te sigue)', desc: 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.', icon: 'comet', make: () => maybeLocalize(chaseProject()) },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: () => maybeLocalize(blankProject()) },
 ];

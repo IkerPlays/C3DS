@@ -64,6 +64,13 @@ export class Game {
         if (o.controls !== 'v') mx = ((held.has('RIGHT') ? 1 : 0) - (held.has('LEFT') ? 1 : 0)) * o.speed;
         if (o.controls !== 'h') my = ((held.has('DOWN') ? 1 : 0) - (held.has('UP') ? 1 : 0)) * o.speed;
       }
+      if (o.follow != null) {
+        const t = this.obj(o.follow);
+        if (t && t.visible && t.screen === o.screen) {
+          const dx = t.x + t.w / 2 - (o.x + o.w / 2); const dy = t.y + t.h / 2 - (o.y + o.h / 2); const d = Math.hypot(dx, dy);
+          if (d > 0.5) { const k = Math.min(num(o.followSpeed) || 1, d) / d; mx += dx * k; my += dy * k; }
+        }
+      }
       if (o.gravity) o.vy = Math.min(12, num(o.vy) + num(o.gravity));
       mx += num(o.vx); my += num(o.vy);
       if (!mx && !my) continue;
@@ -166,12 +173,14 @@ export function render(game, ctxs, images) {
     ctx.textBaseline = 'top'; ctx.font = '14px "DejaVu Sans Mono", monospace';
     for (const o of game.objs) {
       if (!o.visible || o.screen !== key) continue;
+      ctx.globalAlpha = o.opacity == null ? 1 : Math.max(0, Math.min(1, o.opacity));
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
       else if (o.type === 'sprite') { const im = images.get(spriteImage(game, o)); if (im) ctx.drawImage(im, o.x, o.y, o.w, o.h); else ctx.fillRect(o.x, o.y, o.w, o.h); }
       else if (o.type === 'text') { ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x, o.y); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; const k = o.size || 1; ctx.font = `${14 * k}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8 * k); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
     }
+    ctx.globalAlpha = 1;
   }
 }
 

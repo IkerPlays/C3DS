@@ -75,7 +75,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -136,6 +136,7 @@ export function generateMainC(p) {
 // Compilar con devkitARM + libctru + citro2d (ver Makefile).
 #include <3ds.h>
 #include <citro2d.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -154,7 +155,8 @@ typedef struct {
 	float x, y, w, h, speed, vx, vy, gravity, tsize;
 	int visible;
 	u32 color;
-	int solid;
+	int solid, follow;
+	float fspeed, opacity;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -344,6 +346,14 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 			if (held & KEY_DUP)    o->y -= o->speed;
 			if (held & KEY_DDOWN)  o->y += o->speed;
 		}
+		if (o->follow >= 0) {
+			const Obj* t = &objs[o->follow];
+			if (t->visible && t->screen == o->screen && t->scene == o->scene) {
+				float fdx = (t->x + t->w / 2) - (o->x + o->w / 2), fdy = (t->y + t->h / 2) - (o->y + o->h / 2);
+				float fd = sqrtf(fdx * fdx + fdy * fdy);
+				if (fd > 0.5f) { float fk = (o->fspeed < fd ? o->fspeed : fd) / fd; o->x += fdx * fk; o->y += fdy * fk; }
+			}
+		}
 		if (o->gravity != 0) { o->vy += o->gravity; if (o->vy > 12) o->vy = 12; }
 		o->x += o->vx;
 		o->y += o->vy;
@@ -375,6 +385,12 @@ ${sceneRules}
 /* ---------- Dibujo ---------- */
 ${A.hasImages ? `static C2D_SpriteSheet sheet;\nstatic const int anim_tbl[${Math.max(1, A.animTable.length)}] = { ${A.animTable.join(', ') || '0'} };\n` : ''}static C2D_TextBuf text_buf;
 
+static u32 with_alpha(u32 c, float a) {
+	if (a >= 1.0f) return c;
+	if (a < 0.0f) a = 0.0f;
+	return (c & 0x00FFFFFFu) | ((u32)(a * 255.0f) << 24);
+}
+
 static void draw_text(const char* s, float x, float y, u32 color, float size) {
 	C2D_Text t;
 	C2D_TextParse(&t, text_buf, s);
@@ -388,17 +404,18 @@ static void draw_screen(int screen) {
 		const Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible || o->screen != screen) continue;
 		switch (o->type) {
-		case T_RECT: C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color); break;
+		case T_RECT: C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity)); break;
 		case T_SPRITE:
 ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames * o->anim_fps / 60) % o->anim_n] : o->image;
 			  C2D_Image img = C2D_SpriteSheetGetImage(sheet, idx);
-			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, NULL, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color);'}
+			  C2D_ImageTint tint; C2D_AlphaImageTint(&tint, o->opacity);
+			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, &tint, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
 			break;
-		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, o->color, o->tsize); break;
+		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, with_alpha(o->color, o->opacity), o->tsize); break;
 		case T_BUTTON:
-			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, o->color);
+			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));
 			format_text(o->tmpl, buf, sizeof buf);
-			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, 0xFF000000, o->tsize);
+			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, with_alpha(0xFF000000, o->opacity), o->tsize);
 			break;
 		}
 	}
