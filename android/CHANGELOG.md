@@ -4,6 +4,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-05
+- Mismas mejoras que la web (interfaz en inglés, física con sólidos y “sigue a”, mosaico y espejo de sprites, selección múltiple, autor e icono del juego, 10 plantillas y 7 lecciones).
+
 ## [0.4.0] - 2026-10-31
 - Mismas mejoras que la web (objetos sólidos, plantillas Topos y Laberinto, nuevas reglas, arreglo del inspector).
 
