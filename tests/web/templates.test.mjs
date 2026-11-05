@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject, platformerProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -238,4 +238,31 @@ test('Persecución: el enemigo te alcanza si te quedas quieto y se ve en el C', 
   for (let i = 0; i < 400; i++) g.step(inp);
   assert.equal(g.scene.name, 'Fin');
   assert.match(generateMainC(p), /sqrtf\(fdx \* fdx/);
+});
+
+test('Plataformas: cae al suelo, salta a la primera plataforma, recoge monedas y gana', () => {
+  const p = platformerProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p, { rng: () => 0.5 });
+  const pl = g.objs.find((o) => o.name === 'Jugador'); const ground = g.objs.find((o) => o.name === 'Suelo'); const p1 = g.objs.find((o) => o.name === 'Plataforma 1');
+  const step = (down = [], held = []) => g.step({ down: new Set(down), held: new Set(held), touch: null, touchDown: false });
+  for (let i = 0; i < 60; i++) step();
+  assert.equal(pl.y + pl.h, ground.y, 'aterriza en el suelo');
+  step(['A']);
+  assert.ok(pl.vy < 0, 'salta desde el suelo');
+  step(['A']); const vy = pl.vy; step(['A']);
+  assert.ok(pl.vy >= vy, 'no hay doble salto en el aire');
+  // salto y avance hasta la primera plataforma
+  for (let i = 0; i < 200; i++) step([], ['RIGHT']);
+  assert.ok(g.scene.name === 'Juego');
+  // colocar al jugador sobre la plataforma: puede volver a saltar
+  pl.x = p1.x + 10; pl.y = p1.y - pl.h - 0.5; pl.vy = 0;
+  for (let i = 0; i < 5; i++) step();
+  step(['A']);
+  assert.ok(pl.vy < 0, 'salta desde la plataforma');
+  // recoger las tres monedas lleva a la pantalla final
+  for (const n of ['Moneda 1', 'Moneda 2', 'Moneda 3']) { const c = g.objs.find((o) => o.name === n); pl.x = c.x; pl.y = c.y; step(); }
+  step();
+  assert.equal(g.scene.name, 'Meta');
+  assert.match(generateMainC(p), /standing_on\(/);
 });

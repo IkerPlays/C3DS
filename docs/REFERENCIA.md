@@ -76,4 +76,5 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - **Topos (táctil)**: Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.
 - **Laberinto (muros sólidos)**: Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.
 - **Persecución (enemigo que te sigue)**: La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.
+- **Plataformas (saltar y recoger)**: Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.
 - **En blanco**: Una escena vacía.

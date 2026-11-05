@@ -54,6 +54,7 @@ export const EN = {
   'Topos (táctil)': 'Whack-a-mole (touch)', 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.': 'Tap the mole before it jumps; timer, countdown and a final screen.',
   'Laberinto (muros sólidos)': 'Maze (solid walls)', 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.': 'Solid objects that block the way: reach the goal without going through the walls.',
   'Persecución (enemigo que te sigue)': 'Chase (an enemy follows you)', 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.': 'The “Follows” property makes an enemy chase you; collect coins without getting caught.',
+  'Plataformas (saltar y recoger)': 'Platformer (jump and collect)', 'Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.': 'Solid platforms, gravity, jumping from any surface and three coins to collect.',
   'En blanco': 'Blank', 'Una escena vacía.': 'An empty scene.',
   '1 · Mover un objeto': '1 · Move an object', '2 · Colisiones': '2 · Collisions', '3 · Variables y marcador': '3 · Variables and scoreboard', '4 · Varias escenas': '4 · Several scenes', '5 · Sonido y música': '5 · Sound and music',
   'D-Pad, Circle Pad y control solo horizontal/vertical.': 'D-Pad, Circle Pad and horizontal-only / vertical-only control.',

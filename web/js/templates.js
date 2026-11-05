@@ -204,6 +204,33 @@ export function chaseProject() {
   return p;
 }
 
+/** Plataformas: gravedad, plataformas sólidas, salto solo desde el suelo o una plataforma y monedas que recoger. */
+export function platformerProject() {
+  const p = empty('Plataformas');
+  p.variables = [{ name: 'puntos', value: 0 }];
+  const jump = addBeep(p, 'salto', 520); const coinSnd = addBeep(p, 'moneda', 880);
+  const game = makeScene(p, 'Juego'); const win = makeScene(p, 'Meta');
+  game.bg.top = '#29adff'; game.bg.bottom = '#1d2b53'; win.bg.top = '#008751'; win.bg.bottom = '#1d2b53';
+  const plat = (name, x, y, w) => makeObject(p, 'rect', { name, x, y, w, h: 10, color: '#00e436', solid: true });
+  const ground = makeObject(p, 'rect', { name: 'Suelo', x: 0, y: 216, w: 400, h: 24, color: '#008751', solid: true });
+  const p1 = plat('Plataforma 1', 90, 170, 70); const p2 = plat('Plataforma 2', 190, 130, 70); const p3 = plat('Plataforma 3', 300, 90, 70);
+  const coin = (name, x, y) => makeObject(p, 'rect', { name, x, y, w: 14, h: 14, color: '#ffec27' });
+  const c1 = coin('Moneda 1', 118, 150); const c2 = coin('Moneda 2', 218, 110); const c3 = coin('Moneda 3', 328, 70);
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 20, y: 150, w: 22, h: 30, color: '#ff004d', controls: 'h', speed: 3, gravity: 0.6 });
+  const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {puntos} / 3', color: '#ffffff' });
+  const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 100, text: '← → mover   A saltar', color: '#c2c3c7' });
+  game.objects.push(ground, p1, p2, p3, c1, c2, c3, player, score, help);
+  for (const on of [ground, p1, p2, p3]) game.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9.2 }, { type: 'sound', sound: jump }] });
+  for (const c of [c1, c2, c3]) game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: c.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'hide', obj: c.id }] });
+  game.rules.push({ id: nextId(p), when: { type: 'var', var: 'puntos', op: '>=', value: 3 }, then: [{ type: 'goto', scene: win.id }] });
+  const t = makeObject(p, 'text', { name: 'Texto', x: 200, y: 90, align: 'center', text: '¡Lo conseguiste!', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Otra vez', x: 100, y: 100, text: 'Otra vez' });
+  win.objects.push(t, again);
+  win.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
+  p.scenes.push(game, win); p.startScene = game.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -292,5 +319,6 @@ export const TEMPLATES = [
   { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: () => maybeLocalize(toposProject()) },
   { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: () => maybeLocalize(mazeProject()) },
   { id: 'chase', name: 'Persecución (enemigo que te sigue)', desc: 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.', icon: 'comet', make: () => maybeLocalize(chaseProject()) },
+  { id: 'platformer', name: 'Plataformas (saltar y recoger)', desc: 'Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.', icon: 'runner', make: () => maybeLocalize(platformerProject()) },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: () => maybeLocalize(blankProject()) },
 ];
