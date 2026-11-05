@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Atajo **Ctrl+Intro** para probar / detener la vista previa.
 
 ## [0.5.0] - 2026-11-05
 - Guía **“Tu primer juego en 10 minutos”** (`docs/GUIA.md` y `docs/GUIDE.en.md`).

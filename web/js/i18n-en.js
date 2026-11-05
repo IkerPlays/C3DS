@@ -182,6 +182,7 @@ export const EN = {
   '6 · Gravedad y sólidos': '6 · Gravity and solids', 'Saltar, caer y no atravesar suelos ni escalones.': 'Jump, fall and do not pass through floors or steps.', '7 · Perseguir': '7 · Chasing', 'La propiedad “Sigue a” para enemigos que te persiguen.': 'The “Follows” property for enemies that chase you.',
   'Guardar el máximo en una variable (récord)': 'Keep the maximum in a variable (high score)', 'Variable (récord)': 'Variable (high score)', 'Comparar con': 'Compare with',
   'Transición entre escenas': 'Scene transition', 'Corte directo': 'Hard cut', 'Fundido desde negro': 'Fade in from black',
+  'Ctrl+Intro': 'Ctrl+Enter', 'Probar / detener la vista previa': 'Test / stop the preview',
   'Duplicar regla': 'Duplicate rule', 'Ajustar': 'Fit', 'Alineación': 'Alignment', 'Izquierda': 'Left', 'Centrada (X es el centro)': 'Centered (X is the center)', 'Cambiar la opacidad de un objeto': 'Change an object’s opacity', 'Opacidad (0 a 1)': 'Opacity (0 to 1)', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
   'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',

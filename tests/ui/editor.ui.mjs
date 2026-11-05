@@ -731,3 +731,15 @@ test('primera visita: el idioma sale del navegador (inglés por defecto salvo en
   assert.equal(await es.page.locator('#tabs button').first().textContent(), 'Inicio');
   await es.ctx.close();
 });
+
+test('atajo Ctrl+Intro: arranca y detiene la vista previa', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.keyboard.press('Control+Enter');
+  await page.waitForFunction(() => !!window.c3ds.editor.getGame());
+  assert.match(await page.textContent('#btn-play'), /Detener/);
+  await page.keyboard.press('Control+Enter');
+  await page.waitForFunction(() => !window.c3ds.editor.getGame());
+  assert.match(await page.textContent('#btn-play'), /Probar/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
