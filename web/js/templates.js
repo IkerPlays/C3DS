@@ -318,12 +318,31 @@ export const lessonSound = () => lesson('Lección 5 - Sonido', (p, sc) => {
   note(p, sc, 'Las canciones usan “bucle” (el icono de repetir en la lista de sonidos).', 200);
 });
 
+export const lessonPhysics = () => lesson('Lección 6 - Física', (p, sc) => {
+  const jump = addBeep(p, 'salto', 520);
+  const ground = makeObject(p, 'rect', { name: 'Suelo', x: 0, y: 216, w: 400, h: 24, color: '#008751', solid: true });
+  const step = makeObject(p, 'rect', { name: 'Escalón', x: 220, y: 176, w: 80, h: 40, color: '#00e436', solid: true });
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 40, y: 150, w: 24, h: 30, color: '#ff004d', controls: 'h', speed: 3, gravity: 0.6 });
+  sc.objects.push(ground, step, player);
+  for (const on of [ground, step]) sc.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9 }, { type: 'sound', sound: jump }] });
+  note(p, sc, '← → mueven, A salta. “Gravedad” empuja hacia abajo y “Sólido” frena el paso.', 20);
+});
+
+export const lessonChase = () => lesson('Lección 7 - Perseguir', (p, sc) => {
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 60, y: 110, w: 24, h: 24, color: '#29adff', controls: true, speed: 3 });
+  const enemy = makeObject(p, 'rect', { name: 'Perseguidor', x: 330, y: 190, w: 24, h: 24, color: '#ff004d', follow: player.id, followSpeed: 1 });
+  sc.objects.push(player, enemy);
+  note(p, sc, 'El rojo tiene “Sigue a” = Jugador. Cambia su velocidad en el panel.', 20);
+});
+
 export const LESSONS = [
   { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: () => maybeLocalize(lessonMove()) },
   { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: () => maybeLocalize(lessonCollide()) },
   { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: 'hash', make: () => maybeLocalize(lessonVariables()) },
   { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: 'clapper', make: () => maybeLocalize(lessonScenes()) },
   { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: 'sound', make: () => maybeLocalize(lessonSound()) },
+  { id: 'l6', name: '6 · Gravedad y sólidos', desc: 'Saltar, caer y no atravesar suelos ni escalones.', icon: 'runner', make: () => maybeLocalize(lessonPhysics()) },
+  { id: 'l7', name: '7 · Perseguir', desc: 'La propiedad “Sigue a” para enemigos que te persiguen.', icon: 'comet', make: () => maybeLocalize(lessonChase()) },
 ];
 
 export const TEMPLATES = [

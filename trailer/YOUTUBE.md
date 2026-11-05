@@ -24,7 +24,7 @@ Qué incluye
 - Editor visual con escenas, objetos, sprites animados, sonido, variables y reglas.
 - Simulador con pausa, paso a paso, cajas de colisión y variables en vivo.
 - Física: gravedad, objetos sólidos, velocidad y aterrizaje.
-- 8 plantillas (monedas, Pong, esquivar, arcade, corredor, topos, laberinto) y 5 lecciones.
+- 8 plantillas (monedas, Pong, esquivar, arcade, corredor, topos, laberinto) y 7 lecciones.
 - Exporta `.3dsx` y `.cia` (compilación en la nube), HTML5, Windows, macOS y Linux.
 - Apps para Windows, macOS, Linux, Android e iOS.
 - Importa escenas de Godot y Unity.

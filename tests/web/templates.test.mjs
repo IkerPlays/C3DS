@@ -184,7 +184,7 @@ test('C generado: gravedad, apoyar y aterrizar', () => {
 });
 
 test('lecciones: válidas, exportables y jugables', () => {
-  assert.equal(LESSONS.length, 5);
+  assert.equal(LESSONS.length, 7);
   for (const l of LESSONS) {
     const p = l.make();
     assert.deepEqual(validate(p).filter((x) => x.level === 'error'), [], l.id);
