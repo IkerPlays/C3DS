@@ -717,3 +717,17 @@ test('las miniaturas de plantillas con fundido no salen en negro', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('primera visita: el idioma sale del navegador (inglés por defecto salvo en español) y la elección manda', async () => {
+  const en = await openPage(browser, server.url, { hash: '#home', locale: 'en-US' });
+  assert.equal(await en.page.locator('#tabs button').first().textContent(), 'Home');
+  assert.equal(await en.page.textContent('#lang-btn'), 'EN');
+  await en.page.click('#lang-btn');                       // elige español a mano
+  await en.page.waitForFunction(() => document.querySelector('#tabs button')?.textContent === 'Inicio');
+  await en.page.reload();
+  assert.equal(await en.page.locator('#tabs button').first().textContent(), 'Inicio', 'la elección se recuerda');
+  await en.ctx.close();
+  const es = await openPage(browser, server.url, { hash: '#home', locale: 'es-ES' });
+  assert.equal(await es.page.locator('#tabs button').first().textContent(), 'Inicio');
+  await es.ctx.close();
+});

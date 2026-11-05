@@ -26,7 +26,7 @@ export async function launch() {
 /** Abre la página y recoge errores de consola / página. */
 export async function openPage(browser, url, opts = {}) {
   const { hash = '#editor', ...ctxOpts } = opts;
-  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 }, acceptDownloads: true, serviceWorkers: 'block', ...ctxOpts });
+  const ctx = await browser.newContext({ viewport: { width: 1400, height: 1000 }, acceptDownloads: true, serviceWorkers: 'block', locale: 'es-ES', ...ctxOpts });
   const page = await ctx.newPage();
   // La comprobación de versión llama a la API de GitHub: se simula (sin red, sin 404 mientras no haya release).
   await ctx.route('https://api.github.com/**', (r) => r.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(r.request().url().includes('/releases?') ? RELEASES : { tag_name: 'v0.0.1', html_url: 'https://example.com' }) }));

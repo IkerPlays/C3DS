@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- **Idioma automático**: la primera vez la web se abre en el idioma del navegador (español si es español, inglés en los demás); tu elección con el selector ES/EN se recuerda.
 - **Transición entre escenas** (fundido desde negro), elegible en la pestaña Escena; en simulador y C. Topos y Plataformas la usan.
 - Arreglo: el **récord** de Corredor y la **mejor racha** de Pong nunca se actualizaban. Nueva acción **“Guardar el máximo en una variable”** (simulador, C y referencia).
 - Dos lecciones nuevas: **6 · Gravedad y sólidos** y **7 · Perseguir**.

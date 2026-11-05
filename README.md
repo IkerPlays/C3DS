@@ -9,7 +9,7 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 - **Editor visual** (pestaña *Editor*): 10 plantillas (monedas, Pong, esquivar, arcade, corredor, topos, laberinto, persecución, plataformas…) y 7 lecciones, escenas, sprites (animación, mosaico, espejo), sonido, variables (con guardado de récords), reglas “cuando → entonces” (colisiones, bordes, velocidad, toques, temporizadores…), física (gravedad, objetos sólidos, “sigue a”), botones táctiles, **vista previa** al instante con pausa/paso a paso, selección múltiple, guardado automático en el navegador y deshacer/rehacer. Autor, descripción e icono del juego para el menú HOME.
 - **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego de escritorio para **Windows, macOS y Linux** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
 - **Importar y analizar** (en el navegador, sin subir nada): Unity, Godot, Unreal y `.exe`; mide límites de la 3DS, **convierte texturas y audio** (PNG en potencia de 2 ≤1024, WAV) y crea un proyecto del editor con ellos.
-- **Idioma**: español (por defecto) e inglés; selector **ES/EN** en la cabecera (o `?lang=en`). Se traduce la interfaz; los datos de tus proyectos no.
+- **Idioma**: español e inglés; la primera visita usa el idioma del navegador y el selector **ES/EN** de la cabecera (o `?lang=en`) lo cambia y se recuerda. Se traduce la interfaz; los datos de tus proyectos no.
 - **Apps**: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor). Aviso de nueva versión.
 
 ## Qué NO hace (todavía) — y por qué

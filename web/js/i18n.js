@@ -9,13 +9,16 @@ export function getLang() {
   try {
     const q = new URLSearchParams(location.search).get('lang');
     if (q === 'en' || q === 'es') { try { localStorage.setItem(KEY, q); } catch { /* ok */ } return q; }
-    return localStorage.getItem(KEY) === 'en' ? 'en' : 'es';
+    const saved = localStorage.getItem(KEY);
+    if (saved === 'en' || saved === 'es') return saved;
+    return /^es\b/i.test(navigator.language || 'es') ? 'es' : 'en'; // primera visita: el idioma del navegador
   } catch { return 'es'; }
 }
 
 export function setLang(lang) {
   try { localStorage.setItem(KEY, lang); } catch { /* ok */ }
-  const u = new URL(location.href); u.searchParams.delete('lang'); location.href = u.toString(); // recarga con el idioma nuevo
+  const u = new URL(location.href);
+  if (u.searchParams.has('lang')) { u.searchParams.delete('lang'); location.href = u.toString(); } else location.reload(); // recarga con el idioma nuevo
 }
 
 /** Traduce una cadena al inglés (conserva los espacios de los extremos). Devuelve la misma si no la conoce. */
