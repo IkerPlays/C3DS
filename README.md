@@ -4,6 +4,9 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 
 > Estado: **alfa 0.1**. Empezamos por lo sencillo; ver "Qué hace hoy" y "Qué NO hace (todavía)".
 
+## Empezar
+[Tu primer juego en 10 minutos](docs/GUIA.md) · [Your first game in 10 minutes](docs/GUIDE.en.md)
+
 ## Qué hace hoy
 - **Inicio y Descargas**: la web presenta el proyecto y descarga las apps desde las releases de GitHub (recomienda tu sistema). Instalable como PWA.
 - **Editor visual** (pestaña *Editor*): 10 plantillas (monedas, Pong, esquivar, arcade, corredor, topos, laberinto, persecución, plataformas…) y 7 lecciones, escenas, sprites (animación, mosaico, espejo), sonido, variables (con guardado de récords), reglas “cuando → entonces” (colisiones, bordes, velocidad, toques, temporizadores…), física (gravedad, objetos sólidos, “sigue a”), botones táctiles, **vista previa** al instante con pausa/paso a paso, selección múltiple, guardado automático en el navegador y deshacer/rehacer. Autor, descripción e icono del juego para el menú HOME.
