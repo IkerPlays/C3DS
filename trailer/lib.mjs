@@ -105,7 +105,8 @@ export async function openScene(browser, server, { dir, path = '/#editor', ready
   // La grabación empieza al crear la página: se mide el desfase hasta que la escena está lista.
   const t0 = Date.now();
   const page = await ctx.newPage();
-  await page.addInitScript(() => { try { localStorage.setItem('c3ds:guide', '1'); } catch { /* ok */ } });
+  const lang = process.env.TRAILER_LANG === 'en' ? 'en' : 'es';
+  await page.addInitScript((l) => { try { localStorage.setItem('c3ds:guide', '1'); localStorage.setItem('c3ds:lang', l); } catch { /* ok */ } }, lang);
   await page.goto(server.url + path);
   if (ready) await page.waitForSelector(ready);
   await page.waitForTimeout(250);

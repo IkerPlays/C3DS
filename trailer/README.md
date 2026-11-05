@@ -19,7 +19,7 @@ node trailer/assemble.mjs /tmp/trailer/clips /tmp/trailer/musica.wav trailer/out
 node trailer/thumbnail.mjs trailer/out/C3DS-trailer-miniatura.png
 ```
 
-Para la versión en inglés, antes de `make.mjs` y `thumbnail.mjs` hay que indicar el idioma (los subtítulos, las tarjetas y el montaje de plantillas cambian; la interfaz de la app sigue en español porque aún no tiene versión en inglés):
+Para la versión en inglés, antes de `make.mjs` y `thumbnail.mjs` hay que indicar el idioma (cambian los subtítulos, las tarjetas, el montaje de plantillas y la propia interfaz de la app, que se abre en inglés; los textos de dentro de los juegos de las plantillas siguen en español porque son datos del proyecto):
 
 ```bash
 TRAILER_LANG=en node trailer/make.mjs /tmp/trailer/clips-en

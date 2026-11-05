@@ -159,7 +159,7 @@ export const EN = {
   'Botones táctiles que cambian de escena.': 'Touch buttons that change scenes.', 'Compilación en la nube': 'Cloud build', 'Compilación en la nube (con token en Netlify)': 'Cloud build (with a token on Netlify)',
   'Descarga la app': 'Download the app', 'Exportar .3dsx / .cia, HTML5 y apps para Windows, macOS y Linux': 'Export .3dsx / .cia, HTML5 and apps for Windows, macOS and Linux',
   'IPA sin firmar': 'Unsigned IPA', 'No hay devbuilds publicados.': 'No devbuilds published.', 'Editor, vista previa, guardado local, plantillas': 'Editor, preview, local saving, templates',
-  'Prueba': 'Test', 'Juego': 'Game', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
+  'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',
   'C3DS - Crea juegos para Nintendo 3DS': 'C3DS - Make games for the Nintendo 3DS', 'Importar · C3DS': 'Import · C3DS', 'Descargas · C3DS': 'Downloads · C3DS', 'Límites 3DS · C3DS': '3DS limits · C3DS',
 };

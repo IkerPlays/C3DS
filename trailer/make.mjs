@@ -63,20 +63,20 @@ const SCENES = [
     await a.drag(at(150, 110), at(70, 150), 800);
     await a.wait(300);
     // propiedades en el inspector: gravedad
-    await a.ring('.insp .field:has(span:text-is("Gravedad"))', { soft: true });
+    await a.ring(`.insp .field:has(span:text-is("${L('Gravedad', 'Gravity')}"))`, { soft: true });
     await a.wait(700);
     await a.ringOff();
     await a.cap(L('Física incluida', 'Physics built in'), L('Gravedad, velocidad y objetos sólidos', 'Gravity, speed and solid objects'));
     b = await itemBox('Suelo'); await a.clickAt(b.x + 70, b.y + b.height / 2, 700);
     await a.wait(500);
-    await a.ring('.insp label.check:has-text("Sólido")', { soft: true });
+    await a.ring(`.insp label.check:has-text("${L('Sólido', 'Solid')}")`, { soft: true });
     await a.wait(900);
-    await a.click('.insp label.check:has-text("Sólido") input', { ms: 500 });
+    await a.click(`.insp label.check:has-text("${L('Sólido', 'Solid')}") input`, { ms: 500 });
     await a.wait(700);
     await a.ringOff();
     b = await itemBox('Obstáculo'); await a.clickAt(b.x + 70, b.y + b.height / 2, 600);
     await a.wait(500);
-    await a.type('.insp .field:has(span:text-is("Vel X")) input', '-6', { delay: 120, ms: 500 });
+    await a.type(`.insp .field:has(span:text-is("${L('Vel X', 'Speed X')}")) input`, '-6', { delay: 120, ms: 500 });
     await page.keyboard.press('Tab');
     await a.wait(900);
   } },
@@ -84,7 +84,7 @@ const SCENES = [
   { name: '05-logica', dur: 10, speed: 1.85, path: '/#editor', ready: '#cv-top', setup: 'runner', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
     await a.cap(L('Lógica visual', 'Visual logic'), L('“Cuando pase esto → haz esto”', '“When this happens → do that”'));
-    await a.click('.ed-right [role=tab]:has-text("Lógica")', { ms: 800 });
+    await a.click(`.ed-right [role=tab]:has-text("${L('Lógica', 'Logic')}")`, { ms: 800 });
     await a.wait(700);
     await a.ring('.rule', { i: 1, soft: true });
     await a.wait(1400);
@@ -119,20 +119,20 @@ const SCENES = [
   { name: '07-recursos', dur: 8, speed: 1.35, path: '/#editor', ready: '#cv-top', setup: 'arcade', async run({ a, page }) {
     await page.locator('label.check:has-text("Zoom") select').selectOption('1');
     await a.cap(L('Sprites y animación', 'Sprites and animation'), L('Importa imágenes, córtalas y anímalas', 'Import images, slice them and animate them'));
-    await a.ring('.ed-left .panel-sec:has(h4:text-is("Imágenes"))', { soft: true });
+    await a.ring(`.ed-left .panel-sec:has(h4:text-is("${L('Imágenes', 'Images')}"))`, { soft: true });
     await a.wait(1600);
     await a.ringOff();
     await a.click('#btn-slicer', { ms: 900 });
     await a.wait(1500);
     await page.keyboard.press('Escape'); await a.wait(300);
-    const close = page.locator('.dlg button:has-text("Cerrar")'); if (await close.count()) await a.click('.dlg button:has-text("Cerrar")', { ms: 400 });
+    const close = page.locator(`.dlg button:has-text("${L('Cerrar', 'Close')}")`); if (await close.count()) await a.click(`.dlg button:has-text("${L('Cerrar', 'Close')}")`, { ms: 400 });
     await a.cap(L('Sonido y variables', 'Sound and variables'), L('Efectos, música en bucle y récords guardados', 'Effects, looping music and saved high scores'));
-    await a.ring('.ed-left .panel-sec:has(h4:text-is("Sonidos"))', { soft: true });
+    await a.ring(`.ed-left .panel-sec:has(h4:text-is("${L('Sonidos', 'Sounds')}"))`, { soft: true });
     await a.wait(1500);
     await a.ring('.ed-left .panel-sec:has(h4:text-is("Variables"))', { soft: true });
     await a.wait(1500);
     await a.ringOff();
-    await a.click('.ed-right [role=tab]:has-text("Escena")', { ms: 700 });
+    await a.click(`.ed-right [role=tab]:has-text("${L('Escena', 'Scene')}")`, { ms: 700 });
     await a.cap(L('Escenas', 'Scenes'), L('Menús, niveles y pantalla final', 'Menus, levels and a game-over screen'));
     await a.wait(900);
   } },
