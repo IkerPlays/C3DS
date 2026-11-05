@@ -1,4 +1,5 @@
 // Editor visual: escenas, objetos, recursos, variables, lógica, vista previa, guardado y exportación.
+import { maybeLocalize } from './localize.js';
 import { h, $, toast, dialog, download, debounce } from './ui.js';
 import {
   SCREENS, KEYS, KEY_LABEL, LIMITS, OBJECT_TYPES, CONTROL_MODES, newProject, migrate, makeObject, makeScene, nextId, validate,
@@ -749,7 +750,7 @@ export function mountEditor(root) {
   const saved = last && loadProject(last);
   let p;
   try { p = saved ? migrate(saved) : null; } catch { p = null; }
-  setProject(p || newProject(), { fresh: !p });
+  setProject(p || maybeLocalize(newProject()), { fresh: !p });
   return { getProject: () => project, getGame: () => runner?.game ?? null, setProject, addImages, addSounds, openProjects };
 }
 

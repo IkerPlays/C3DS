@@ -3,6 +3,7 @@ import { newProject, makeScene, makeObject, nextId } from './model.js';
 import { toDataURL } from './bytes.js';
 import { toneWav, melodyWav } from './wav.js';
 import { encodePNG } from './png.js';
+import { maybeLocalize } from './localize.js';
 
 function empty(name) {
   const p = newProject();
@@ -250,20 +251,20 @@ export const lessonSound = () => lesson('Lección 5 - Sonido', (p, sc) => {
 });
 
 export const LESSONS = [
-  { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: lessonMove },
-  { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: lessonCollide },
-  { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: 'hash', make: lessonVariables },
-  { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: 'clapper', make: lessonScenes },
-  { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: 'sound', make: lessonSound },
+  { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: () => maybeLocalize(lessonMove()) },
+  { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: () => maybeLocalize(lessonCollide()) },
+  { id: 'l3', name: '3 · Variables y marcador', desc: 'Contar toques y mostrar texto con {variable}.', icon: 'hash', make: () => maybeLocalize(lessonVariables()) },
+  { id: 'l4', name: '4 · Varias escenas', desc: 'Botones táctiles que cambian de escena.', icon: 'clapper', make: () => maybeLocalize(lessonScenes()) },
+  { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: 'sound', make: () => maybeLocalize(lessonSound()) },
 ];
 
 export const TEMPLATES = [
   { id: 'coins', name: 'Recoger monedas', desc: 'Menú con botón táctil, jugador con D-Pad, sprite y sonido.', icon: 'coin', make: () => newProject() },
-  { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: 'pong', make: pongProject },
-  { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: 'comet', make: dodgeProject },
-  { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: 'joystick', make: arcadeProject },
-  { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: runnerProject },
-  { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: toposProject },
-  { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: mazeProject },
-  { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: blankProject },
+  { id: 'pong', name: 'Pong (1 jugador)', desc: 'Pelota con velocidad y rebotes en los bordes; pala vertical.', icon: 'pong', make: () => maybeLocalize(pongProject()) },
+  { id: 'dodge', name: 'Esquivar', desc: 'Bloques que caen, marcador y pantalla de fin con reintento.', icon: 'comet', make: () => maybeLocalize(dodgeProject()) },
+  { id: 'arcade', name: 'Arcade (Circle Pad + stylus)', desc: 'Nave con Circle Pad, cursor táctil, música en bucle, moneda animada y total guardado en la SD.', icon: 'joystick', make: () => maybeLocalize(arcadeProject()) },
+  { id: 'runner', name: 'Corredor (saltos)', desc: 'Gravedad, saltar con A solo desde el suelo, obstáculos y récord guardado.', icon: 'runner', make: () => maybeLocalize(runnerProject()) },
+  { id: 'topos', name: 'Topos (táctil)', desc: 'Toca al topo antes de que salte; temporizador, cuenta atrás y pantalla final.', icon: 'target', make: () => maybeLocalize(toposProject()) },
+  { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: () => maybeLocalize(mazeProject()) },
+  { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: () => maybeLocalize(blankProject()) },
 ];

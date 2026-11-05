@@ -70,7 +70,8 @@
   import { Game, render } from '/js/runtime.js';
 
   const tpl = (id) => TEMPLATES.find((t) => t.id === id).make;
-  const find = (g, name) => g.objs.find((o) => o.name === name);
+  const ALIAS = { Jugador: 'Player', Moneda: 'Coin', Pala: 'Paddle', Pelota: 'Ball', Nave: 'Ship', 'Obstáculo': 'Obstacle', Topo: 'Mole', Cursor: 'Cursor' };
+  const find = (g, name) => g.objs.find((o) => o.name === name || o.name === ALIAS[name]);
   const dir = (held, a, b, tol = 4) => { // mueve a hacia b con D-Pad
     if (b.x > a.x + tol) held.add('RIGHT'); else if (b.x < a.x - tol) held.add('LEFT');
     if (b.y > a.y + tol) held.add('DOWN'); else if (b.y < a.y - tol) held.add('UP');

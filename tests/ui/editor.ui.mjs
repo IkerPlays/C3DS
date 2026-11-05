@@ -528,6 +528,7 @@ test('interfaz en inglés: ?lang=en traduce la web y el selector vuelve al espa�
   assert.equal(await page.locator('#tabs button').first().textContent(), 'Home');
   assert.match(await page.textContent('#tab-home'), /Make games for/);
   await page.click('[data-tab=editor]');
+  assert.equal(await page.inputValue('.proj-name'), 'My first game', 'el proyecto inicial sale en inglés');
   assert.equal((await page.textContent('#btn-export')).trim(), 'Export ▾');
   await page.click('#btn-projects');
   assert.ok(await page.locator('.dlg [data-tpl=runner]', { hasText: 'Runner (jumping)' }).count(), 'las plantillas salen en inglés');
