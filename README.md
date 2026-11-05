@@ -9,6 +9,7 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 - **Editor visual** (pestaña *Editor*): plantillas (monedas, Pong, esquivar), escenas, sprites, sonido, variables, reglas “cuando → entonces” (colisiones, bordes, velocidad, toques), botones táctiles, **vista previa** al instante, guardado automático en el navegador y deshacer/rehacer.
 - **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego de escritorio para **Windows, macOS y Linux** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
 - **Importar y analizar** (en el navegador, sin subir nada): Unity, Godot, Unreal y `.exe`; mide límites de la 3DS, **convierte texturas y audio** (PNG en potencia de 2 ≤1024, WAV) y crea un proyecto del editor con ellos.
+- **Idioma**: español (por defecto) e inglés; selector **ES/EN** en la cabecera (o `?lang=en`). Se traduce la interfaz; los datos de tus proyectos no.
 - **Apps**: Windows, macOS, Linux (Tauri) · Android, iOS (Capacitor). Aviso de nueva versión.
 
 ## Qué NO hace (todavía) — y por qué
@@ -23,6 +24,7 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 web/        sitio estático (Netlify)         android/  ios/  windows/  macos/  linux/   apps nativas
 shared/     plantillas Tauri y Capacitor      assets/  icono fuente
 scripts/    release-info, package, plan-devbuild, changelog     tests/   pruebas (node:test + Playwright)
+trailer/    tráiler de YouTube generado por código (ES/EN), ver trailer/README.md
 netlify/    Function de compilación en la nube
 .github/workflows/   ci · release · release-platform · devbuild · cloud-build · _build
 docs/RELEASING.md    cómo publicar
