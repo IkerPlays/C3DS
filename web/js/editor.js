@@ -159,10 +159,14 @@ function deleteSelected() {
   const o = selected(); if (!o) return;
   const sc = scene();
   sc.objects = sc.objects.filter((x) => x.id !== o.id);
+  for (const q of sc.objects) if (q.follow === o.id) q.follow = null;
   for (const s of project.scenes) s.rules = s.rules.filter((r) => !refsObject(r, o.id));
   selectedId = null; changed({ structure: true });
 }
-function refsObject(r, id) { return r.when.a === id || r.when.b === id || r.when.obj === id || r.then.some((a) => a.obj === id); }
+function refsObject(r, id) {
+  const w = (e) => !!e && (e.a === id || e.b === id || e.obj === id || e.on === id);
+  return w(r.when) || w(r.also) || r.then.some((a) => a.obj === id || a.on === id);
+}
 
 let clipboard = null;
 function copySelected() { const o = selected(); if (!o) return false; clipboard = JSON.parse(JSON.stringify(o)); toast(`“${o.name}” copiado (Ctrl+V para pegar).`, 'info', 1800); return true; }

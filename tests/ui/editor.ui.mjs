@@ -569,3 +569,16 @@ test('zoom “Ajustar”: el escenario se adapta a la altura de la ventana', asy
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('borrar un objeto limpia lo que lo referenciaba (reglas, “y además” y “sigue a”)', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=chase]');
+  await page.waitForSelector('#cv-top');
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li', { hasText: 'Jugador' }).click();
+  await page.locator('.insp button', { hasText: 'Eliminar' }).click();
+  const info = await page.evaluate(() => { const p = window.c3ds.editor.getProject(); const e = p.scenes[0].objects.find((o) => o.name === 'Enemigo'); return { follow: e.follow, rules: p.scenes[0].rules.length }; });
+  assert.equal(info.follow, null, 'el enemigo ya no sigue a nadie');
+  assert.equal(info.rules, 0, 'las dos reglas de la escena usaban al jugador y se borran');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

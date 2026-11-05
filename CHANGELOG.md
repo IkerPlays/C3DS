@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Editor: al borrar un objeto se limpian también las reglas que lo usaban en “y además” o “sobre”, y los objetos que lo seguían.
 - Plantilla **Plataformas** (plataformas sólidas, gravedad, salto desde cualquier superficie y monedas).
 - Reglas: acción **“Cambiar la opacidad de un objeto”**. Textos con **alineación centrada** (también en el C con `C2D_AlignCenter`).
 - Editor: zoom **“Ajustar”** (el escenario se adapta a la ventana). Se respeta “reducir movimiento” del sistema.
