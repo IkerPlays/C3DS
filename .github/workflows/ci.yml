@@ -3,6 +3,7 @@ on:
   push:
     branches-ignore: [cloud-builds]   # esa rama solo guarda proyectos temporales de la compilación en la nube
   pull_request:
+  workflow_dispatch:
 permissions:
   contents: read
 concurrency:
@@ -107,7 +108,10 @@ jobs:
         run: ls -la result/*.exe
 
   # Valida los destinos macOS y Linux del editor: el juego HTML5 de ejemplo empaquetado con Tauri.
+  # macOS solo se valida a mano (Run workflow) o con [macos] en el mensaje del commit: sus ejecutores tardan
+  # mucho en arrancar y retrasaban todos los CI. Las releases siguen compilando macOS siempre.
   desktop-game-sample:
+    if: ${{ matrix.target != 'macos' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[macos]') }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:

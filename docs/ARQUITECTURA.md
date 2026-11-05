@@ -27,7 +27,7 @@ C3DS es una web estática (sin build) más una función de Netlify. Todo el cód
 ## Pruebas
 - `npm test`: unitarias (Node). Incluye comprobaciones de que `runtime-source.js` y `docs/REFERENCIA.md` están sincronizados.
 - `npm run test:ui`: Chromium con Playwright (editor, importadores, exportaciones, descargas, accesibilidad).
-- El CI (`.github/workflows/ci.yml`) además **compila de verdad** cada plantilla a `.3dsx` y `.cia` con devkitARM, y empaqueta el juego para Windows, macOS y Linux con Tauri.
+- El CI (`.github/workflows/ci.yml`) además **compila de verdad** cada plantilla a `.3dsx` y `.cia` con devkitARM, y empaqueta el juego para Windows y Linux con Tauri. El empaquetado de macOS solo corre a mano (*Run workflow*) o con `[macos]` en el mensaje del commit, porque sus ejecutores tardan mucho en arrancar; las releases siempre compilan macOS.
 
 ## Compilación en la nube
 `netlify/functions/build.mjs` → `lib/cloud-core.mjs`: recibe el **proyecto** (datos), regenera los archivos con las plantillas del sitio y lanza `cloud-build.yml`. Detalles de seguridad en `docs/CLOUD-BUILD.md`.
