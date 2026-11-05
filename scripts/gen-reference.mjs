@@ -21,7 +21,7 @@ ${Object.entries(OBJECT_TYPES).map(([k, v]) => `- **${v}** (\`${k}\`)`).join('\n
 ## Control de objetos
 ${Object.entries(CONTROL_MODES).map(([k, v]) => `- \`${k}\`: ${v}`).join('\n')}
 
-Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, **sigue a otro objeto** (persecución), opacidad, **sólido** (bloquea el paso a los objetos que se mueven; se apoyan sobre él), animación por grupo de imágenes, tamaño del texto y visibilidad inicial.
+Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, **sigue a otro objeto** (persecución), opacidad, **mosaico** de sprites (repite la imagen en columnas × filas), **sólido** (bloquea el paso a los objetos que se mueven; se apoyan sobre él), animación por grupo de imágenes, tamaño del texto y visibilidad inicial.
 
 ## Eventos (“Cuando…”)
 | Id | Descripción | Campos |

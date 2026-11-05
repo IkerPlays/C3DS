@@ -283,3 +283,15 @@ test('autor, descripción e icono del proyecto llegan al Makefile y al .cia', as
   p.icon = 'http://malo/icon.png';
   assert.ok(validate(p).some((x) => /icono/.test(x.text)));
 });
+
+test('mosaico de sprites: plataformas con ladrillos (simulador y C)', async () => {
+  const p = platformerProject();
+  const ground = p.scenes[0].objects.find((o) => o.name === 'Suelo');
+  assert.equal(ground.type, 'sprite'); assert.equal(ground.tileCols, 25); assert.ok(ground.solid);
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const c = generateMainC(p);
+  assert.match(c, /for \(int ty = 0; ty < o->rows; ty\+\+\)/); assert.match(c, /int align, cols, rows;/);
+  assert.match(c, /, 25, 2 \}, \/\/ \d+/);
+  ground.tileCols = 64; ground.tileRows = 64;
+  assert.ok(validate(p).some((x) => /mosaico/.test(x.text)));
+});

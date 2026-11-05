@@ -14,7 +14,7 @@ const NAMES = {
   'Muro 1': 'Wall 1', 'Muro 2': 'Wall 2', 'Muro 3': 'Wall 3', 'Muro 4': 'Wall 4', 'Meta': 'Goal', 'Texto': 'Text', 'Otra vez': 'Again', 'Instrucciones': 'Instructions', 'Botón +1': 'Button +1',
   'Contador': 'Counter', 'Mensaje': 'Message', 'Ir a la segunda': 'Go to second', 'Volver': 'Back', 'Pitido': 'Beep', 'Música': 'Music', 'Parar': 'Stop',
 };
-const ASSETS = { moneda_1: 'coin_1', moneda_2: 'coin_2', moneda_3: 'coin_3', moneda_4: 'coin_4', moneda: 'coin', rebote: 'bounce', punto: 'point', musica: 'music', salto: 'jump', golpe: 'hit', pitido: 'beep' };
+const ASSETS = { ladrillo: 'brick', moneda_1: 'coin_1', moneda_2: 'coin_2', moneda_3: 'coin_3', moneda_4: 'coin_4', moneda: 'coin', rebote: 'bounce', punto: 'point', musica: 'music', salto: 'jump', golpe: 'hit', pitido: 'beep' };
 const TEXTS = {
   'Monedas: {puntos} / 3': 'Coins: {score} / 3', '← → mover   A saltar': '← → move   A jump', 'No dejes que el rojo te alcance': 'Don’t let the red one catch you', '¡Te alcanzaron!  {puntos} puntos': 'You got caught!  {score} points', 'MI PRIMER JUEGO': 'MY FIRST GAME', 'Jugar': 'Play', 'Puntos: {puntos}': 'Score: {score}', 'D-Pad: mover   START: menú': 'D-Pad: move   START: menu', '{puntos}': '{score}',
   'Mejor racha: {mejor}': 'Best streak: {best}', 'Arriba/Abajo mueven la pala': 'Up/Down move the paddle', 'FIN  -  {puntos} puntos': 'END  -  {score} points', 'Reintentar': 'Retry',

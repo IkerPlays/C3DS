@@ -672,3 +672,18 @@ test('proyecto: autor, descripción e icono (se reduce a 48×48) en la pestaña 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('mosaico: el suelo de la plantilla Plataformas se dibuja repetido en la vista previa', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=platformer]');
+  await page.waitForSelector('#cv-top');
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li', { hasText: 'Suelo' }).click();
+  assert.equal(await page.locator('.insp .field:has(span:text-is("Mosaico: columnas")) input').inputValue(), '25');
+  // el suelo ocupa el borde inferior del escenario y tiene los colores del ladrillo (verde arriba, marrón abajo)
+  const px = await page.evaluate(() => { const c = document.querySelector('#cv-top'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; const at = (x, y) => [...d.slice((y * c.width + x) * 4, (y * c.width + x) * 4 + 3)]; return { grass: at(8, 217), brick: at(8, 223), grass2: at(8, 229) }; });
+  assert.ok(px.grass[1] > 150 && px.grass[0] < 50, 'hierba arriba: ' + px.grass);
+  assert.ok(px.brick[0] > 80 && px.brick[2] < 80, 'ladrillo debajo: ' + px.brick);
+  assert.ok(px.grass2[1] > 150 && px.grass2[0] < 50, 'la segunda fila repite la hierba (mosaico): ' + px.grass2);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

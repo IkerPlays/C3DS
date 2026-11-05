@@ -177,7 +177,11 @@ export function render(game, ctxs, images) {
       ctx.globalAlpha = o.opacity == null ? 1 : Math.max(0, Math.min(1, o.opacity));
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
-      else if (o.type === 'sprite') { const im = images.get(spriteImage(game, o)); if (im) ctx.drawImage(im, o.x, o.y, o.w, o.h); else ctx.fillRect(o.x, o.y, o.w, o.h); }
+      else if (o.type === 'sprite') {
+        const im = images.get(spriteImage(game, o)); const cols = Math.max(1, o.tileCols | 0 || 1); const rows = Math.max(1, o.tileRows | 0 || 1);
+        if (!im) ctx.fillRect(o.x, o.y, o.w, o.h);
+        else for (let ty = 0; ty < rows; ty++) for (let tx = 0; tx < cols; tx++) ctx.drawImage(im, o.x + (tx * o.w) / cols, o.y + (ty * o.h) / rows, o.w / cols, o.h / rows);
+      }
       else if (o.type === 'text') { ctx.textAlign = o.align === 'center' ? 'center' : 'left'; ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; { const k = o.size || 1; game.text(o).split('\n').forEach((line, li) => ctx.fillText(line, o.x, o.y + li * 16 * k)); } ctx.textAlign = 'left'; ctx.font = '14px "DejaVu Sans Mono", monospace'; }
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; const k = o.size || 1; ctx.font = `${14 * k}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8 * k); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
     }

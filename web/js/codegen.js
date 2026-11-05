@@ -76,7 +76,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0}, ${int(o.tileCols || 1, 1, 32)}, ${int(o.tileRows || 1, 1, 32)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -159,7 +159,7 @@ typedef struct {
 	u32 color;
 	int solid, follow;
 	float fspeed, opacity;
-	int align;
+	int align, cols, rows;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -412,7 +412,10 @@ static void draw_screen(int screen) {
 ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames * o->anim_fps / 60) % o->anim_n] : o->image;
 			  C2D_Image img = C2D_SpriteSheetGetImage(sheet, idx);
 			  C2D_ImageTint tint; C2D_AlphaImageTint(&tint, o->opacity);
-			  C2D_DrawImageAt(img, o->x, o->y, 0.0f, &tint, o->w / img.subtex->width, o->h / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
+			  float tw = o->w / o->cols, th = o->h / o->rows;
+			  for (int ty = 0; ty < o->rows; ty++)
+			  	for (int tx = 0; tx < o->cols; tx++)
+			  		C2D_DrawImageAt(img, o->x + tx * tw, o->y + ty * th, 0.0f, &tint, tw / img.subtex->width, th / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
 			break;
 		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, with_alpha(o->color, o->opacity), o->tsize, o->align); break;
 		case T_BUTTON:

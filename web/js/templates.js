@@ -18,6 +18,21 @@ function addBeep(p, name, freq) {
   return id;
 }
 
+/** Ladrillo de 16×16 (tierra con hierba arriba) para suelos y plataformas en mosaico. */
+function addBrick(p) {
+  const px = new Uint8Array(16 * 16 * 4);
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const i = (y * 16 + x) * 4;
+    const grass = y < 4; const mortar = !grass && (y % 8 === 7 || (x + (y >= 8 ? 4 : 0)) % 8 === 7);
+    const c = grass ? [0, 200 - (y % 2) * 30, 60] : mortar ? [90, 50, 30] : [171, 82, 54];
+    px.set([...c, 255], i);
+  }
+  const id = nextId(p);
+  p.assets.images.push({ id, name: 'ladrillo', w: 16, h: 16 });
+  p.blobs[id] = toDataURL(encodePNG(16, 16, px), 'image/png');
+  return id;
+}
+
 export function blankProject() {
   const p = empty('Proyecto nuevo');
   const s = makeScene(p, 'Escena 1');
@@ -211,8 +226,9 @@ export function platformerProject() {
   const jump = addBeep(p, 'salto', 520); const coinSnd = addBeep(p, 'moneda', 880);
   const game = makeScene(p, 'Juego'); const win = makeScene(p, 'Meta');
   game.bg.top = '#29adff'; game.bg.bottom = '#1d2b53'; win.bg.top = '#008751'; win.bg.bottom = '#1d2b53';
-  const plat = (name, x, y, w) => makeObject(p, 'rect', { name, x, y, w, h: 10, color: '#00e436', solid: true });
-  const ground = makeObject(p, 'rect', { name: 'Suelo', x: 0, y: 216, w: 400, h: 24, color: '#008751', solid: true });
+  const brick = addBrick(p);
+  const plat = (name, x, y, w) => makeObject(p, 'sprite', { name, x, y, w, h: 10, image: brick, tileCols: Math.round(w / 16), tileRows: 1, solid: true });
+  const ground = makeObject(p, 'sprite', { name: 'Suelo', x: 0, y: 216, w: 400, h: 24, image: brick, tileCols: 25, tileRows: 2, solid: true });
   const p1 = plat('Plataforma 1', 90, 170, 70); const p2 = plat('Plataforma 2', 190, 130, 70); const p3 = plat('Plataforma 3', 300, 90, 70);
   const coin = (name, x, y) => makeObject(p, 'rect', { name, x, y, w: 14, h: 14, color: '#ffec27' });
   const c1 = coin('Moneda 1', 118, 150); const c2 = coin('Moneda 2', 218, 110); const c3 = coin('Moneda 3', 328, 70);

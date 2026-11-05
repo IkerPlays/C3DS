@@ -127,7 +127,7 @@ test('setOpacity y alineación centrada: simulador y C', async () => {
   g.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
   assert.equal(g.objs.find((o) => o.id === t.id).opacity, 0.25);
   const c = generateMainC(p);
-  assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /1 \}, \/\/ \d+/);
+  assert.match(c, /\.opacity = 0\.250f;/); assert.match(c, /C2D_AlignCenter/); assert.match(c, /, 1, 1 \}, \/\/ \d+/);
   assert.match(describeRule(sc.rules[0], p, sc), /opacidad de Titulo = 0\.25/);
 });
 
