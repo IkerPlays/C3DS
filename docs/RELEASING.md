@@ -30,3 +30,7 @@ Crea `<plataforma>/build.sh`; se ejecuta en el runner de esa plataforma (ver `pl
 
 ## Web (Netlify)
 `netlify.toml` publica la carpeta `web/` sin build. Conecta el repositorio en Netlify y se despliega solo en cada push a `main`. La release de la plataforma `web` es solo un zip del mismo sitio.
+
+
+## Subir la versión
+`node scripts/bump-version.mjs 0.5.0 --note "Mismas mejoras que la web (…)"` cambia a la vez `VERSION` (raíz y plataformas), los `package.json`, `Cargo.toml` y `tauri.conf.json`, y convierte `[Unreleased]` del changelog global y de cada plataforma en la nueva versión. `node scripts/bump-version.mjs --check` comprueba que todas coinciden (también lo hace `npm test`).

@@ -70,3 +70,9 @@ test('package: plataforma con build.sh publica binarios tal cual y valida nombre
     assert.throws(() => packagePlatform('fake', '1.0.0', out, root), /falló/);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
+
+test('todas las versiones del repositorio coinciden (bump-version --check)', async () => {
+  const { versions } = await import('../../scripts/bump-version.mjs');
+  const v = versions();
+  assert.equal(new Set(Object.values(v)).size, 1, JSON.stringify(v));
+});
