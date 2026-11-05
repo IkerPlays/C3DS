@@ -24,7 +24,8 @@ What's inside
 - Visual editor with scenes, objects, animated sprites, sound, variables and rules.
 - Simulator with pause, frame stepping, collision boxes and live variables.
 - Physics: gravity, solid objects, speed and landing.
-- 8 templates (coins, Pong, dodge, arcade, runner, whack-a-mole, maze) and 5 lessons.
+- 10 templates (coins, Pong, dodge, arcade, runner, whack-a-mole, maze, chase, platformer…) and 7 lessons.
+- Interface in Spanish and English.
 - Export `.3dsx` and `.cia` (cloud build), HTML5, Windows, macOS and Linux.
 - Apps for Windows, macOS, Linux, Android and iOS.
 - Imports Godot and Unity scenes.
