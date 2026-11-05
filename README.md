@@ -6,7 +6,7 @@ Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homeb
 
 ## Qué hace hoy
 - **Inicio y Descargas**: la web presenta el proyecto y descarga las apps desde las releases de GitHub (recomienda tu sistema). Instalable como PWA.
-- **Editor visual** (pestaña *Editor*): plantillas (monedas, Pong, esquivar), escenas, sprites, sonido, variables, reglas “cuando → entonces” (colisiones, bordes, velocidad, toques), botones táctiles, **vista previa** al instante, guardado automático en el navegador y deshacer/rehacer.
+- **Editor visual** (pestaña *Editor*): 10 plantillas (monedas, Pong, esquivar, arcade, corredor, topos, laberinto, persecución, plataformas…) y 7 lecciones, escenas, sprites (animación, mosaico, espejo), sonido, variables (con guardado de récords), reglas “cuando → entonces” (colisiones, bordes, velocidad, toques, temporizadores…), física (gravedad, objetos sólidos, “sigue a”), botones táctiles, **vista previa** al instante con pausa/paso a paso, selección múltiple, guardado automático en el navegador y deshacer/rehacer. Autor, descripción e icono del juego para el menú HOME.
 - **Exportar**: proyecto 3DS (`.zip` → `make` = `.3dsx`, `make cia` = `.cia`), juego **HTML5**, juego de escritorio para **Windows, macOS y Linux** y **compilación en la nube** (ver [docs/CLOUD-BUILD.md](docs/CLOUD-BUILD.md)).
 - **Importar y analizar** (en el navegador, sin subir nada): Unity, Godot, Unreal y `.exe`; mide límites de la 3DS, **convierte texturas y audio** (PNG en potencia de 2 ≤1024, WAV) y crea un proyecto del editor con ellos.
 - **Idioma**: español (por defecto) e inglés; selector **ES/EN** en la cabecera (o `?lang=en`). Se traduce la interfaz; los datos de tus proyectos no.
