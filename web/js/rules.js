@@ -1,5 +1,6 @@
 // Esquema de eventos y acciones del editor (qué campos tiene cada uno y sus valores por defecto).
 import { KEYS } from './model.js';
+import { tr } from './i18n.js';
 
 export const EDGES = { left: 'Izquierdo', right: 'Derecho', top: 'Superior', bottom: 'Inferior' };
 export const AXES = { x: 'Horizontal (X)', y: 'Vertical (Y)' };
@@ -75,27 +76,37 @@ export function describeRule(r, p, scene) {
   const base = describeBase(r, p, scene);
   if (!r.also) return base;
   const extra = describeBase({ when: r.also, then: [] }, p, scene).split(' → ')[0].toLowerCase();
-  return base.replace(' → ', ` y además ${extra} → `);
+  return base.replace(' → ', ` ${tr('y además', 'and also')} ${extra} → `);
 }
+
+const EDGE_EN = { left: 'left', right: 'right', top: 'top', bottom: 'bottom' };
+const OP_EN = { '==': 'equals', '!=': 'is not equal to', '>': 'is greater than', '>=': 'is greater than or equal to', '<': 'is less than', '<=': 'is less than or equal to' };
 
 function describeBase(r, p, scene) {
   const obj = (id) => scene.objects.find((o) => o.id === id)?.name ?? '¿?';
   const sc = (id) => p.scenes.find((x) => x.id === id)?.name ?? '¿?';
   const snd = (id) => p.assets.sounds.find((x) => x.id === id)?.name ?? '¿?';
   const w = r.when;
+  const T = (es, en) => tr(es, en);
   const when = {
-    start: () => 'al empezar la escena', key: () => `al pulsar ${w.key}`, keyHeld: () => `mientras se mantiene ${w.key}`, keyUp: () => `al soltar ${w.key}`,
-    collide: () => `si ${obj(w.a)} choca con ${obj(w.b)}`, touch: () => `al tocar ${obj(w.obj)}`,
-    var: () => `si ${w.var} ${OP_LABEL[w.op] || w.op} ${w.value}`, edge: () => `si ${obj(w.obj)} toca el borde ${EDGES[w.edge]?.toLowerCase() || ''}`,
-    touchAny: () => 'al tocar la pantalla táctil', timer: () => `cada ${w.seconds} s`, standing: () => `si ${obj(w.obj)} está sobre ${obj(w.on)}`,
+    start: () => T('al empezar la escena', 'when the scene starts'), key: () => T(`al pulsar ${w.key}`, `when ${w.key} is pressed`),
+    keyHeld: () => T(`mientras se mantiene ${w.key}`, `while ${w.key} is held`), keyUp: () => T(`al soltar ${w.key}`, `when ${w.key} is released`),
+    collide: () => T(`si ${obj(w.a)} choca con ${obj(w.b)}`, `if ${obj(w.a)} collides with ${obj(w.b)}`), touch: () => T(`al tocar ${obj(w.obj)}`, `when ${obj(w.obj)} is tapped`),
+    var: () => T(`si ${w.var} ${OP_LABEL[w.op] || w.op} ${w.value}`, `if ${w.var} ${OP_EN[w.op] || w.op} ${w.value}`),
+    edge: () => T(`si ${obj(w.obj)} toca el borde ${EDGES[w.edge]?.toLowerCase() || ''}`, `if ${obj(w.obj)} touches the ${EDGE_EN[w.edge] || ''} edge`),
+    touchAny: () => T('al tocar la pantalla táctil', 'when the touch screen is tapped'), timer: () => T(`cada ${w.seconds} s`, `every ${w.seconds} s`),
+    standing: () => T(`si ${obj(w.obj)} está sobre ${obj(w.on)}`, `if ${obj(w.obj)} is on ${obj(w.on)}`),
   }[w.type]?.() ?? '…';
   const act = (a) => ({
-    goto: () => `ir a “${sc(a.scene)}”`, setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
-    randVar: () => `${a.var} = azar(${a.min}…${a.max})`,
-    sound: () => `sonar “${snd(a.sound)}”`, stopSound: () => `parar “${snd(a.sound)}”`, setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => `mover ${obj(a.obj)} (${a.dx}, ${a.dy})`,
-    randomPos: () => `${obj(a.obj)} al azar`, landOn: () => `${obj(a.obj)} aterriza sobre ${obj(a.on)}`, setVel: () => `vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`,
-    setAnim: () => `animación de ${obj(a.obj)} = ${a.group || 'ninguna'}`,
-    setText: () => `texto de ${obj(a.obj)}`, setColor: () => `color de ${obj(a.obj)} = ${a.color}`, show: () => `mostrar ${obj(a.obj)}`, hide: () => `ocultar ${obj(a.obj)}`, quit: () => 'salir',
+    goto: () => T(`ir a “${sc(a.scene)}”`, `go to “${sc(a.scene)}”`), setVar: () => `${a.var} = ${a.value}`, addVar: () => `${a.var} ${a.value >= 0 ? '+' : '-'}= ${Math.abs(a.value)}`,
+    randVar: () => T(`${a.var} = azar(${a.min}…${a.max})`, `${a.var} = random(${a.min}…${a.max})`),
+    sound: () => T(`sonar “${snd(a.sound)}”`, `play “${snd(a.sound)}”`), stopSound: () => T(`parar “${snd(a.sound)}”`, `stop “${snd(a.sound)}”`),
+    setPos: () => `${obj(a.obj)} → (${a.x}, ${a.y})`, move: () => T(`mover ${obj(a.obj)} (${a.dx}, ${a.dy})`, `move ${obj(a.obj)} (${a.dx}, ${a.dy})`),
+    randomPos: () => T(`${obj(a.obj)} al azar`, `${obj(a.obj)} at random`), landOn: () => T(`${obj(a.obj)} aterriza sobre ${obj(a.on)}`, `${obj(a.obj)} lands on ${obj(a.on)}`),
+    setVel: () => T(`vel. ${a.axis === 'y' ? 'Y' : 'X'} de ${obj(a.obj)} = ${a.value}`, `speed ${a.axis === 'y' ? 'Y' : 'X'} of ${obj(a.obj)} = ${a.value}`),
+    setAnim: () => T(`animación de ${obj(a.obj)} = ${a.group || 'ninguna'}`, `animation of ${obj(a.obj)} = ${a.group || 'none'}`),
+    setText: () => T(`texto de ${obj(a.obj)}`, `text of ${obj(a.obj)}`), setColor: () => T(`color de ${obj(a.obj)} = ${a.color}`, `color of ${obj(a.obj)} = ${a.color}`),
+    show: () => T(`mostrar ${obj(a.obj)}`, `show ${obj(a.obj)}`), hide: () => T(`ocultar ${obj(a.obj)}`, `hide ${obj(a.obj)}`), quit: () => T('salir', 'quit'),
   }[a.type]?.() ?? '…');
-  return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || 'nada'}`;
+  return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || T('nada', 'nothing')}`;
 }

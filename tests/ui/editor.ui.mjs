@@ -522,3 +522,19 @@ test('objeto sólido: casilla en el inspector y el laberinto bloquea al jugador 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('interfaz en inglés: ?lang=en traduce la web y el selector vuelve al español', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url + '/?lang=en', { hash: '#home' });
+  assert.equal(await page.locator('#tabs button').first().textContent(), 'Home');
+  assert.match(await page.textContent('#tab-home'), /Make games for/);
+  await page.click('[data-tab=editor]');
+  assert.equal((await page.textContent('#btn-export')).trim(), 'Export ▾');
+  await page.click('#btn-projects');
+  assert.ok(await page.locator('.dlg [data-tpl=runner]', { hasText: 'Runner (jumping)' }).count(), 'las plantillas salen en inglés');
+  await page.keyboard.press('Escape');
+  await page.evaluate(() => document.querySelector('.dlg')?.closest('dialog')?.close?.());
+  await page.click('#lang-btn');
+  await page.waitForFunction(() => document.querySelector('#tabs button')?.textContent === 'Inicio');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

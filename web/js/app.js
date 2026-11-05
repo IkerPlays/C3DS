@@ -7,6 +7,10 @@ import { mountThemeToggle } from './theme.js';
 import { hydrateIcons } from './icons.js';
 import { checkForUpdate } from './update-check.js';
 import { decodeProject, tokenFromHash } from './share.js';
+import { startI18n, mountLangToggle, translate } from './i18n.js';
+
+mountLangToggle($('#lang-btn'));
+startI18n(); // inglés opcional: traduce lo que ya hay y lo que se añada
 
 const TABS = ['home', 'editor', 'import', 'downloads', 'limits'];
 
@@ -14,7 +18,7 @@ function showTab(name) {
   if (!TABS.includes(name)) name = 'home';
   for (const b of $$('#tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === name));
   for (const s of $$('main > section')) s.hidden = s.id !== `tab-${name}`;
-  document.title = { home: 'C3DS - Crea juegos para Nintendo 3DS', editor: 'Editor · C3DS', import: 'Importar · C3DS', downloads: 'Descargas · C3DS', limits: 'Límites 3DS · C3DS' }[name];
+  document.title = translate({ home: 'C3DS - Crea juegos para Nintendo 3DS', editor: 'Editor · C3DS', import: 'Importar · C3DS', downloads: 'Descargas · C3DS', limits: 'Límites 3DS · C3DS' }[name]);
   try { history.replaceState(null, '', `#${name}`); } catch { /* sin historial */ }
   if (name !== 'home') window.scrollTo({ top: 0 });
 }
