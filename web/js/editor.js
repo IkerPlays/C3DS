@@ -9,7 +9,7 @@ import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases } from './runtime.js';
 import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, defaultWhen, defaultAction, describeRule } from './rules.js';
-import { imageToAsset, audioToWav, sliceSheet } from './images.js';
+import { imageToAsset, audioToWav, sliceSheet, iconToDataURL } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
 import { buildHtml5 } from './html5.js';
@@ -445,6 +445,15 @@ function renderSceneTab(body) {
     field('Fondo superior', colorInput(() => sc.bg.top, (v) => { sc.bg.top = v; })),
     field('Fondo inferior', colorInput(() => sc.bg.bottom, (v) => { sc.bg.bottom = v; })),
     h('p', { class: 'muted small' }, project.startScene === sc.id ? '★ Es la escena inicial.' : 'Usa ★ en la lista para marcarla como inicial.'),
+    h('hr', { class: 'sep' }),
+    h('h4', {}, 'Tu juego en el menú HOME de la 3DS'),
+    field('Autor', textInput(() => project.author || '', (v) => { project.author = v; }, { max: 40 })),
+    field('Descripción', textInput(() => project.description || '', (v) => { project.description = v; }, { max: 80 })),
+    h('div', { class: 'icon-pick' },
+      project.icon ? h('img', { class: 'app-icon', src: project.icon, alt: 'Icono del juego', width: 48, height: 48 }) : h('span', { class: 'app-icon empty' }, 'sin icono'),
+      h('label', { class: 'btn small', title: 'Elige una imagen: se recorta al centro y se reduce a 48×48' }, 'Elegir icono…', h('input', { type: 'file', accept: 'image/*', hidden: true, id: 'pick-icon', onChange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; try { project.icon = await iconToDataURL(f); changed({ structure: true }); } catch (err) { toast(`No se pudo usar el icono: ${err.message}`, 'error'); } } })),
+      project.icon ? h('button', { class: 'btn small ghost', id: 'btn-icon-clear', onClick: () => { delete project.icon; changed({ structure: true }); } }, 'Quitar') : null),
+    h('p', { class: 'muted small' }, 'Estos datos salen en el icono y el título del .cia. El icono se reduce a 48×48.'),
   );
 }
 const renderLeftSoon = debounce(renderLeft, 400);

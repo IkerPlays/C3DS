@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Pestaña **Escena**: ahora se puede poner **autor, descripción e icono** (48×48) del juego; salen en el menú HOME de la 3DS (`.cia`). Antes eran fijos.
 - Editor: **selección múltiple** (Mayús + clic en el escenario o en la lista) para mover, duplicar y borrar varios objetos a la vez.
 - Ayuda: lista de todos los eventos y acciones (generada desde el código).
 - Textos de **varias líneas**: escribe `\n` en el texto (simulador y C).

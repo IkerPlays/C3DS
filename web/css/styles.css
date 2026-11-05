@@ -84,6 +84,7 @@ input[type=checkbox]{accent-color:var(--acc);width:16px;height:16px}
 .list .grow{flex:1;display:flex;min-width:0;padding:4px}
 .chip{width:12px;height:12px;border-radius:3px;border:1px solid #fff4;flex:none}
 .thumb{width:28px;height:28px;object-fit:contain;background:repeating-conic-gradient(#8884 0 25%,transparent 0 50%) 50%/10px 10px;border-radius:4px}
+.icon-pick{display:flex;align-items:center;gap:10px;margin:8px 0}.app-icon{width:48px;height:48px;border-radius:8px;image-rendering:pixelated;border:1px solid var(--line);background:var(--panel2);display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--muted);text-align:center}.sep{border:0;border-top:1px solid var(--line);margin:14px 0}
 .ref-list{margin:6px 0 14px;padding-left:18px;display:grid;gap:4px}.ref-list li{line-height:1.35}
 .var{gap:4px}.var>input:first-child{flex:1 1 72px;min-width:60px;width:72px}.var>input[type=number]{flex:none;width:56px}
 

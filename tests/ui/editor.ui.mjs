@@ -657,3 +657,18 @@ test('selección múltiple: Mayús + clic, mover, duplicar y borrar varios a la 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('proyecto: autor, descripción e icono (se reduce a 48×48) en la pestaña Escena', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('.ed-right [role=tab]:has-text("Escena")');
+  await page.locator('.insp .field:has(span:text-is("Autor")) input').fill('Ana');
+  await page.locator('.insp .field:has(span:text-is("Descripción")) input').fill('Un juego');
+  await page.setInputFiles('#pick-icon', { name: 'icono.png', mimeType: 'image/png', buffer: tinyPng() });
+  await page.waitForSelector('.app-icon[src^="data:image/png"]');
+  const info = await page.evaluate(() => { const p = window.c3ds.editor.getProject(); const im = document.querySelector('img.app-icon'); return { a: p.author, d: p.description, icon: p.icon.slice(0, 22), nw: im.naturalWidth, nh: im.naturalHeight }; });
+  assert.deepEqual(info, { a: 'Ana', d: 'Un juego', icon: 'data:image/png;base64,', nw: 48, nh: 48 });
+  await page.click('#btn-icon-clear');
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().icon), undefined);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

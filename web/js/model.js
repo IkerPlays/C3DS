@@ -115,6 +115,8 @@ export function validate(p) {
   for (const a of p.assets.images) if (a.w > LIMITS.maxImageSide || a.h > LIMITS.maxImageSide) warn('error', `La imagen "${a.name}" supera ${LIMITS.maxImageSide}px.`);
   const objIds = new Set(p.scenes.flatMap((s) => s.objects.map((o) => o.id)));
   const imgIds = new Set(p.assets.images.map((a) => a.id));
+  if (p.icon && !/^data:image\/png;base64,/.test(p.icon)) warn('error', 'El icono del juego debe ser un PNG.');
+  if (p.icon && p.icon.length > 90000) warn('error', 'El icono del juego es demasiado grande (máximo 48×48).');
   const sndIds = new Set(p.assets.sounds.map((a) => a.id));
   const sceneIds = new Set(p.scenes.map((s) => s.id));
   for (const s of p.scenes) {

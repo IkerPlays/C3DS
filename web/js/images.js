@@ -37,6 +37,16 @@ export async function imageToAsset(file, { pow2 = false, max = LIMITS.maxImageSi
   return { w: size.w, h: size.h, bytes, dataURL: toDataURL(bytes, 'image/png'), scaled: size.w !== bmp.width || size.h !== bmp.height };
 }
 
+/** Icono de la aplicación: PNG de 48×48 (recorta al centro para llenar el cuadrado). */
+export async function iconToDataURL(file) {
+  const bmp = await decodeImage(file);
+  const c = document.createElement('canvas'); c.width = 48; c.height = 48;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingQuality = 'high';
+  const s = Math.min(bmp.width, bmp.height);
+  ctx.drawImage(bmp, (bmp.width - s) / 2, (bmp.height - s) / 2, s, s, 0, 0, 48, 48);
+  return toDataURL(await canvasPng(c), 'image/png');
+}
+
 /** Convierte audio (wav/ogg/mp3...) a WAV PCM16 mono 22 050 Hz (máx. 15 s). */
 export async function audioToWav(arrayBuffer, maxSeconds = 15) {
   const Ctx = globalThis.OfflineAudioContext || globalThis.webkitOfflineAudioContext;

@@ -2,6 +2,7 @@
 // Herramientas open source usadas en el build: makerom (3DSGuy/Project_CTR) y bannertool (diasurgical/bannertool).
 import { encodePNG } from './png.js';
 import { silentWav } from './wav.js';
+import { fromDataURL } from './bytes.js';
 
 export const MAKEROM_URL = 'https://github.com/3DSGuy/Project_CTR/releases/download/makerom-v0.18/makerom-v0.18-ubuntu_x86_64.zip';
 export const MAKEROM_SHA256 = 'c6f8aafba8f1cdb403929719c95173cada707cd9ceacfa2bec5118f8f96c6f8a';
@@ -209,11 +210,17 @@ export function gradientPNG(w, h, hexColor) {
   return encodePNG(w, h, px);
 }
 
+/** Icono del proyecto (48×48) si lo tiene; si no, un degradado rojo. */
+function iconBytes(p) {
+  if (p.icon) { try { const { mime, bytes } = fromDataURL(p.icon); if (mime === 'image/png' && bytes.length < 65536) return bytes; } catch { /* usa el de por defecto */ } }
+  return gradientPNG(48, 48, '#ff004d');
+}
+
 export function ciaAssets(p, opts = {}) {
   return [
     { path: 'cia/app.rsf', content: generateRsf(p, opts) },
     { path: 'cia/banner.png', content: gradientPNG(256, 128, p.scenes[0]?.bg.top) },
-    { path: 'cia/icon.png', content: gradientPNG(48, 48, '#ff004d') },
+    { path: 'cia/icon.png', content: iconBytes(p) },
     { path: 'cia/audio.wav', content: silentWav() },
   ];
 }

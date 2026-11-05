@@ -266,3 +266,20 @@ test('Plataformas: cae al suelo, salta a la primera plataforma, recoge monedas y
   assert.equal(g.scene.name, 'Meta');
   assert.match(generateMainC(p), /standing_on\(/);
 });
+
+test('autor, descripción e icono del proyecto llegan al Makefile y al .cia', async () => {
+  const { exportFiles } = await import('../../web/js/codegen.js');
+  const { toDataURL } = await import('../../web/js/bytes.js');
+  const { encodePNG } = await import('../../web/js/png.js');
+  const p = newProject(); p.author = 'Ana'; p.description = 'Mi gran juego';
+  const find = (files, path) => files.find((f) => f.path.endsWith('/' + path));
+  const def = find(exportFiles(p), 'cia/icon.png').content;
+  const png = encodePNG(48, 48, new Uint8Array(48 * 48 * 4).fill(200));
+  p.icon = toDataURL(png, 'image/png');
+  const files = exportFiles(p);
+  assert.match(find(files, 'Makefile').content, /APP_AUTHOR\s+:= Ana/); assert.match(find(files, 'Makefile').content, /APP_DESCRIPTION := Mi gran juego/);
+  assert.deepEqual([...find(files, 'cia/icon.png').content], [...png], 'usa el icono del proyecto');
+  assert.notDeepEqual([...def], [...png]);
+  p.icon = 'http://malo/icon.png';
+  assert.ok(validate(p).some((x) => /icono/.test(x.text)));
+});
