@@ -582,7 +582,13 @@ function openProjects() {
 function showShortcuts() {
   const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
     ['Flechas', 'En la vista previa: D-Pad'], ['Z X S A', 'A B X Y'], ['Enter / Shift', 'Start / Select'], ['Ratón', 'Pantalla táctil (inferior)']];
-  dialog('Atajos y controles', h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])));
+  dialog('Atajos y controles', h('div', {}, h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])), h('p', {}, h('button', { class: 'btn small', id: 'btn-reference', onClick: showReference }, 'Ver todos los eventos y acciones'))));
+}
+
+/** Lista de lo que se puede usar en las reglas (generada a partir de rules.js, así nunca se queda anticuada). */
+function showReference() {
+  const list = (schema) => h('ul', { class: 'ref-list' }, Object.values(schema).map((e) => h('li', {}, h('strong', {}, e.label), e.fields.length ? h('span', { class: 'muted small' }, ` — ${e.fields.map((f) => f.label).filter(Boolean).join(', ')}`) : null)));
+  dialog('Eventos y acciones', h('div', { id: 'reference' }, h('h4', {}, 'CUANDO (eventos)'), list(EVENTS), h('h4', {}, 'ENTONCES (acciones)'), list(ACTIONS)));
 }
 
 function showGuide() {

@@ -626,3 +626,13 @@ test('interfaz en inglés: ninguna pantalla principal conserva textos con acento
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('ayuda: referencia de todos los eventos y acciones', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-help');
+  await page.click('#btn-reference');
+  const text = await page.textContent('#reference');
+  for (const s of ['La escena empieza', 'Se suelta un botón', 'Cambiar la opacidad de un objeto', 'Poner variable a un número al azar', 'Cambiar animación de un sprite']) assert.ok(text.includes(s), `falta "${s}"`);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
