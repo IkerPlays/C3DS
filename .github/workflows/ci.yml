@@ -108,18 +108,10 @@ jobs:
         run: ls -la result/*.exe
 
   # Valida los destinos macOS y Linux del editor: el juego HTML5 de ejemplo empaquetado con Tauri.
-  # macOS solo se valida a mano (Run workflow) o con [macos] en el mensaje del commit: sus ejecutores tardan
-  # mucho en arrancar y retrasaban todos los CI. Las releases siguen compilando macOS siempre.
+  # Linux se valida en cada commit; macOS aparte (ver más abajo).
   desktop-game-sample:
-    if: ${{ matrix.target != 'macos' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[macos]') }}
-    runs-on: ${{ matrix.runner }}
+    runs-on: ubuntu-latest
     timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - { target: macos, runner: macos-latest }
-          - { target: linux, runner: ubuntu-latest }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -128,5 +120,22 @@ jobs:
       - name: Generar juego HTML5 de ejemplo
         run: node scripts/gen-sample.mjs sample-html --html5
       - name: Empaquetar
-        run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result ${{ matrix.target }}
+        run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result linux
+      - run: ls -la result
+
+  # macOS solo se valida a mano (Run workflow) o con [macos] en el mensaje del commit: sus ejecutores tardan
+  # mucho en arrancar y retrasaban todos los CI. Las releases siguen compilando macOS siempre.
+  desktop-game-sample-macos:
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[macos]') }}
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Generar juego HTML5 de ejemplo
+        run: node scripts/gen-sample.mjs sample-html --html5
+      - name: Empaquetar
+        run: bash scripts/build-tauri-game.sh sample-html mi-primer-juego result macos
       - run: ls -la result
