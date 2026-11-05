@@ -582,3 +582,17 @@ test('borrar un objeto limpia lo que lo referenciaba (reglas, “y además” y 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('reglas: duplicar una regla la copia justo debajo', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=runner]');
+  await page.waitForSelector('#cv-top');
+  await page.click('.ed-right [role=tab]:has-text("Lógica")');
+  const before = await page.locator('.rule').count();
+  await page.locator('.rule').first().locator('button[title="Duplicar regla"]').click();
+  assert.equal(await page.locator('.rule').count(), before + 1);
+  const texts = await page.locator('.rule .rule-summary').allTextContents();
+  assert.equal(texts[0], texts[1], 'la copia es idéntica y queda justo debajo');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
