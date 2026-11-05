@@ -170,6 +170,8 @@ ${objInit.join('\n') || '\t{ 0 }'}
 static Obj objs[${NO}];
 static int vars[NUM_VARS] = { ${p.variables.map((v) => int(v.value)).join(', ') || '0'} };
 static u32 keys_up = 0;
+#define FADE_ON ${p.transition === 'fade' ? 1 : 0}
+static int fade_frames = FADE_ON ? 18 : 0;
 static int cur_scene = START_SCENE, next_scene = -1, scene_frames = 0, quit = 0;
 static const u32 scene_bg[NUM_SCENES][2] = {
 ${bg || '\t{ 0, 0 },'}
@@ -265,6 +267,7 @@ static void enter_scene(int s) {
 	save_vars();
 	cur_scene = s;
 	scene_frames = 0;
+	fade_frames = FADE_ON ? 18 : 0;
 	for (int i = 0; i < NUM_OBJS; i++) if (init_objs[i].scene == s) objs[i] = init_objs[i];
 }
 
@@ -385,6 +388,7 @@ ${sceneRules}
 	default: break;
 	}
 	scene_frames++;
+	if (fade_frames > 0) fade_frames--;
 }
 
 /* ---------- Dibujo ---------- */
@@ -427,6 +431,7 @@ ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames
 			break;
 		}
 	}
+	if (fade_frames > 0) C2D_DrawRectSolid(0, 0, 0.0f, screen_w[screen], screen_h[screen], with_alpha(0xFF000000, fade_frames / 18.0f));
 }
 
 int main(int argc, char* argv[]) {

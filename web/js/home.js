@@ -44,6 +44,7 @@ function drawThumb(t, canvas) {
     const g = new Game(p, { rng: () => 0.37 });
     const best = p.scenes.reduce((a, b) => (b.objects.length > a.objects.length ? b : a), p.scenes[0]);
     if (best) g.enter(best.id);
+    g.fade = 0; // miniatura sin fundido
     const images = new Map();
     let pending = p.assets.images.length;
     const paint = () => render(g, { top: canvas.getContext('2d'), bottom: document.createElement('canvas').getContext('2d') }, images);

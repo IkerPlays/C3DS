@@ -140,3 +140,24 @@ test('seguir a otro objeto y opacidad (simulador y C)', async () => {
   chaser.follow = target.id; chaser.opacity = 2;
   assert.ok(validate(p).some((x) => /opacidad/.test(x.text)));
 });
+
+test('transición de fundido entre escenas (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { FADE_FRAMES, render } = await import('../../web/js/runtime.js');
+  const p = newProject();
+  let g = new Game(p); assert.equal(g.fade, 0, 'sin transición por defecto');
+  assert.match(generateMainC(p), /#define FADE_ON 0/);
+  p.transition = 'fade';
+  g = new Game(p);
+  assert.equal(g.fade, FADE_FRAMES);
+  const inp = { down: new Set(), held: new Set(), touch: null, touchDown: false };
+  for (let i = 0; i < FADE_FRAMES; i++) g.step(inp);
+  assert.equal(g.fade, 0, 'el fundido termina');
+  g.enter(p.scenes[1].id); assert.equal(g.fade, FADE_FRAMES, 'cada cambio de escena vuelve a fundir');
+  const c = generateMainC(p);
+  assert.match(c, /#define FADE_ON 1/); assert.match(c, /fade_frames = FADE_ON \? 18 : 0;/); assert.match(c, /fade_frames \/ 18\.0f/);
+  // el simulador pinta negro con transparencia
+  const calls = []; const ctx = () => new Proxy({}, { get: (t, k) => (k === 'measureText' ? () => ({ width: 8 }) : typeof k === 'string' && /^(fillRect|fillText|drawImage|save|restore|translate|scale)$/.test(k) ? (...a) => calls.push([k, a]) : undefined), set: (t, k, v) => { if (k === 'fillStyle') calls.push(['fillStyle', v]); return true; } });
+  render(g, { top: ctx(), bottom: ctx() }, new Map());
+  assert.ok(calls.some(([k, v]) => k === 'fillStyle' && /^rgba\(0,0,0,1\)$/.test(v)), 'overlay negro al empezar el fundido');
+});

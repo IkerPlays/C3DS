@@ -149,7 +149,7 @@ export function runnerProject() {
 
 /** Topos: toca al topo antes de que salte a otro sitio; cuenta atrás con temporizador. */
 export function toposProject() {
-  const p = empty('Topos');
+  const p = empty('Topos'); p.transition = 'fade';
   p.variables = [{ name: 'puntos', value: 0 }, { name: 'tiempo', value: 20 }];
   const hit = addBeep(p, 'golpe', 660);
   const game = makeScene(p, 'Juego'); const over = makeScene(p, 'Fin');
@@ -221,7 +221,7 @@ export function chaseProject() {
 
 /** Plataformas: gravedad, plataformas sólidas, salto solo desde el suelo o una plataforma y monedas que recoger. */
 export function platformerProject() {
-  const p = empty('Plataformas');
+  const p = empty('Plataformas'); p.transition = 'fade';
   p.variables = [{ name: 'puntos', value: 0 }];
   const jump = addBeep(p, 'salto', 520); const coinSnd = addBeep(p, 'moneda', 880);
   const game = makeScene(p, 'Juego'); const win = makeScene(p, 'Meta');

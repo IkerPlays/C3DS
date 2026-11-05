@@ -2,6 +2,7 @@
 // Se usa en la vista previa del editor y en la exportación HTML5. Sin dependencias de DOM en `Game`.
 import { SCREENS } from './model.js';
 
+export const FADE_FRAMES = 18;
 export const formatText = (tpl, vars) => String(tpl).replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (m, n) => (n in vars ? String(vars[n]) : m));
 
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -37,6 +38,7 @@ export class Game {
     if (this.objs) this.persist();
     this.sceneId = id;
     this.frames = 0;
+    this.fade = this.p.transition === 'fade' ? FADE_FRAMES : 0;
     this.objs = this.scene.objects.map((o) => ({ ...o, tpl: o.text }));
   }
 
@@ -92,6 +94,7 @@ export class Game {
       }
     }
     this.frames++;
+    if (this.fade > 0) this.fade--;
     if (next != null) this.enter(next);
   }
 
@@ -191,6 +194,7 @@ export function render(game, ctxs, images) {
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; const k = o.size || 1; ctx.font = `${14 * k}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8 * k); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
     }
     ctx.globalAlpha = 1;
+    if (game.fade > 0) { ctx.fillStyle = `rgba(0,0,0,${game.fade / FADE_FRAMES})`; ctx.fillRect(0, 0, SCREENS[key].w, SCREENS[key].h); }
   }
 }
 

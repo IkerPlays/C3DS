@@ -81,6 +81,7 @@ function setProject(p, { fresh = false } = {}) {
 function stageGame() {
   const g = new Game(project, { rng: () => 0.5 });
   g.enter(scene().id);
+  g.fade = 0; // el escenario de edición nunca se muestra con el fundido
   return g;
 }
 
@@ -451,6 +452,7 @@ function renderSceneTab(body) {
     h('h4', {}, 'Tu juego en el menú HOME de la 3DS'),
     field('Autor', textInput(() => project.author || '', (v) => { project.author = v; }, { max: 40 })),
     field('Descripción', textInput(() => project.description || '', (v) => { project.description = v; }, { max: 80 })),
+    field('Transición entre escenas', selectInput([['none', 'Corte directo'], ['fade', 'Fundido desde negro']], project.transition || 'none', (v) => { project.transition = v; changed(); })),
     h('div', { class: 'icon-pick' },
       project.icon ? h('img', { class: 'app-icon', src: project.icon, alt: 'Icono del juego', width: 48, height: 48 }) : h('span', { class: 'app-icon empty' }, 'sin icono'),
       h('label', { class: 'btn small', title: 'Elige una imagen: se recorta al centro y se reduce a 48×48' }, 'Elegir icono…', h('input', { type: 'file', accept: 'image/*', hidden: true, id: 'pick-icon', onChange: async (e) => { const f = e.target.files[0]; e.target.value = ''; if (!f) return; try { project.icon = await iconToDataURL(f); changed({ structure: true }); } catch (err) { toast(`No se pudo usar el icono: ${err.message}`, 'error'); } } })),

@@ -697,3 +697,23 @@ test('referencia de reglas en inglés: también los nombres de los campos', asyn
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('transición entre escenas: se elige en la pestaña Escena', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('.ed-right [role=tab]:has-text("Escena")');
+  const sel = page.locator('.insp .field:has(span:text-is("Transición entre escenas")) select');
+  assert.equal(await sel.inputValue(), 'none');
+  await sel.selectOption('fade');
+  assert.equal(await page.evaluate(() => window.c3ds.editor.getProject().transition), 'fade');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('las miniaturas de plantillas con fundido no salen en negro', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#home' });
+  await page.waitForSelector('#tpl-cards [data-tpl=topos] canvas');
+  const lit = await page.evaluate(() => { const c = document.querySelector('#tpl-cards [data-tpl=topos] canvas'); const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] + d[i + 1] + d[i + 2] > 60) n++; return n; });
+  assert.ok(lit > 200, 'la miniatura de Topos se ve (píxeles claros: ' + lit + ')');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
