@@ -140,7 +140,7 @@ table{width:100%;border-collapse:collapse;background:var(--panel);border-radius:
 th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{white-space:nowrap;width:1%}
 .status-list{list-style:none;padding:0}.status-list li{padding:6px 0 6px 30px;position:relative}.status-list li::before{position:absolute;left:0}
 .status-list .ok::before{content:"✅"}.status-list .soon::before{content:"🕓"}
-@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
 
 /* ===================== v2: marca, inicio, descargas ===================== */
 html{scroll-behavior:smooth}

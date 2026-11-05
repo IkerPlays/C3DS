@@ -555,3 +555,17 @@ test('inspector: “Sigue a” y “Opacidad” en el objeto, y la plantilla Per
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('zoom “Ajustar”: el escenario se adapta a la altura de la ventana', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  const sel = page.locator('label.check:has-text("Zoom") select');
+  await sel.selectOption('fit');
+  const a = (await page.locator('#cv-top').boundingBox()).width;
+  await page.setViewportSize({ width: 1400, height: 700 });
+  await page.waitForTimeout(300);
+  const b = (await page.locator('#cv-top').boundingBox()).width;
+  assert.ok(b < a, `con menos altura el escenario es más pequeño (${a} → ${b})`);
+  assert.ok(a >= 300 && a <= 1000);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

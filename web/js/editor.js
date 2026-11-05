@@ -22,7 +22,15 @@ let project; let history; let sceneId; let selectedId = null; let tab = 'object'
 const images = new Map(); const sounds = new Map();
 /** append que ignora null/false (los condicionales del inspector). */
 const appendKids = (el, ...kids) => el.append(...kids.flat().filter((k) => k != null && k !== false));
-const cv = {}; let grid = true; let zoom = 1.25;
+const cv = {}; let grid = true; let zoom = 1.25; let zoomMode = 1.25; // zoomMode: número o 'fit'
+const fitZoom = () => {
+  const wrap = refs.stageWrap; if (!wrap) return 1.25;
+  const top = wrap.getBoundingClientRect().top + window.scrollY;
+  const availH = window.innerHeight - 150; const availW = wrap.clientWidth - 48;
+  const z = Math.min(availH / 560, availW / 410);
+  return Math.max(0.75, Math.min(2.5, Math.round(z * 20) / 20));
+};
+function applyZoom(root) { zoom = zoomMode === 'fit' ? fitZoom() : zoomMode; root.style.setProperty('--zoom', zoom); }
 const refs = {};
 let saveState = 'saved';
 
@@ -696,7 +704,7 @@ export function mountEditor(root) {
   refs.stageWrap = h('div', { class: 'stage-wrap' },
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),
-      h('label', { class: 'check' }, 'Zoom', selectInput([[1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoom, (v) => { zoom = Number(v); root.style.setProperty('--zoom', zoom); })),
+      h('label', { class: 'check' }, 'Zoom', selectInput([['fit', 'Ajustar'], [1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoomMode, (v) => { zoomMode = v === 'fit' ? 'fit' : Number(v); applyZoom(root); })),
       refs.coords, refs.hud),
     h('div', { class: 'screens' },
       h('figure', {}, h('figcaption', {}, 'Superior 400×240'), cv.top),
@@ -713,7 +721,8 @@ export function mountEditor(root) {
     refs.warnPanel,
     refs.guide,
     h('div', { class: 'ed-grid' }, refs.left, refs.stageWrap, refs.right));
-  root.style.setProperty('--zoom', zoom);
+  applyZoom(root);
+  window.addEventListener('resize', () => { if (zoomMode === 'fit') applyZoom(root); });
   // Arrastrar archivos al escenario: imágenes, sonidos o un proyecto .c3ds.json.
   const dropZone = refs.stageWrap;
   dropZone.addEventListener('dragover', (e) => { if ([...(e.dataTransfer?.types || [])].includes('Files')) { e.preventDefault(); dropZone.classList.add('drop-over'); } });
