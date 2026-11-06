@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Reglas: eventos **“Se pulsa cualquier botón”** y **“Pasan N segundos desde que empieza la escena”** (una vez, para pantallas de presentación), y acción **“Alternar visible / oculto”**.
 - Editor: el zoom por defecto es **Ajustar** (el escenario ocupa lo que cabe en tu ventana, con las dos pantallas visibles).
 - Atajo **Ctrl+Intro** para probar / detener la vista previa.
 

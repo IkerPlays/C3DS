@@ -24,6 +24,8 @@ Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 40
 | `start` | La escena empieza | — |
 | `key` | Se pulsa un botón | Botón (botón) |
 | `keyUp` | Se suelta un botón | Botón (botón) |
+| `anyKey` | Se pulsa cualquier botón | — |
+| `after` | Pasan unos segundos desde que empieza la escena (una vez) | Segundos (número) |
 | `keyHeld` | Se mantiene un botón | Botón (botón) |
 | `collide` | Dos objetos chocan | Objeto (objeto), con (objeto) |
 | `touchAny` | Se toca la pantalla táctil (en cualquier sitio) | — |
@@ -55,6 +57,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 | `setAnim` | Cambiar animación de un sprite | Sprite (objeto), Grupo (grupo de animación) |
 | `setOpacity` | Cambiar la opacidad de un objeto | Objeto (objeto), Opacidad (0 a 1) (número) |
 | `setFlip` | Voltear un sprite (espejo horizontal) | Sprite (objeto), Espejo (normal o espejo) |
+| `toggle` | Alternar visible / oculto | Objeto (objeto) |
 | `show` | Mostrar objeto | Objeto (objeto) |
 | `hide` | Ocultar objeto | Objeto (objeto) |
 | `quit` | Salir del juego | — |

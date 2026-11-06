@@ -242,7 +242,10 @@ export function platformerProject() {
   const t = makeObject(p, 'text', { name: 'Texto', x: 200, y: 90, align: 'center', text: '¡Lo conseguiste!', color: '#ffffff' });
   const again = makeObject(p, 'button', { name: 'Otra vez', x: 100, y: 100, text: 'Otra vez' });
   win.objects.push(t, again);
-  win.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
+  win.rules.push(
+    { id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] },
+    { id: nextId(p), when: { type: 'anyKey' }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] },
+  );
   p.scenes.push(game, win); p.startScene = game.id;
   return p;
 }

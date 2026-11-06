@@ -158,3 +158,26 @@ test('setFlip: espejo horizontal de un sprite (simulador y C)', async () => {
   assert.match(c, /\.flip = 1;/); assert.match(c, /o->flip \? -tw : tw/); assert.match(c, /int align, cols, rows, flip;/);
   assert.match(describeRule(sc.rules[0], p, sc), /voltear Moneda/);
 });
+
+test('anyKey, after (una vez) y toggle: simulador y C', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.rules.length = 0;
+  const o = sc.objects[0];
+  sc.rules.push(
+    { id: 1, when: { type: 'anyKey' }, then: [{ type: 'toggle', obj: o.id }] },
+    { id: 2, when: { type: 'after', seconds: 1 }, then: [{ type: 'addVar', var: 'puntos', value: 10 }] },
+  );
+  const g = new Game(p); g.enter(sc.id);
+  const step = (down = []) => g.step({ down: new Set(down), held: new Set(), touch: null, touchDown: false });
+  const obj = g.objs.find((x) => x.id === o.id);
+  assert.equal(obj.visible, true);
+  step(['B']); assert.equal(obj.visible, false, 'cualquier botón alterna');
+  step(['A']); assert.equal(obj.visible, true);
+  step(); assert.equal(obj.visible, true, 'sin botones no cambia');
+  for (let i = 0; i < 200; i++) step();
+  assert.equal(g.vars.puntos, 10, 'after solo salta una vez');
+  const c = generateMainC(p);
+  assert.match(c, /\(down & ~KEY_TOUCH\)/); assert.match(c, /scene_frames == 60/); assert.match(c, /\.visible = !objs\[\d+\]\.visible;/);
+  assert.match(describeRule(sc.rules[1], p, sc), /[Aa] los 1 s de empezar/);
+});

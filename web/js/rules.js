@@ -13,6 +13,8 @@ export const EVENTS = {
   start: { label: 'La escena empieza', fields: [] },
   key: { label: 'Se pulsa un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
   keyUp: { label: 'Se suelta un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
+  anyKey: { label: 'Se pulsa cualquier botón', fields: [] },
+  after: { label: 'Pasan unos segundos desde que empieza la escena (una vez)', fields: [{ k: 'seconds', t: 'number', label: 'Segundos', min: 0.1, step: 0.1 }] },
   keyHeld: { label: 'Se mantiene un botón', fields: [{ k: 'key', t: 'key', label: 'Botón' }] },
   collide: { label: 'Dos objetos chocan', fields: [{ k: 'a', t: 'object', label: 'Objeto' }, { k: 'b', t: 'object', label: 'con' }] },
   touchAny: { label: 'Se toca la pantalla táctil (en cualquier sitio)', fields: [] },
@@ -41,6 +43,7 @@ export const ACTIONS = {
   setAnim: { label: 'Cambiar animación de un sprite', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'group', t: 'group', label: 'Grupo' }] },
   setOpacity: { label: 'Cambiar la opacidad de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'value', t: 'number', label: 'Opacidad (0 a 1)', step: 0.1, min: 0, max: 1 }] },
   setFlip: { label: 'Voltear un sprite (espejo horizontal)', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'flip', t: 'flip', label: 'Espejo' }] },
+  toggle: { label: 'Alternar visible / oculto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   show: { label: 'Mostrar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   hide: { label: 'Ocultar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   quit: { label: 'Salir del juego', fields: [] },
@@ -96,6 +99,7 @@ function describeBase(r, p, scene) {
   const when = {
     start: () => T('al empezar la escena', 'when the scene starts'), key: () => T(`al pulsar ${w.key}`, `when ${w.key} is pressed`),
     keyHeld: () => T(`mientras se mantiene ${w.key}`, `while ${w.key} is held`), keyUp: () => T(`al soltar ${w.key}`, `when ${w.key} is released`),
+    anyKey: () => T('al pulsar cualquier botón', 'when any button is pressed'), after: () => T(`a los ${w.seconds} s de empezar`, `${w.seconds} s after the scene starts`),
     collide: () => T(`si ${obj(w.a)} choca con ${obj(w.b)}`, `if ${obj(w.a)} collides with ${obj(w.b)}`), touch: () => T(`al tocar ${obj(w.obj)}`, `when ${obj(w.obj)} is tapped`),
     var: () => T(`si ${w.var} ${OP_LABEL[w.op] || w.op} ${w.value}`, `if ${w.var} ${OP_EN[w.op] || w.op} ${w.value}`),
     edge: () => T(`si ${obj(w.obj)} toca el borde ${EDGES[w.edge]?.toLowerCase() || ''}`, `if ${obj(w.obj)} touches the ${EDGE_EN[w.edge] || ''} edge`),
@@ -114,6 +118,7 @@ function describeBase(r, p, scene) {
     setText: () => T(`texto de ${obj(a.obj)}`, `text of ${obj(a.obj)}`), setColor: () => T(`color de ${obj(a.obj)} = ${a.color}`, `color of ${obj(a.obj)} = ${a.color}`),
     setOpacity: () => T(`opacidad de ${obj(a.obj)} = ${a.value}`, `opacity of ${obj(a.obj)} = ${a.value}`),
     setFlip: () => T(`${a.flip ? 'voltear' : 'enderezar'} ${obj(a.obj)}`, `${a.flip ? 'flip' : 'unflip'} ${obj(a.obj)}`),
+    toggle: () => T(`alternar ${obj(a.obj)}`, `toggle ${obj(a.obj)}`),
     show: () => T(`mostrar ${obj(a.obj)}`, `show ${obj(a.obj)}`), hide: () => T(`ocultar ${obj(a.obj)}`, `hide ${obj(a.obj)}`), quit: () => T('salir', 'quit'),
   }[a.type]?.() ?? '…');
   return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || T('nada', 'nothing')}`;

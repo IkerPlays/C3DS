@@ -106,6 +106,8 @@ export class Game {
       case 'keyHeld': return held.has(w.key);
       case 'collide': { const a = this.obj(w.a); const b = this.obj(w.b); return !!a && !!b && a.visible && b.visible && a.screen === b.screen && overlap(a, b); }
       case 'touchAny': return !!touched;
+      case 'anyKey': return down.size > 0;
+      case 'after': return this.frames === Math.max(1, Math.round(num(w.seconds) * 60));
       case 'touch': { const o = this.obj(w.obj); return !!touched && !!o && o.visible && o.screen === 'bottom' && touch.x >= o.x && touch.x < o.x + o.w && touch.y >= o.y && touch.y < o.y + o.h; }
       case 'var': {
         const v = this.vars[w.var]; const k = num(w.value);
@@ -152,6 +154,7 @@ export class Game {
       case 'setColor': if (o && /^#[0-9a-f]{6}$/i.test(a.color)) o.color = a.color; break;
       case 'show': if (o) o.visible = true; break;
       case 'hide': if (o) o.visible = false; break;
+      case 'toggle': if (o) o.visible = !o.visible; break;
       case 'quit': this.quit = true; this.persist(); break;
       default: break;
     }
