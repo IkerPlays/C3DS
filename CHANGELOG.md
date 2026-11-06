@@ -4,6 +4,9 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+
+## [0.6.0] - 2026-11-06
+- Lección nueva: **8 · Pantalla de inicio** (cualquier botón, temporizador “una vez” y texto parpadeante).
 - Editor: el **zoom** elegido se recuerda entre sesiones.
 - Editor: las **escenas se reordenan arrastrando** en la lista.
 - Reglas: eventos **“Se pulsa cualquier botón”** y **“Pasan N segundos desde que empieza la escena”** (una vez, para pantallas de presentación), y acción **“Alternar visible / oculto”**.

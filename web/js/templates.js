@@ -338,6 +338,21 @@ export const lessonChase = () => lesson('Lección 7 - Perseguir', (p, sc) => {
   note(p, sc, 'El rojo tiene “Sigue a” = Jugador. Cambia su velocidad en el panel.', 20);
 });
 
+export const lessonTitle = () => {
+  const p = lesson('Lección 8 - Pantalla de inicio', () => {});
+  const a = p.scenes[0]; a.name = 'Inicio'; a.bg.top = '#1d2b53'; a.bg.bottom = '#0e1020';
+  const b = makeScene(p, 'Juego'); b.bg.top = '#008751';
+  const title = makeObject(p, 'text', { name: 'Título', x: 200, y: 80, align: 'center', size: 1.6, text: 'MI JUEGO', color: '#ffec27' });
+  const blink = makeObject(p, 'text', { name: 'Pulsa', x: 200, y: 140, align: 'center', text: 'Pulsa cualquier botón', color: '#ffffff' });
+  const game = makeObject(p, 'text', { name: 'Texto', x: 200, y: 100, align: 'center', text: '¡Aquí empieza el juego!\\nVuelve solo en 3 segundos', color: '#ffffff' });
+  a.objects.push(title, blink); b.objects.push(game);
+  a.rules.push({ id: nextId(p), when: { type: 'anyKey' }, then: [{ type: 'goto', scene: b.id }] });
+  a.rules.push({ id: nextId(p), when: { type: 'timer', seconds: 0.5 }, then: [{ type: 'toggle', obj: blink.id }] });
+  b.rules.push({ id: nextId(p), when: { type: 'after', seconds: 3 }, then: [{ type: 'goto', scene: a.id }] });
+  p.scenes.push(b);
+  return p;
+};
+
 export const LESSONS = [
   { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: () => maybeLocalize(lessonMove()) },
   { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: () => maybeLocalize(lessonCollide()) },
@@ -346,6 +361,7 @@ export const LESSONS = [
   { id: 'l5', name: '5 · Sonido y música', desc: 'Efectos, música en bucle y parar sonido.', icon: 'sound', make: () => maybeLocalize(lessonSound()) },
   { id: 'l6', name: '6 · Gravedad y sólidos', desc: 'Saltar, caer y no atravesar suelos ni escalones.', icon: 'runner', make: () => maybeLocalize(lessonPhysics()) },
   { id: 'l7', name: '7 · Perseguir', desc: 'La propiedad “Sigue a” para enemigos que te persiguen.', icon: 'comet', make: () => maybeLocalize(lessonChase()) },
+  { id: 'l8', name: '8 · Pantalla de inicio', desc: 'Cualquier botón, temporizador “una vez” y texto parpadeante.', icon: 'clapper', make: () => maybeLocalize(lessonTitle()) },
 ];
 
 export const TEMPLATES = [

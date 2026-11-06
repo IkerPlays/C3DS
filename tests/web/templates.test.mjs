@@ -184,7 +184,7 @@ test('C generado: gravedad, apoyar y aterrizar', () => {
 });
 
 test('lecciones: válidas, exportables y jugables', () => {
-  assert.equal(LESSONS.length, 7);
+  assert.equal(LESSONS.length, 8);
   for (const l of LESSONS) {
     const p = l.make();
     assert.deepEqual(validate(p).filter((x) => x.level === 'error'), [], l.id);
@@ -311,4 +311,21 @@ test('récord: Corredor y Pong guardan el máximo (maxVar) en simulador y C', ()
   h.vars.puntos = 4; ball.x = 0; ball.vx = -3;
   h.step({ down: new Set(), held: new Set(), touch: null, touchDown: false });
   assert.equal(h.vars.mejor, 4, 'la mejor racha se guarda'); assert.equal(h.vars.puntos, 0);
+});
+
+test('Lección 8: cualquier botón entra al juego y a los 3 s vuelve solo', () => {
+  const p = LESSONS.find((l) => l.id === 'l8').make();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p);
+  const step = (down = []) => g.step({ down: new Set(down), held: new Set(), touch: null, touchDown: false });
+  assert.equal(g.scene.name, 'Inicio');
+  for (let i = 0; i < 40; i++) step();
+  const blink = g.objs.find((o) => o.name === 'Pulsa');
+  assert.ok(blink.visible === true || blink.visible === false);
+  step(['A']); assert.equal(g.scene.name, 'Juego');
+  for (let i = 0; i < 175; i++) step();
+  assert.equal(g.scene.name, 'Juego', 'aún no han pasado 3 s');
+  for (let i = 0; i < 10; i++) step();
+  assert.equal(g.scene.name, 'Inicio', 'vuelve solo');
+  assert.equal(g.text(g.objs.find((o) => o.name === 'Título')), 'MI JUEGO');
 });
