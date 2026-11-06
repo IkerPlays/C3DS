@@ -342,7 +342,10 @@ function renderLeft() {
   // Escenas
   root.append(h('section', { class: 'panel-sec' },
     h('div', { class: 'sec-head' }, h('h4', {}, 'Escenas'), h('button', { class: 'mini', title: 'Añadir escena', onClick: addScene }, '+')),
-    h('ul', { class: 'list' }, project.scenes.map((s) => h('li', { class: s.id === sceneId ? 'active' : '' },
+    h('ul', { class: 'list' }, project.scenes.map((s, si) => h('li', { class: s.id === sceneId ? 'active' : '', draggable: 'true', title: 'Arrastra para cambiar el orden',
+      onDragstart: (e) => { e.dataTransfer.setData('text/plain', String(si)); e.dataTransfer.effectAllowed = 'move'; },
+      onDragover: (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; },
+      onDrop: (e) => { e.preventDefault(); const from = Number(e.dataTransfer.getData('text/plain')); if (Number.isInteger(from) && from !== si) { const [m] = project.scenes.splice(from, 1); project.scenes.splice(si, 0, m); changed({ structure: true }); } } },
       h('button', { class: 'row', onClick: () => { sceneId = s.id; selectedId = null; refreshAll(); } }, project.startScene === s.id ? '★ ' : '', s.name),
       h('button', { class: 'mini ghost', title: 'Marcar como escena inicial', onClick: () => { project.startScene = s.id; changed({ structure: true }); } }, '★'),
       h('button', { class: 'mini ghost', title: 'Duplicar escena', onClick: () => duplicateScene(s.id) }, '⧉'),

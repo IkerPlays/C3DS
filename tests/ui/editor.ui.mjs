@@ -753,3 +753,16 @@ test('zoom por defecto “Ajustar”: las dos pantallas caben en la ventana', as
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('escenas: se reordenan arrastrando y la escena inicial no cambia', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  const names = () => page.evaluate(() => window.c3ds.editor.getProject().scenes.map((s) => s.name));
+  const start = () => page.evaluate(() => { const p = window.c3ds.editor.getProject(); return p.scenes.find((s) => s.id === p.startScene).name; });
+  assert.deepEqual(await names(), ['Menú', 'Juego']);
+  const items = page.locator('.ed-left .panel-sec').first().locator('li');
+  await items.nth(1).dragTo(items.nth(0));
+  assert.deepEqual(await names(), ['Juego', 'Menú'], 'el orden cambia');
+  assert.equal(await start(), 'Menú', 'la escena inicial sigue siendo la misma');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
