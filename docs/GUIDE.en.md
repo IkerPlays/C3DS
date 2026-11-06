@@ -24,6 +24,8 @@ Add a rule with **+ New rule**, pick the event and the actions. A plain-language
 - **Follows** makes an object chase another (enemies). **Opacity** and **Mirror** change how it looks.
 - For floors and walls use a **sprite with tiles** (columns × rows).
 
+- **Wide world and camera**: in the **Scene** tab set a *World width* of up to 1600 px and pick what the camera follows. Tick **Fixed on screen** on the scoreboard so it does not move, and use **Parallax** (0–1) on backgrounds so they move more slowly. See the **Wide world** template.
+
 ## 5. Images, sound and scenes
 - **Images**: upload PNG/JPG/WebP. The scissors icon slices a sprite sheet into frames and creates an animation.
 - **Sounds**: WAV/OGG/MP3, converted automatically. Tick the loop icon for music.

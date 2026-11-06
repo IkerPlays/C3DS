@@ -24,6 +24,8 @@ Añade una regla con **+ Nueva regla**, elige el evento y las acciones. Verás u
 - **Sigue a** hace que un objeto persiga a otro (enemigos). **Opacidad** y **Espejo** cambian cómo se ve.
 - Para suelos y muros usa un **sprite con mosaico** (columnas × filas).
 
+- **Mundo ancho y cámara**: en la pestaña **Escena** pon un *Ancho del mundo* de hasta 1600 px y elige a quién sigue la cámara. Marca **Fijo en pantalla** en el marcador para que no se mueva, y usa **Paralaje** (0–1) en los fondos para que se muevan más despacio. Mira la plantilla **Mundo ancho**.
+
 ## 5. Imágenes, sonido y escenas
 - **Imágenes**: sube PNG/JPG/WebP. Con el icono de tijeras cortas una hoja de sprites en fotogramas y creas una animación.
 - **Sonidos**: WAV/OGG/MP3, se convierten solos. Marca el icono de repetir para música.
