@@ -76,7 +76,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0}, ${int(o.tileCols || 1, 1, 100)}, ${int(o.tileRows || 1, 1, 32)}, ${o.flipX ? 1 : 0}, ${o.fixed ? 1 : 0} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0}, ${int(o.tileCols || 1, 1, 100)}, ${int(o.tileRows || 1, 1, 32)}, ${o.flipX ? 1 : 0}, ${o.fixed ? 1 : 0}, ${flt(o.parallax ?? 1, 3)} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -165,6 +165,7 @@ typedef struct {
 	int solid, follow;
 	float fspeed, opacity;
 	int align, cols, rows, flip, fixed;
+	float par;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -183,7 +184,8 @@ static const float screen_w[2] = { ${SCREENS.top.w}.0f, ${SCREENS.bottom.w}.0f }
 static const float scene_world[NUM_SCENES] = { ${p.scenes.map((s) => `${int(s.worldW ?? 400, 400, 1600)}.0f`).join(', ') || '400.0f'} };
 static const int scene_cam[NUM_SCENES] = { ${p.scenes.map((s) => (s.camera != null ? A.objIndex.get(s.camera) ?? -1 : -1)).join(', ') || '-1'} };
 static float cam_x = 0;
-static float max_w(const Obj* o) { return (o->screen == 0 && !o->fixed) ? scene_world[cur_scene] : screen_w[o->screen]; }
+static float cam_f(const Obj* o) { return o->fixed ? 0.0f : o->par; }
+static float max_w(const Obj* o) { return (o->screen == 0 && cam_f(o) > 0.0f) ? scene_world[cur_scene] : screen_w[o->screen]; }
 static void update_camera(void) {
 	cam_x = 0;
 	int c = scene_cam[cur_scene];
@@ -429,7 +431,7 @@ static void draw_screen(int screen) {
 	for (int i = 0; i < NUM_OBJS; i++) {
 		const Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible || o->screen != screen) continue;
-		float ox = (screen == 0 && !o->fixed) ? o->x - cam_x : o->x;
+		float ox = (screen == 0) ? o->x - cam_x * cam_f(o) : o->x;
 		switch (o->type) {
 		case T_RECT: C2D_DrawRectSolid(ox, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity)); break;
 		case T_SPRITE:

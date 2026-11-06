@@ -267,7 +267,9 @@ export function scrollerProject() {
   const player = makeObject(p, 'rect', { name: 'Jugador', x: 20, y: 150, w: 22, h: 30, color: '#ffffff', controls: 'h', speed: 3, gravity: 0.6 });
   const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {puntos}', color: '#ffffff', fixed: true });
   const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 100, text: '← → mover   A saltar   Llega a la bandera', color: '#c2c3c7' });
-  game.objects.push(ground, ...blocks, ...coins, flag, player, score, help); game.camera = player.id;
+  const hill = (name, x, w, h) => makeObject(p, 'rect', { name, x, y: 216 - h, w, h, color: '#008751', parallax: 0.5 });
+  const hills = [hill('Colina 1', 60, 160, 70), hill('Colina 2', 380, 220, 100), hill('Colina 3', 700, 180, 80)]; // fondo con paralaje
+  game.objects.push(...hills, ground, ...blocks, ...coins, flag, player, score, help); game.camera = player.id;
   for (const on of [ground, ...blocks]) game.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9.2 }, { type: 'sound', sound: jump }] });
   for (const c of coins) game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: c.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'hide', obj: c.id }] });
   game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: flag.id }, then: [{ type: 'goto', scene: win.id }] });

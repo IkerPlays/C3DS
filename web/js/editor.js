@@ -7,7 +7,7 @@ import {
 } from './model.js';
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
-import { Game, render, runInCanvases } from './runtime.js';
+import { Game, render, runInCanvases, camFactor } from './runtime.js';
 import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, FLIPS, defaultWhen, defaultAction, describeRule } from './rules.js';
 import { imageToAsset, audioToWav, sliceSheet, iconToDataURL } from './images.js';
 import { exportFiles } from './codegen.js';
@@ -103,7 +103,7 @@ function drawStage() {
   for (const key of ['top', 'bottom']) {
     const ctx = ctxs[key];
     if (grid) { ctx.fillStyle = 'rgba(255,255,255,.07)'; for (let x = 0; x < SCREENS[key].w; x += 20) ctx.fillRect(x, 0, 1, SCREENS[key].h); for (let y = 0; y < SCREENS[key].h; y += 20) ctx.fillRect(0, y, SCREENS[key].w, 1); }
-    const shift = (q) => (key === 'top' && !q.fixed ? -panX : 0);
+    const shift = (q) => (key === 'top' ? -panX * camFactor(q) : 0);
     for (const q of selectedAll().slice(1)) if (q.screen === key) { const bq = objBox(ctx, q); bq.x += shift(q); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(bq.x - 1.5, bq.y - 1.5, bq.w + 3, bq.h + 3); ctx.setLineDash([]); }
     const sel = selected();
     if (sel && sel.screen === key) {
@@ -123,7 +123,7 @@ const snap = (v) => (grid ? Math.round(v / 5) * 5 : Math.round(v));
 function bindStage() {
   for (const key of ['top', 'bottom']) {
     const c = cv[key]; let drag = null;
-    const wx = (o, p) => (key === 'top' && !o.fixed ? p.x + panX : p.x); // x de pantalla -> x del mundo para ese objeto
+    const wx = (o, p) => (key === 'top' ? p.x + panX * camFactor(o) : p.x); // x de pantalla -> x del mundo para ese objeto
     c.addEventListener('pointerdown', (ev) => {
       if (runner) return;
       const p = pointer(key, ev); const ctx = c.getContext('2d');
@@ -440,6 +440,7 @@ function renderRight() {
     o.type === 'rect' || o.type === 'sprite' ? f('gravity', 'Gravedad', numInput(() => o.gravity || 0, (v) => { o.gravity = v; }, { step: 0.1 })) : null,
     o.type === 'rect' || o.type === 'sprite' ? h('p', { class: 'muted small' }, 'Vel X/Y mueven el objeto solo (px por frame). La gravedad suma a Vel Y cada frame; usa “apoyar sobre” para aterrizar.') : null,
     o.screen === 'top' ? h('label', { class: 'check', title: 'No se mueve con la cámara (marcador, vidas, textos de la interfaz)' }, h('input', { type: 'checkbox', checked: !!o.fixed, id: 'chk-fixed', onChange: (e) => { o.fixed = e.target.checked; changed(); } }), 'Fijo en pantalla (no sigue a la cámara)') : null,
+    o.screen === 'top' ? f('parallax', 'Paralaje (0 fijo, 1 normal)', numInput(() => o.parallax ?? 1, (v) => { o.parallax = Math.max(0, Math.min(1, v)); }, { step: 0.1, min: 0, max: 1 })) : null,
     o.type === 'rect' || o.type === 'sprite' ? h('label', { class: 'check', title: 'Los objetos que se mueven no pueden atravesarlo (muros, suelos, plataformas)' }, h('input', { type: 'checkbox', checked: !!o.solid, onChange: (e) => { o.solid = e.target.checked; changed(); } }), 'Sólido (bloquea el paso)') : null,
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.visible, onChange: (e) => { o.visible = e.target.checked; changed(); } }), 'Visible al empezar'),
     h('div', { class: 'row-btns tight', 'aria-label': 'Orden de capas' }, h('button', { class: 'btn small', title: 'Traer al frente', onClick: () => moveSelected('front') }, '⤒ Frente'), h('button', { class: 'btn small', title: 'Subir una capa', onClick: () => moveSelected('up') }, '↑'), h('button', { class: 'btn small', title: 'Bajar una capa', onClick: () => moveSelected('down') }, '↓'), h('button', { class: 'btn small', title: 'Enviar al fondo', onClick: () => moveSelected('back') }, '⤓ Fondo')),

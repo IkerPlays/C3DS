@@ -290,8 +290,8 @@ test('mosaico de sprites: plataformas con ladrillos (simulador y C)', async () =
   assert.equal(ground.type, 'sprite'); assert.equal(ground.tileCols, 25); assert.ok(ground.solid);
   assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
   const c = generateMainC(p);
-  assert.match(c, /for \(int ty = 0; ty < o->rows; ty\+\+\)/); assert.match(c, /int align, cols, rows, flip, fixed;/);
-  assert.match(c, /, 25, 2, 0, 0 \}, \/\/ \d+/);
+  assert.match(c, /for \(int ty = 0; ty < o->rows; ty\+\+\)/); assert.match(c, /int align, cols, rows, flip, fixed;\n\tfloat par;/);
+  assert.match(c, /, 25, 2, 0, 0, 1\.000f \}, \/\/ \d+/);
   ground.tileCols = 64; ground.tileRows = 64;
   assert.ok(validate(p).some((x) => /mosaico/.test(x.text)));
 });

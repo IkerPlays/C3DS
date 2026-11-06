@@ -3,6 +3,8 @@
 import { SCREENS } from './model.js';
 
 export const FADE_FRAMES = 18;
+/** Cuánto se desplaza un objeto con la cámara: 0 = fijo (interfaz), 1 = normal, entre medias = fondo con paralaje. */
+export const camFactor = (o) => (o.fixed ? 0 : o.parallax == null ? 1 : Math.max(0, Math.min(1, Number(o.parallax) || 0)));
 export const formatText = (tpl, vars) => String(tpl).replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (m, n) => (n in vars ? String(vars[n]) : m));
 
 const overlap = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
@@ -46,7 +48,7 @@ export class Game {
   obj(id) { return this.objs.find((o) => o.id === id); }
 
   /** Ancho útil para un objeto: el mundo de la escena (pantalla superior) o la pantalla (fijos y pantalla inferior). */
-  maxW(o) { return o.screen === 'top' && !o.fixed ? Math.max(SCREENS.top.w, Math.min(1600, num(this.scene.worldW) || SCREENS.top.w)) : SCREENS[o.screen].w; }
+  maxW(o) { return o.screen === 'top' && camFactor(o) > 0 ? Math.max(SCREENS.top.w, Math.min(1600, num(this.scene.worldW) || SCREENS.top.w)) : SCREENS[o.screen].w; }
 
   /** Posición horizontal de la cámara (siguiendo al objeto elegido, sin salirse del mundo). */
   updateCamera() {
@@ -194,7 +196,7 @@ export function render(game, ctxs, images) {
     ctx.textBaseline = 'top'; ctx.font = '14px "DejaVu Sans Mono", monospace';
     for (const o of game.objs) {
       if (!o.visible || o.screen !== key) continue;
-      ctx.save(); if (key === 'top' && !o.fixed) ctx.translate(-(game.camX || 0), 0);
+      ctx.save(); if (key === 'top') ctx.translate(-(game.camX || 0) * camFactor(o), 0);
       ctx.globalAlpha = o.opacity == null ? 1 : Math.max(0, Math.min(1, o.opacity));
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
