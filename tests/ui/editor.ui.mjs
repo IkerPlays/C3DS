@@ -766,3 +766,12 @@ test('escenas: se reordenan arrastrando y la escena inicial no cambia', async ()
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('el zoom elegido se recuerda al recargar', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.locator('label.check:has-text("Zoom") select').selectOption('1.5');
+  await page.reload(); await page.waitForSelector('#cv-top');
+  assert.equal(await page.locator('label.check:has-text("Zoom") select').inputValue(), '1.5');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

@@ -24,6 +24,7 @@ const images = new Map(); const sounds = new Map();
 /** append que ignora null/false (los condicionales del inspector). */
 const appendKids = (el, ...kids) => el.append(...kids.flat().filter((k) => k != null && k !== false));
 const cv = {}; let grid = true; let zoom = 1.25; let zoomMode = 'fit'; // zoomMode: número o 'fit'
+try { const z = localStorage.getItem('c3ds:zoom'); if (z === 'fit' || ['1', '1.25', '1.5', '2'].includes(z)) zoomMode = z === 'fit' ? 'fit' : Number(z); } catch { /* sin almacenamiento */ }
 const fitZoom = () => {
   const wrap = refs.stageWrap; if (!wrap) return 1.25;
   const top = wrap.getBoundingClientRect().top + window.scrollY;
@@ -759,7 +760,7 @@ export function mountEditor(root) {
   refs.stageWrap = h('div', { class: 'stage-wrap' },
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),
-      h('label', { class: 'check' }, 'Zoom', selectInput([['fit', 'Ajustar'], [1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoomMode, (v) => { zoomMode = v === 'fit' ? 'fit' : Number(v); applyZoom(root); })),
+      h('label', { class: 'check' }, 'Zoom', selectInput([['fit', 'Ajustar'], [1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoomMode, (v) => { zoomMode = v === 'fit' ? 'fit' : Number(v); try { localStorage.setItem('c3ds:zoom', String(zoomMode)); } catch { /* ok */ } applyZoom(root); })),
       refs.coords, refs.hud),
     h('div', { class: 'screens' },
       h('figure', {}, h('figcaption', {}, 'Superior 400×240'), cv.top),
