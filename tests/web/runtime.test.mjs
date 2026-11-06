@@ -114,7 +114,7 @@ test('objetos sólidos bloquean el paso y dejan apoyarse', async () => {
   assert.equal(h.y + h.h, 200, 'se apoya exactamente en el suelo');
   const c = generateMainC(p);
   assert.match(c, /static int blocked\(int i\)/); assert.match(c, /int solid, follow;/);
-  assert.match(c, /0xFF[0-9A-F]{6}, 1, -1, 1\.000f, 1\.000f, 0, 1, 1, 0 \}, \/\/ \d+/);
+  assert.match(c, /0xFF[0-9A-F]{6}, 1, -1, 1\.000f, 1\.000f, 0, 1, 1, 0, 0 \}, \/\/ \d+/);
 });
 
 test('seguir a otro objeto y opacidad (simulador y C)', async () => {
@@ -134,7 +134,7 @@ test('seguir a otro objeto y opacidad (simulador y C)', async () => {
   assert.ok(Math.abs(c.x - 300) < 0.6 && Math.abs(c.y - 100) < 0.6, 'llega al objetivo');
   const code = generateMainC(p);
   assert.match(code, /static u32 with_alpha/); assert.match(code, /float fspeed, opacity;/); assert.match(code, /sqrtf\(fdx \* fdx/);
-  assert.match(code, /0xFFFFFFFF, 0, 2, 2\.000f, 0\.500f, 0, 1, 1, 0 \}/);
+  assert.match(code, /0xFFFFFFFF, 0, 2, 2\.000f, 0\.500f, 0, 1, 1, 0, 0 \}/);
   chaser.follow = 9999;
   assert.ok(validate(p).some((x) => /sigue a un objeto/.test(x.text)));
   chaser.follow = target.id; chaser.opacity = 2;
@@ -160,4 +160,47 @@ test('transición de fundido entre escenas (simulador y C)', async () => {
   const calls = []; const ctx = () => new Proxy({}, { get: (t, k) => (k === 'measureText' ? () => ({ width: 8 }) : typeof k === 'string' && /^(fillRect|fillText|drawImage|save|restore|translate|scale)$/.test(k) ? (...a) => calls.push([k, a]) : undefined), set: (t, k, v) => { if (k === 'fillStyle') calls.push(['fillStyle', v]); return true; } });
   render(g, { top: ctx(), bottom: ctx() }, new Map());
   assert.ok(calls.some(([k, v]) => k === 'fillStyle' && /^rgba\(0,0,0,1\)$/.test(v)), 'overlay negro al empezar el fundido');
+});
+
+test('mundo ancho y cámara: el objeto se mueve por todo el mundo y la cámara lo sigue (simulador)', async () => {
+  const { validate } = await import('../../web/js/model.js');
+  const { render } = await import('../../web/js/runtime.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.objects.length = 0; sc.rules.length = 0;
+  sc.worldW = 1000;
+  const hero = makeObject(p, 'rect', { name: 'Heroe', x: 50, y: 100, w: 20, h: 20, vx: 5 });
+  const hud = makeObject(p, 'text', { name: 'HUD', x: 10, y: 10, text: 'HUD', fixed: true });
+  sc.objects.push(hero, hud); sc.camera = hero.id;
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p); g.enter(sc.id);
+  const inp = { down: new Set(), held: new Set(), touch: null, touchDown: false };
+  g.step(inp); assert.equal(g.camX, 0, 'al principio la cámara está a la izquierda');
+  for (let i = 0; i < 120; i++) g.step(inp);
+  const h = g.objs.find((o) => o.name === 'Heroe');
+  assert.ok(h.x > 400, 'pasa de la pantalla (x=' + h.x + ')');
+  assert.ok(g.camX > 0, 'la cámara avanza (camX=' + g.camX + ')');
+  for (let i = 0; i < 300; i++) g.step(inp);
+  assert.equal(h.x, 980, 'se detiene en el borde del mundo');
+  assert.equal(g.camX, 600, 'la cámara no se sale del mundo (1000-400)');
+  // dibujo: los objetos normales se desplazan con la cámara; los fijos no
+  const log = []; const mk = () => new Proxy({}, { get: (t, k) => (k === 'measureText' ? () => ({ width: 8 }) : typeof k === 'string' && /^(fillRect|fillText|drawImage|save|restore|translate|scale)$/.test(k) ? (...a) => log.push([k, ...a]) : undefined), set: () => true });
+  render(g, { top: mk(), bottom: mk() }, new Map());
+  assert.ok(log.some(([k, x]) => k === 'translate' && x === -600), 'el héroe se dibuja desplazado -600');
+  assert.equal(log.filter(([k]) => k === 'save').length, log.filter(([k]) => k === 'restore').length, 'save/restore equilibrados');
+  sc.worldW = 5000; assert.ok(validate(p).some((x) => /ancho del mundo/.test(x.text)));
+  sc.worldW = 1000; sc.camera = 99999; assert.ok(validate(p).some((x) => /cámara/.test(x.text)));
+});
+
+test('mundo ancho y cámara en el C generado', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.worldW = 800; sc.camera = sc.objects[0].id; sc.objects[2].fixed = true;
+  const c = generateMainC(p);
+  assert.match(c, /static const float scene_world\[NUM_SCENES\] = \{ 400\.0f, 800\.0f \};/);
+  assert.match(c, /static const int scene_cam\[NUM_SCENES\] = \{ -1, 2 \};/);
+  assert.match(c, /static float max_w\(const Obj\* o\)/); assert.match(c, /update_camera\(\);\n\tscene_frames\+\+;/);
+  assert.match(c, /float ox = \(screen == 0 && !o->fixed\) \? o->x - cam_x : o->x;/);
+  assert.match(c, /int align, cols, rows, flip, fixed;/);
+  assert.match(c, /if \(nx > max_w\(o\) - o->w\) nx = max_w\(o\) - o->w;/);
+  assert.match(c, /, 0, 1, 1, 0, 1 \}, \/\/ \d+/);
 });

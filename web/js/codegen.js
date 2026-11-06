@@ -76,7 +76,7 @@ export function generateMainC(p) {
   const tplId = (t) => { let i = templates.indexOf(t); if (i < 0) { templates.push(t); i = templates.length - 1; } return i; };
   const objInit = A.objs.map((o) => {
     const t = o.type === 'text' || o.type === 'button' ? tplId(o.text) : -1;
-        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0}, ${int(o.tileCols || 1, 1, 32)}, ${int(o.tileRows || 1, 1, 32)}, ${o.flipX ? 1 : 0} }, // ${o.id}`;
+        return `\t{ ${{ rect: 0, text: 1, sprite: 2, button: 3 }[o.type]}, ${o.scene}, ${o.screen === 'top' ? 0 : 1}, ${A.imageIndex.get(o.image) ?? 0}, ${ctl(o.controls)}, ${t}, ${A.animOf.get(o.id)?.off ?? 0}, ${A.animOf.get(o.id)?.n ?? 0}, ${int(o.animFps, 1, 60) || 8}, ${int(o.x)}.0f, ${int(o.y)}.0f, ${int(o.w, 0, 400)}.0f, ${int(o.h, 0, 240)}.0f, ${int(o.speed, 0, 40)}.0f, ${flt(o.vx)}, ${flt(o.vy)}, ${flt(o.gravity, 5)}, ${flt(o.size || 1, 4)}, ${o.visible ? 1 : 0}, ${col(o.color)}, ${o.solid ? 1 : 0}, ${o.follow != null ? A.objIndex.get(o.follow) ?? -1 : -1}, ${flt(o.followSpeed ?? 1)}, ${flt(o.opacity ?? 1, 3)}, ${o.align === 'center' ? 1 : 0}, ${int(o.tileCols || 1, 1, 100)}, ${int(o.tileRows || 1, 1, 32)}, ${o.flipX ? 1 : 0}, ${o.fixed ? 1 : 0} }, // ${o.id}`;
   });
 
   const cond = (w) => {
@@ -164,7 +164,7 @@ typedef struct {
 	u32 color;
 	int solid, follow;
 	float fspeed, opacity;
-	int align, cols, rows, flip;
+	int align, cols, rows, flip, fixed;
 } Obj;
 
 static const Obj init_objs[${NO}] = {
@@ -180,6 +180,19 @@ static const u32 scene_bg[NUM_SCENES][2] = {
 ${bg || '\t{ 0, 0 },'}
 };
 static const float screen_w[2] = { ${SCREENS.top.w}.0f, ${SCREENS.bottom.w}.0f };
+static const float scene_world[NUM_SCENES] = { ${p.scenes.map((s) => `${int(s.worldW ?? 400, 400, 1600)}.0f`).join(', ') || '400.0f'} };
+static const int scene_cam[NUM_SCENES] = { ${p.scenes.map((s) => (s.camera != null ? A.objIndex.get(s.camera) ?? -1 : -1)).join(', ') || '-1'} };
+static float cam_x = 0;
+static float max_w(const Obj* o) { return (o->screen == 0 && !o->fixed) ? scene_world[cur_scene] : screen_w[o->screen]; }
+static void update_camera(void) {
+	cam_x = 0;
+	int c = scene_cam[cur_scene];
+	if (c < 0) return;
+	const Obj* t = &objs[c];
+	cam_x = t->x + t->w / 2 - screen_w[0] / 2;
+	if (cam_x > scene_world[cur_scene] - screen_w[0]) cam_x = scene_world[cur_scene] - screen_w[0];
+	if (cam_x < 0) cam_x = 0;
+}
 static const float screen_h[2] = { ${SCREENS.top.h}.0f, ${SCREENS.bottom.h}.0f };
 
 static void format_text(int tmpl, char* out, size_t n) {
@@ -222,7 +235,7 @@ static int edge_hit(int i, int e) {
 	if (!o->visible) return 0;
 	switch (e) {
 	case 0: return o->x <= 0;
-	case 1: return o->x + o->w >= screen_w[o->screen];
+	case 1: return o->x + o->w >= max_w(o);
 	case 2: return o->y <= 0;
 	default: return o->y + o->h >= screen_h[o->screen];
 	}
@@ -231,7 +244,7 @@ static int edge_hit(int i, int e) {
 /* mode: 0 = X e Y, 1 = solo X, 2 = solo Y */
 static void random_pos(int i, int mode) {
 	Obj* o = &objs[i];
-	float mw = screen_w[o->screen] - o->w, mh = screen_h[o->screen] - o->h;
+	float mw = max_w(o) - o->w, mh = screen_h[o->screen] - o->h;
 	if (mode != 2) o->x = (float)(rand() % (int)(mw > 1 ? mw : 1));
 	if (mode != 1) o->y = (float)(rand() % (int)(mh > 1 ? mh : 1));
 }
@@ -371,7 +384,7 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 		float nx = o->x, ny = o->y;
 		if (nx < 0) nx = 0;
 		if (ny < 0) ny = 0;
-		if (nx > screen_w[o->screen] - o->w) nx = screen_w[o->screen] - o->w;
+		if (nx > max_w(o) - o->w) nx = max_w(o) - o->w;
 		if (ny > screen_h[o->screen] - o->h) ny = screen_h[o->screen] - o->h;
 		o->x = nx; o->y = oy;
 		if (blocked(i) >= 0) o->x = ox;
@@ -390,6 +403,7 @@ static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, fl
 ${sceneRules}
 	default: break;
 	}
+	update_camera();
 	scene_frames++;
 	if (fade_frames > 0) fade_frames--;
 }
@@ -415,8 +429,9 @@ static void draw_screen(int screen) {
 	for (int i = 0; i < NUM_OBJS; i++) {
 		const Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible || o->screen != screen) continue;
+		float ox = (screen == 0 && !o->fixed) ? o->x - cam_x : o->x;
 		switch (o->type) {
-		case T_RECT: C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity)); break;
+		case T_RECT: C2D_DrawRectSolid(ox, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity)); break;
 		case T_SPRITE:
 ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames * o->anim_fps / 60) % o->anim_n] : o->image;
 			  C2D_Image img = C2D_SpriteSheetGetImage(sheet, idx);
@@ -424,13 +439,13 @@ ${A.hasImages ? `			{ int idx = o->anim_n ? anim_tbl[o->anim_off + (scene_frames
 			  float tw = o->w / o->cols, th = o->h / o->rows;
 			  for (int ty = 0; ty < o->rows; ty++)
 			  	for (int tx = 0; tx < o->cols; tx++)
-			  		C2D_DrawImageAt(img, o->x + tx * tw + (o->flip ? tw : 0.0f), o->y + ty * th, 0.0f, &tint, (o->flip ? -tw : tw) / img.subtex->width, th / img.subtex->height); }` : '			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
+			  		C2D_DrawImageAt(img, ox + tx * tw + (o->flip ? tw : 0.0f), o->y + ty * th, 0.0f, &tint, (o->flip ? -tw : tw) / img.subtex->width, th / img.subtex->height); }` : '			C2D_DrawRectSolid(ox, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));'}
 			break;
-		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, o->x, o->y, with_alpha(o->color, o->opacity), o->tsize, o->align); break;
+		case T_TEXT: format_text(o->tmpl, buf, sizeof buf); draw_text(buf, ox, o->y, with_alpha(o->color, o->opacity), o->tsize, o->align); break;
 		case T_BUTTON:
-			C2D_DrawRectSolid(o->x, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));
+			C2D_DrawRectSolid(ox, o->y, 0.0f, o->w, o->h, with_alpha(o->color, o->opacity));
 			format_text(o->tmpl, buf, sizeof buf);
-			draw_text(buf, o->x + 6, o->y + o->h / 2 - 8 * o->tsize, with_alpha(0xFF000000, o->opacity), o->tsize, 0);
+			draw_text(buf, ox + 6, o->y + o->h / 2 - 8 * o->tsize, with_alpha(0xFF000000, o->opacity), o->tsize, 0);
 			break;
 		}
 	}

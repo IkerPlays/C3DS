@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject, platformerProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject, platformerProject, scrollerProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -290,8 +290,8 @@ test('mosaico de sprites: plataformas con ladrillos (simulador y C)', async () =
   assert.equal(ground.type, 'sprite'); assert.equal(ground.tileCols, 25); assert.ok(ground.solid);
   assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
   const c = generateMainC(p);
-  assert.match(c, /for \(int ty = 0; ty < o->rows; ty\+\+\)/); assert.match(c, /int align, cols, rows, flip;/);
-  assert.match(c, /, 25, 2, 0 \}, \/\/ \d+/);
+  assert.match(c, /for \(int ty = 0; ty < o->rows; ty\+\+\)/); assert.match(c, /int align, cols, rows, flip, fixed;/);
+  assert.match(c, /, 25, 2, 0, 0 \}, \/\/ \d+/);
   ground.tileCols = 64; ground.tileRows = 64;
   assert.ok(validate(p).some((x) => /mosaico/.test(x.text)));
 });
@@ -328,4 +328,26 @@ test('Lección 8: cualquier botón entra al juego y a los 3 s vuelve solo', () =
   for (let i = 0; i < 10; i++) step();
   assert.equal(g.scene.name, 'Inicio', 'vuelve solo');
   assert.equal(g.text(g.objs.find((o) => o.name === 'Título')), 'MI JUEGO');
+});
+
+test('Mundo ancho: la cámara sigue al jugador hasta la bandera, el marcador es fijo y se gana', () => {
+  const p = scrollerProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const sc = p.scenes[0];
+  assert.equal(sc.worldW, 1200); assert.ok(sc.camera != null);
+  assert.ok(sc.objects.find((o) => o.name === 'Marcador').fixed, 'el marcador no se mueve con la cámara');
+  const g = new Game(p, { rng: () => 0.5 });
+  const step = (down = [], held = []) => g.step({ down: new Set(down), held: new Set(held), touch: null, touchDown: false });
+  const pl = g.objs.find((o) => o.name === 'Jugador');
+  for (let i = 0; i < 60; i++) step();
+  assert.equal(g.camX, 0);
+  // camina por el suelo hasta que el bloque 1 lo detiene; la cámara avanza al pasar la mitad de la pantalla
+  for (let i = 0; i < 70; i++) step([], ['RIGHT']);
+  assert.ok(pl.x > 200 && g.camX > 0, `x=${pl.x} camX=${g.camX}`);
+  // teletransporte a la bandera: gana
+  const flag = g.objs.find((o) => o.name === 'Bandera'); pl.x = flag.x - 10; pl.y = flag.y;
+  for (let i = 0; i < 3; i++) step();
+  assert.equal(g.scene.name, 'Meta');
+  const c = generateMainC(p);
+  assert.match(c, /scene_world\[NUM_SCENES\] = \{ 1200\.0f, 400\.0f \}/); assert.match(c, /scene_cam\[NUM_SCENES\] = \{ \d+, -1 \}/);
 });

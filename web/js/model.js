@@ -22,7 +22,7 @@ export const animFrames = (p, group) => (group ? p.assets.images.filter((a) => a
 export function nextId(p) { p.seq = (p.seq || 0) + 1; return p.seq; }
 
 export function makeObject(p, type, over = {}) {
-  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, gravity: 0, size: 1, animGroup: null, animFps: 8, visible: true, solid: false, opacity: 1, follow: null, followSpeed: 1, align: 'left', tileCols: 1, tileRows: 1, flipX: false };
+  const base = { id: nextId(p), name: '', type, screen: 'top', x: 40, y: 40, w: 40, h: 40, color: '#ffffff', text: '', image: null, controls: false, speed: 3, vx: 0, vy: 0, gravity: 0, size: 1, animGroup: null, animFps: 8, visible: true, solid: false, opacity: 1, follow: null, followSpeed: 1, align: 'left', tileCols: 1, tileRows: 1, flipX: false, fixed: false };
   if (type === 'text') Object.assign(base, { w: 0, h: 0, text: 'Texto' });
   if (type === 'button') Object.assign(base, { screen: 'bottom', w: 120, h: 40, color: '#29adff', text: 'Botón' });
   const o = { ...base, ...over };
@@ -31,7 +31,7 @@ export function makeObject(p, type, over = {}) {
 }
 
 export function makeScene(p, name = 'Escena') {
-  return { id: nextId(p), name, bg: { top: '#1d2b53', bottom: '#222222' }, objects: [], rules: [] };
+  return { id: nextId(p), name, bg: { top: '#1d2b53', bottom: '#222222' }, objects: [], rules: [], worldW: 400, camera: null };
 }
 
 /** Proyecto de ejemplo: menú + juego de recoger monedas, con un sprite y un sonido generados. */
@@ -120,6 +120,8 @@ export function validate(p) {
   const sndIds = new Set(p.assets.sounds.map((a) => a.id));
   const sceneIds = new Set(p.scenes.map((s) => s.id));
   for (const s of p.scenes) {
+    if (s.worldW != null && !(s.worldW >= 400 && s.worldW <= 1600)) warn('error', `Escena "${s.name}": el ancho del mundo debe estar entre 400 y 1600.`);
+    if (s.camera != null && !s.objects.some((q) => q.id === s.camera)) warn('error', `Escena "${s.name}": la cámara sigue a un objeto que ya no existe.`);
     if (s.objects.length > LIMITS.objectsPerScene) warn('error', `Escena "${s.name}": máximo ${LIMITS.objectsPerScene} objetos.`);
     if (s.rules.length > LIMITS.rules) warn('error', `Escena "${s.name}": máximo ${LIMITS.rules} reglas.`);
     if (!isHex(s.bg.top) || !isHex(s.bg.bottom)) warn('error', `Escena "${s.name}": color de fondo inválido.`);
@@ -131,7 +133,7 @@ export function validate(p) {
       if (o.animGroup && !animFrames(p, o.animGroup).length) warn('error', `"${o.name}" (${s.name}): el grupo de animación "${o.animGroup}" no tiene imágenes.`);
       if (o.type !== 'text' && (o.x < 0 || o.y < 0 || o.x + o.w > scr.w || o.y + o.h > scr.h)) warn('warn', `"${o.name}" (${s.name}) sale de la pantalla.`);
       if (o.follow != null && !s.objects.some((q) => q.id === o.follow)) warn('error', `"${o.name}" (${s.name}): sigue a un objeto que ya no existe.`);
-      if (o.type === 'sprite' && ((o.tileCols || 1) < 1 || (o.tileRows || 1) < 1 || (o.tileCols || 1) > 32 || (o.tileRows || 1) > 32 || (o.tileCols || 1) * (o.tileRows || 1) > 128)) warn('error', `"${o.name}" (${s.name}): el mosaico admite como máximo 32×32 y 128 piezas.`);
+      if (o.type === 'sprite' && ((o.tileCols || 1) < 1 || (o.tileRows || 1) < 1 || (o.tileCols || 1) > 100 || (o.tileRows || 1) > 32 || (o.tileCols || 1) * (o.tileRows || 1) > 256)) warn('error', `"${o.name}" (${s.name}): el mosaico admite como máximo 100 columnas, 32 filas y 256 piezas.`);
       if (o.opacity != null && !(o.opacity >= 0 && o.opacity <= 1)) warn('error', `"${o.name}" (${s.name}): la opacidad debe estar entre 0 y 1.`);
       if (o.type === 'button' && o.screen !== 'bottom') warn('warn', `"${o.name}": los botones táctiles solo funcionan en la pantalla inferior.`);
     }

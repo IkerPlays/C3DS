@@ -172,7 +172,7 @@ test('inicio: hero, demo en vivo, plantillas y descarga recomendada', async () =
   await page.waitForTimeout(600);
   const painted = await page.locator('#demo-top').evaluate((c) => { const d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] === 255 && d[i + 1] === 0 && d[i + 2] === 77) n++; return n; });
   assert.ok(painted > 500, 'la demo dibuja al jugador');
-  assert.equal(await page.locator('#tpl-cards .tpl').count(), 9);
+  assert.equal(await page.locator('#tpl-cards .tpl').count(), 10);
   await page.click('#tpl-cards [data-tpl=pong]');
   await page.waitForSelector('#cv-top');
   assert.equal(await page.inputValue('.proj-name'), 'Pong');
@@ -772,6 +772,29 @@ test('el zoom elegido se recuerda al recargar', async () => {
   await page.locator('label.check:has-text("Zoom") select').selectOption('1.5');
   await page.reload(); await page.waitForSelector('#cv-top');
   assert.equal(await page.locator('label.check:has-text("Zoom") select').inputValue(), '1.5');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('mundo ancho: barra de vista, cámara en la escena y objeto fijo; la vista previa desplaza la cámara', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=scroller]');
+  await page.waitForSelector('#cv-top');
+  assert.equal(await page.locator('#pan-x').isVisible(), true, 'aparece la barra de vista');
+  assert.equal(await page.locator('#pan-x').getAttribute('max'), '800');
+  await page.locator('#pan-x').fill('500');
+  const coords = await page.evaluate(() => document.querySelector('#cv-top').getBoundingClientRect().width);
+  assert.ok(coords > 100);
+  await page.click('.ed-right [role=tab]:has-text("Escena")');
+  assert.equal(await page.locator('.insp .field:has(span:text-is("Ancho del mundo (px)")) input').inputValue(), '1200');
+  assert.notEqual(await page.locator('.insp .field:has(span:text-is("La cámara sigue a")) select').inputValue(), '');
+  await page.locator('.ed-left .panel-sec').nth(1).locator('li', { hasText: 'Marcador' }).click();
+  assert.equal(await page.locator('#chk-fixed').isChecked(), true, 'el marcador es fijo');
+  await page.click('#btn-play');
+  await page.waitForTimeout(300);
+  await page.keyboard.down('ArrowRight'); await page.waitForTimeout(2200); await page.keyboard.up('ArrowRight');
+  const cam = await page.evaluate(() => window.c3ds.editor.getGame().camX);
+  assert.ok(cam > 0, 'la cámara se ha movido en la vista previa: ' + cam);
   assert.deepEqual(errors, []);
   await ctx.close();
 });

@@ -40,9 +40,20 @@ export class Game {
     this.frames = 0;
     this.fade = this.p.transition === 'fade' ? FADE_FRAMES : 0;
     this.objs = this.scene.objects.map((o) => ({ ...o, tpl: o.text }));
+    this.camX = 0; this.updateCamera();
   }
 
   obj(id) { return this.objs.find((o) => o.id === id); }
+
+  /** Ancho útil para un objeto: el mundo de la escena (pantalla superior) o la pantalla (fijos y pantalla inferior). */
+  maxW(o) { return o.screen === 'top' && !o.fixed ? Math.max(SCREENS.top.w, Math.min(1600, num(this.scene.worldW) || SCREENS.top.w)) : SCREENS[o.screen].w; }
+
+  /** Posición horizontal de la cámara (siguiendo al objeto elegido, sin salirse del mundo). */
+  updateCamera() {
+    const world = this.maxW({ screen: 'top', fixed: false });
+    const t = this.scene.camera != null ? this.obj(this.scene.camera) : null;
+    this.camX = t ? Math.max(0, Math.min(world - SCREENS.top.w, t.x + t.w / 2 - SCREENS.top.w / 2)) : 0;
+  }
 
   /** Primer objeto sólido visible de su pantalla con el que solapa `o` (o null). */
   blocked(o) {
@@ -77,7 +88,7 @@ export class Game {
       mx += num(o.vx); my += num(o.vy);
       if (!mx && !my) continue;
       const ox = o.x; const oy = o.y;
-      o.x = Math.max(0, Math.min(s.w - o.w, o.x + mx));
+      o.x = Math.max(0, Math.min(this.maxW(o) - o.w, o.x + mx));
       if (this.blocked(o)) o.x = ox;
       o.y = Math.max(0, Math.min(s.h - o.h, o.y + my));
       const wall = this.blocked(o);
@@ -93,6 +104,7 @@ export class Game {
         if (n != null) next = n;
       }
     }
+    this.updateCamera();
     this.frames++;
     if (this.fade > 0) this.fade--;
     if (next != null) this.enter(next);
@@ -116,7 +128,7 @@ export class Game {
       case 'edge': {
         const o = this.obj(w.obj); if (!o || !o.visible) return false;
         const sc = SCREENS[o.screen];
-        return { left: o.x <= 0, right: o.x + o.w >= sc.w, top: o.y <= 0, bottom: o.y + o.h >= sc.h }[w.edge] ?? false;
+        return { left: o.x <= 0, right: o.x + o.w >= this.maxW(o), top: o.y <= 0, bottom: o.y + o.h >= sc.h }[w.edge] ?? false;
       }
       case 'standing': {
         const a = this.obj(w.obj); const b = this.obj(w.on);
@@ -142,7 +154,7 @@ export class Game {
       case 'move': if (o) { o.x += num(a.dx); o.y += num(a.dy); } break;
       case 'randomPos': if (o) {
         const s = SCREENS[o.screen]; const ax = a.axis || 'xy';
-        if (ax !== 'y') o.x = Math.floor(this.rng() * Math.max(1, s.w - o.w));
+        if (ax !== 'y') o.x = Math.floor(this.rng() * Math.max(1, this.maxW(o) - o.w));
         if (ax !== 'x') o.y = Math.floor(this.rng() * Math.max(1, s.h - o.h));
       } break;
       case 'landOn': { const b = a.on != null ? this.obj(a.on) : null; if (o && b) { o.y = b.y - o.h; o.vy = 0; } break; }
@@ -182,6 +194,7 @@ export function render(game, ctxs, images) {
     ctx.textBaseline = 'top'; ctx.font = '14px "DejaVu Sans Mono", monospace';
     for (const o of game.objs) {
       if (!o.visible || o.screen !== key) continue;
+      ctx.save(); if (key === 'top' && !o.fixed) ctx.translate(-(game.camX || 0), 0);
       ctx.globalAlpha = o.opacity == null ? 1 : Math.max(0, Math.min(1, o.opacity));
       ctx.fillStyle = o.color;
       if (o.type === 'rect') ctx.fillRect(o.x, o.y, o.w, o.h);
@@ -195,6 +208,7 @@ export function render(game, ctxs, images) {
       }
       else if (o.type === 'text') { ctx.textAlign = o.align === 'center' ? 'center' : 'left'; ctx.font = `${14 * (o.size || 1)}px "DejaVu Sans Mono", monospace`; { const k = o.size || 1; game.text(o).split('\n').forEach((line, li) => ctx.fillText(line, o.x, o.y + li * 16 * k)); } ctx.textAlign = 'left'; ctx.font = '14px "DejaVu Sans Mono", monospace'; }
       else if (o.type === 'button') { ctx.fillRect(o.x, o.y, o.w, o.h); ctx.fillStyle = '#000'; const k = o.size || 1; ctx.font = `${14 * k}px "DejaVu Sans Mono", monospace`; ctx.fillText(game.text(o), o.x + 6, o.y + o.h / 2 - 8 * k); ctx.font = '14px "DejaVu Sans Mono", monospace'; }
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
     if (game.fade > 0) { ctx.fillStyle = `rgba(0,0,0,${game.fade / FADE_FRAMES})`; ctx.fillRect(0, 0, SCREENS[key].w, SCREENS[key].h); }

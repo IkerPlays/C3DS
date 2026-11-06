@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- **Mundo ancho y cámara**: cada escena puede medir hasta 1600 px de ancho y la pantalla superior sigue a un objeto; objetos **fijos** (marcador) que no se mueven con la cámara; barra de vista en el editor. Plantilla **Mundo ancho**. El mosaico admite hasta 100 columnas.
 
 ## [0.6.0] - 2026-11-06
 - Lección nueva: **8 · Pantalla de inicio** (cualquier botón, temporizador “una vez” y texto parpadeante).

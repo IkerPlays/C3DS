@@ -250,6 +250,35 @@ export function platformerProject() {
   return p;
 }
 
+/** Aventura lateral: mundo de 1200 px con cámara que sigue al jugador; llega a la bandera. */
+export function scrollerProject() {
+  const p = empty('Mundo ancho'); p.transition = 'fade';
+  p.variables = [{ name: 'puntos', value: 0 }];
+  const jump = addBeep(p, 'salto', 520); const coinSnd = addBeep(p, 'moneda', 880);
+  const brick = addBrick(p);
+  const game = makeScene(p, 'Juego'); const win = makeScene(p, 'Meta');
+  game.bg.top = '#29adff'; game.bg.bottom = '#1d2b53'; game.worldW = 1200; win.bg.top = '#008751'; win.bg.bottom = '#1d2b53';
+  const tile = (name, x, y, w, h) => makeObject(p, 'sprite', { name, x, y, w, h, image: brick, tileCols: Math.max(1, Math.round(w / 16)), tileRows: Math.max(1, Math.round(h / 12)), solid: true });
+  const ground = tile('Suelo', 0, 216, 1200, 24);
+  const blocks = [tile('Bloque 1', 260, 176, 48, 40), tile('Bloque 2', 520, 150, 64, 66), tile('Bloque 3', 800, 176, 48, 40), tile('Bloque 4', 940, 130, 80, 10)];
+  const coin = (name, x, y) => makeObject(p, 'rect', { name, x, y, w: 14, h: 14, color: '#ffec27' });
+  const coins = [coin('Moneda 1', 270, 150), coin('Moneda 2', 545, 120), coin('Moneda 3', 975, 100)];
+  const flag = makeObject(p, 'rect', { name: 'Bandera', x: 1150, y: 176, w: 16, h: 40, color: '#ff004d' });
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 20, y: 150, w: 22, h: 30, color: '#ffffff', controls: 'h', speed: 3, gravity: 0.6 });
+  const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {puntos}', color: '#ffffff', fixed: true });
+  const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 100, text: '← → mover   A saltar   Llega a la bandera', color: '#c2c3c7' });
+  game.objects.push(ground, ...blocks, ...coins, flag, player, score, help); game.camera = player.id;
+  for (const on of [ground, ...blocks]) game.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9.2 }, { type: 'sound', sound: jump }] });
+  for (const c of coins) game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: c.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'hide', obj: c.id }] });
+  game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: flag.id }, then: [{ type: 'goto', scene: win.id }] });
+  const t = makeObject(p, 'text', { name: 'Texto', x: 200, y: 90, align: 'center', text: '¡Llegaste! Monedas: {puntos}', color: '#ffffff' });
+  const again = makeObject(p, 'button', { name: 'Otra vez', x: 100, y: 100, text: 'Otra vez' });
+  win.objects.push(t, again);
+  win.rules.push({ id: nextId(p), when: { type: 'touch', obj: again.id }, then: [{ type: 'setVar', var: 'puntos', value: 0 }, { type: 'goto', scene: game.id }] });
+  p.scenes.push(game, win); p.startScene = game.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -374,5 +403,6 @@ export const TEMPLATES = [
   { id: 'maze', name: 'Laberinto (muros sólidos)', desc: 'Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.', icon: 'target', make: () => maybeLocalize(mazeProject()) },
   { id: 'chase', name: 'Persecución (enemigo que te sigue)', desc: 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.', icon: 'comet', make: () => maybeLocalize(chaseProject()) },
   { id: 'platformer', name: 'Plataformas (saltar y recoger)', desc: 'Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.', icon: 'runner', make: () => maybeLocalize(platformerProject()) },
+  { id: 'scroller', name: 'Mundo ancho (cámara que te sigue)', desc: 'Un mundo de 1200 px con cámara que sigue al jugador, marcador fijo y una bandera al final.', icon: 'runner', make: () => maybeLocalize(scrollerProject()) },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: () => maybeLocalize(blankProject()) },
 ];

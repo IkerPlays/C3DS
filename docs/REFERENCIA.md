@@ -16,7 +16,7 @@
 - `circle`: Circle Pad (analógico)
 - `touch`: Seguir el stylus (táctil)
 
-Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, **sigue a otro objeto** (persecución), opacidad, **mosaico** de sprites (repite la imagen en columnas × filas), **sólido** (bloquea el paso a los objetos que se mueven; se apoyan sobre él), animación por grupo de imágenes, tamaño del texto y visibilidad inicial.
+Otras propiedades de un objeto: posición, tamaño, color, pantalla (superior 400×240 o inferior 320×240 táctil), velocidad automática (Vel X / Vel Y), gravedad, **sigue a otro objeto** (persecución), **fijo en pantalla** (no sigue a la cámara), opacidad, **mosaico** de sprites (repite la imagen en columnas × filas), **sólido** (bloquea el paso a los objetos que se mueven; se apoyan sobre él), animación por grupo de imágenes, tamaño del texto y visibilidad inicial.
 
 ## Eventos (“Cuando…”)
 | Id | Descripción | Campos |
@@ -82,4 +82,5 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - **Laberinto (muros sólidos)**: Objetos sólidos que bloquean el paso: llega a la meta sin atravesar los muros.
 - **Persecución (enemigo que te sigue)**: La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.
 - **Plataformas (saltar y recoger)**: Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.
+- **Mundo ancho (cámara que te sigue)**: Un mundo de 1200 px con cámara que sigue al jugador, marcador fijo y una bandera al final.
 - **En blanco**: Una escena vacía.

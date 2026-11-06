@@ -18,6 +18,8 @@ import { TEMPLATES, LESSONS } from './templates.js';
 import { icon } from './icons.js';
 import { encodeProject, shareUrl, MAX_LINK_CHARS } from './share.js';
 
+let panX = 0; // desplazamiento horizontal de la vista de edición de la pantalla superior (mundos anchos)
+const worldOf = () => Math.max(400, scene()?.worldW || 400);
 const extraSel = new Set(); // objetos seleccionados además del principal (Mayús + clic)
 let project; let history; let sceneId; let selectedId = null; let tab = 'object'; let runner = null;
 const images = new Map(); const sounds = new Map();
@@ -94,15 +96,18 @@ function objBox(ctx, o) {
 function drawStage() {
   if (runner || !cv.top) return;
   const g = stageGame();
+  panX = Math.max(0, Math.min(worldOf() - 400, panX)); g.camX = panX;
+  if (refs.panBox) { refs.panBox.hidden = worldOf() <= 400; refs.panIn.max = worldOf() - 400; refs.panIn.value = panX; }
   const ctxs = { top: cv.top.getContext('2d'), bottom: cv.bottom.getContext('2d') };
   render(g, ctxs, images);
   for (const key of ['top', 'bottom']) {
     const ctx = ctxs[key];
     if (grid) { ctx.fillStyle = 'rgba(255,255,255,.07)'; for (let x = 0; x < SCREENS[key].w; x += 20) ctx.fillRect(x, 0, 1, SCREENS[key].h); for (let y = 0; y < SCREENS[key].h; y += 20) ctx.fillRect(0, y, SCREENS[key].w, 1); }
-    for (const q of selectedAll().slice(1)) if (q.screen === key) { const bq = objBox(ctx, q); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(bq.x - 1.5, bq.y - 1.5, bq.w + 3, bq.h + 3); ctx.setLineDash([]); }
+    const shift = (q) => (key === 'top' && !q.fixed ? -panX : 0);
+    for (const q of selectedAll().slice(1)) if (q.screen === key) { const bq = objBox(ctx, q); bq.x += shift(q); ctx.strokeStyle = '#ffd400'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(bq.x - 1.5, bq.y - 1.5, bq.w + 3, bq.h + 3); ctx.setLineDash([]); }
     const sel = selected();
     if (sel && sel.screen === key) {
-      const b = objBox(ctx, sel);
+      const b = objBox(ctx, sel); b.x += shift(sel);
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(b.x - 1.5, b.y - 1.5, b.w + 3, b.h + 3); ctx.setLineDash([]);
       if (sel.type !== 'text') { ctx.fillStyle = '#ff004d'; ctx.fillRect(b.x + b.w - 3, b.y + b.h - 3, 7, 7); }
     }
@@ -118,35 +123,36 @@ const snap = (v) => (grid ? Math.round(v / 5) * 5 : Math.round(v));
 function bindStage() {
   for (const key of ['top', 'bottom']) {
     const c = cv[key]; let drag = null;
+    const wx = (o, p) => (key === 'top' && !o.fixed ? p.x + panX : p.x); // x de pantalla -> x del mundo para ese objeto
     c.addEventListener('pointerdown', (ev) => {
       if (runner) return;
       const p = pointer(key, ev); const ctx = c.getContext('2d');
       const sel = selected();
       if (sel && sel.screen === key && sel.type !== 'text') {
         const b = objBox(ctx, sel);
-        if (Math.abs(p.x - (b.x + b.w)) < 8 && Math.abs(p.y - (b.y + b.h)) < 8) { drag = { mode: 'resize', ox: p.x - sel.w, oy: p.y - sel.h }; c.setPointerCapture(ev.pointerId); return; }
+        if (Math.abs(wx(sel, p) - (b.x + b.w)) < 8 && Math.abs(p.y - (b.y + b.h)) < 8) { drag = { mode: 'resize', ox: wx(sel, p) - sel.w, oy: p.y - sel.h }; c.setPointerCapture(ev.pointerId); return; }
       }
-      const hit = [...scene().objects].reverse().find((o) => { if (o.screen !== key) return false; const b = objBox(ctx, o); return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; });
+      const hit = [...scene().objects].reverse().find((o) => { if (o.screen !== key) return false; const b = objBox(ctx, o); const px = wx(o, p); return px >= b.x && px <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; });
       if (ev.shiftKey && hit) toggleSelect(hit.id);
       else if (hit && (hit.id === selectedId || extraSel.has(hit.id)) && selectedAll().length > 1) { /* arrastrar el grupo */ }
       else selectObject(hit?.id ?? null);
       if (hit && selected()) {
         const prim = selected();
-        drag = { mode: 'move', dx: p.x - prim.x, dy: p.y - prim.y, start: new Map(selectedAll().map((q) => [q.id, { x: q.x, y: q.y }])), px: prim.x, py: prim.y };
+        drag = { mode: 'move', dx: wx(prim, p) - prim.x, dy: p.y - prim.y, start: new Map(selectedAll().map((q) => [q.id, { x: q.x, y: q.y }])), px: prim.x, py: prim.y };
         c.setPointerCapture(ev.pointerId);
       }
     });
     c.addEventListener('pointerleave', () => { if (refs.coords) refs.coords.textContent = ''; });
     c.addEventListener('pointermove', (ev) => {
-      if (refs.coords && !runner) { const q = pointer(key, ev); refs.coords.textContent = `x ${Math.round(q.x)}  y ${Math.round(q.y)}`; }
+      if (refs.coords && !runner) { const q = pointer(key, ev); refs.coords.textContent = `x ${Math.round(q.x + (key === 'top' ? panX : 0))}  y ${Math.round(q.y)}`; }
       const o = selected();
-      if (!drag || !o) { const p = pointer(key, ev); c.style.cursor = scene().objects.some((q) => q.screen === key && (() => { const b = objBox(c.getContext('2d'), q); return p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; })()) ? 'move' : 'default'; return; }
+      if (!drag || !o) { const p = pointer(key, ev); c.style.cursor = scene().objects.some((q) => q.screen === key && (() => { const b = objBox(c.getContext('2d'), q); const px = wx(q, p); return px >= b.x && px <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h; })()) ? 'move' : 'default'; return; }
       const p = pointer(key, ev);
       if (drag.mode === 'move') {
-        o.x = snap(p.x - drag.dx); o.y = snap(p.y - drag.dy);
+        o.x = snap(wx(o, p) - drag.dx); o.y = snap(p.y - drag.dy);
         const ddx = o.x - drag.px; const ddy = o.y - drag.py;
         for (const q of selectedAll().slice(1)) { const st = drag.start.get(q.id); if (st) { q.x = st.x + ddx; q.y = st.y + ddy; } }
-      } else { o.w = Math.max(4, snap(p.x - drag.ox)); o.h = Math.max(4, snap(p.y - drag.oy)); }
+      } else { o.w = Math.max(4, snap(wx(o, p) - drag.ox)); o.h = Math.max(4, snap(p.y - drag.oy)); }
       syncInspector(); live();
     });
     const end = () => { if (drag) { drag = null; changed(); } };
@@ -421,7 +427,7 @@ function renderRight() {
     o.type === 'sprite' ? f('animGroup', 'Animación', selectInput([['', 'Sin animación'], ...[...new Set(project.assets.images.map((a) => a.group).filter(Boolean))].map((g) => [g, `${g} (${animFrames(project, g).length} fotogramas)`])], o.animGroup || '', (v) => { o.animGroup = v || null; changed({ structure: true }); })) : null,
     o.type === 'sprite' && o.animGroup ? f('animFps', 'Fotogramas/s', numInput(() => o.animFps || 8, (v) => { o.animFps = Math.max(1, Math.min(60, v)); }, { min: 1, max: 60 })) : null,
     o.type === 'sprite' ? h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: !!o.flipX, id: 'chk-flip', onChange: (e) => { o.flipX = e.target.checked; changed(); } }), 'Espejo (voltear horizontalmente)') : null,
-    o.type === 'sprite' ? h('div', { class: 'grid2' }, f('tileCols', 'Mosaico: columnas', numInput(() => o.tileCols || 1, (v) => { o.tileCols = Math.max(1, Math.min(32, Math.round(v))); }, { min: 1, max: 32 })), f('tileRows', 'Mosaico: filas', numInput(() => o.tileRows || 1, (v) => { o.tileRows = Math.max(1, Math.min(32, Math.round(v))); }, { min: 1, max: 32 }))) : null,
+    o.type === 'sprite' ? h('div', { class: 'grid2' }, f('tileCols', 'Mosaico: columnas', numInput(() => o.tileCols || 1, (v) => { o.tileCols = Math.max(1, Math.min(100, Math.round(v))); }, { min: 1, max: 100 })), f('tileRows', 'Mosaico: filas', numInput(() => o.tileRows || 1, (v) => { o.tileRows = Math.max(1, Math.min(32, Math.round(v))); }, { min: 1, max: 32 }))) : null,
     o.type === 'sprite' ? f('image', 'Imagen', selectInput(project.assets.images.map((a) => [a.id, a.name]), o.image, (v) => { o.image = Number(v); changed(); })) : null,
     o.type === 'rect' || o.type === 'sprite' ? f('controls', 'Control', selectInput(Object.entries(CONTROL_MODES), String(o.controls), (v) => { o.controls = v === 'true' ? true : v === 'false' ? false : v; changed({ structure: true }); })) : null,
     o.controls === 'circle' ? h('p', { class: 'muted small' }, 'En la vista previa el Circle Pad se mueve con I J K L.') : null,
@@ -433,6 +439,7 @@ function renderRight() {
     f('opacity', 'Opacidad', numInput(() => o.opacity ?? 1, (v) => { o.opacity = Math.max(0, Math.min(1, v)); }, { step: 0.1, min: 0, max: 1 })),
     o.type === 'rect' || o.type === 'sprite' ? f('gravity', 'Gravedad', numInput(() => o.gravity || 0, (v) => { o.gravity = v; }, { step: 0.1 })) : null,
     o.type === 'rect' || o.type === 'sprite' ? h('p', { class: 'muted small' }, 'Vel X/Y mueven el objeto solo (px por frame). La gravedad suma a Vel Y cada frame; usa “apoyar sobre” para aterrizar.') : null,
+    o.screen === 'top' ? h('label', { class: 'check', title: 'No se mueve con la cámara (marcador, vidas, textos de la interfaz)' }, h('input', { type: 'checkbox', checked: !!o.fixed, id: 'chk-fixed', onChange: (e) => { o.fixed = e.target.checked; changed(); } }), 'Fijo en pantalla (no sigue a la cámara)') : null,
     o.type === 'rect' || o.type === 'sprite' ? h('label', { class: 'check', title: 'Los objetos que se mueven no pueden atravesarlo (muros, suelos, plataformas)' }, h('input', { type: 'checkbox', checked: !!o.solid, onChange: (e) => { o.solid = e.target.checked; changed(); } }), 'Sólido (bloquea el paso)') : null,
     h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: o.visible, onChange: (e) => { o.visible = e.target.checked; changed(); } }), 'Visible al empezar'),
     h('div', { class: 'row-btns tight', 'aria-label': 'Orden de capas' }, h('button', { class: 'btn small', title: 'Traer al frente', onClick: () => moveSelected('front') }, '⤒ Frente'), h('button', { class: 'btn small', title: 'Subir una capa', onClick: () => moveSelected('up') }, '↑'), h('button', { class: 'btn small', title: 'Bajar una capa', onClick: () => moveSelected('down') }, '↓'), h('button', { class: 'btn small', title: 'Enviar al fondo', onClick: () => moveSelected('back') }, '⤓ Fondo')),
@@ -452,6 +459,11 @@ function renderSceneTab(body) {
     field('Fondo superior', colorInput(() => sc.bg.top, (v) => { sc.bg.top = v; })),
     field('Fondo inferior', colorInput(() => sc.bg.bottom, (v) => { sc.bg.bottom = v; })),
     h('p', { class: 'muted small' }, project.startScene === sc.id ? '★ Es la escena inicial.' : 'Usa ★ en la lista para marcarla como inicial.'),
+    h('hr', { class: 'sep' }),
+    h('h4', {}, 'Mundo y cámara (pantalla superior)'),
+    field('Ancho del mundo (px)', numInput(() => sc.worldW || 400, (v) => { sc.worldW = Math.max(400, Math.min(1600, Math.round(v / 10) * 10)); }, { min: 400, max: 1600, step: 40 })),
+    field('La cámara sigue a', selectInput([['', '(nadie)'], ...sc.objects.map((q) => [q.id, q.name])], sc.camera ?? '', (v) => { sc.camera = v === '' ? null : Number(v); changed({ structure: true }); })),
+    h('p', { class: 'muted small' }, 'Si el mundo es más ancho que 400 px, la pantalla superior se desplaza siguiendo a ese objeto. Los objetos “fijos” (marcador, menús) no se mueven con la cámara.'),
     h('hr', { class: 'sep' }),
     h('h4', {}, 'Tu juego en el menú HOME de la 3DS'),
     field('Autor', textInput(() => project.author || '', (v) => { project.author = v; }, { max: 40 })),
@@ -726,6 +738,8 @@ export function mountEditor(root) {
   refs.play = h('button', { class: 'btn primary', id: 'btn-play', onClick: () => (runner ? stopPlay() : startPlay()) }, '▶ Probar');
   refs.hud = h('div', { class: 'hud', 'aria-live': 'off' });
   refs.coords = h('span', { class: 'coords', 'aria-hidden': 'true' });
+  refs.panIn = h('input', { type: 'range', id: 'pan-x', min: 0, max: 0, value: 0, step: 10, 'aria-label': 'Vista horizontal del mundo', onInput: (e) => { panX = Number(e.target.value); drawStage(); } });
+  refs.panBox = h('label', { class: 'check pan', hidden: true, title: 'Desplaza la vista de la pantalla superior por el mundo' }, 'Vista ', refs.panIn);
   refs.pauseBtn = h('button', { class: 'btn small', id: 'btn-pause', title: 'Pausar o seguir', onClick: togglePause }, '⏸ Pausa');
   refs.debugBar = h('div', { class: 'debug-bar' },
     refs.pauseBtn,
@@ -760,6 +774,7 @@ export function mountEditor(root) {
   refs.stageWrap = h('div', { class: 'stage-wrap' },
     h('div', { class: 'stage-bar' },
       h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: grid, onChange: (e) => { grid = e.target.checked; drawStage(); } }), 'Cuadrícula'),
+      refs.panBox,
       h('label', { class: 'check' }, 'Zoom', selectInput([['fit', 'Ajustar'], [1, '100%'], [1.25, '125%'], [1.5, '150%'], [2, '200%']], zoomMode, (v) => { zoomMode = v === 'fit' ? 'fit' : Number(v); try { localStorage.setItem('c3ds:zoom', String(zoomMode)); } catch { /* ok */ } applyZoom(root); })),
       refs.coords, refs.hud),
     h('div', { class: 'screens' },
