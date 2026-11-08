@@ -4,10 +4,10 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
-- **Paralaje**: cada objeto de la pantalla superior puede desplazarse menos que la cámara (fondos de colinas, nubes…); 0 = fijo, 1 = normal. La plantilla Mundo ancho tiene colinas.
-- **Mundo ancho y cámara**: cada escena puede medir hasta 1600 px de ancho y la pantalla superior sigue a un objeto; objetos **fijos** (marcador) que no se mueven con la cámara; barra de vista en el editor. Plantilla **Mundo ancho**. El mosaico admite hasta 100 columnas.
 
 ## [0.6.0] - 2026-11-06
+- **Paralaje**: cada objeto de la pantalla superior puede desplazarse menos que la cámara (fondos de colinas, nubes…); 0 = fijo, 1 = normal. La plantilla Mundo ancho tiene colinas.
+- **Mundo ancho y cámara**: cada escena puede medir hasta 1600 px de ancho y la pantalla superior sigue a un objeto; objetos **fijos** (marcador) que no se mueven con la cámara; barra de vista en el editor. Plantilla **Mundo ancho**. El mosaico admite hasta 100 columnas.
 - Lección nueva: **8 · Pantalla de inicio** (cualquier botón, temporizador “una vez” y texto parpadeante).
 - Editor: el **zoom** elegido se recuerda entre sesiones.
 - Editor: las **escenas se reordenan arrastrando** en la lista.

@@ -5,7 +5,7 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 ## [Unreleased]
 
 ## [0.6.0] - 2026-11-06
-- Mismas mejoras que la web (nuevos eventos y acciones, escenas reordenables, zoom recordado, lección 8).
+- Mismas mejoras que la web (mundo ancho con cámara y paralaje, nuevos eventos y acciones, escenas reordenables, zoom recordado, lección 8).
 
 ## [0.5.0] - 2026-11-05
 - Mismas mejoras que la web (interfaz en inglés, física con sólidos y “sigue a”, mosaico y espejo de sprites, selección múltiple, autor e icono del juego, 10 plantillas y 7 lecciones).
