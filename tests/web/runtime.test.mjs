@@ -223,3 +223,14 @@ test('paralaje: los fondos se desplazan menos que la cámara (simulador y C)', a
   const c = generateMainC(p);
   assert.match(c, /static float cam_f\(const Obj\* o\)/); assert.match(c, /o->x - cam_x \* cam_f\(o\)/); assert.match(c, /, 0\.500f \}, \/\/ \d+/);
 });
+
+test('aviso: mundo ancho sin cámara', async () => {
+  const { validate } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  assert.ok(!validate(p).some((x) => /cámara no sigue/.test(x.text)));
+  sc.worldW = 800;
+  const w = validate(p).find((x) => /cámara no sigue/.test(x.text));
+  assert.ok(w && w.level === 'warn');
+  sc.camera = sc.objects[0].id;
+  assert.ok(!validate(p).some((x) => /cámara no sigue/.test(x.text)));
+});

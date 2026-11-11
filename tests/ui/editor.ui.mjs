@@ -798,3 +798,17 @@ test('mundo ancho: barra de vista, cámara en la escena y objeto fijo; la vista 
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('Ctrl+A selecciona todos los objetos de la escena y Esc quita la selección', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('#btn-projects'); await page.click('.dlg [data-tpl=runner]');
+  await page.waitForSelector('#cv-top');
+  const n = await page.evaluate(() => window.c3ds.editor.getProject().scenes[0].objects.length);
+  await page.locator('#cv-top').click({ position: { x: 5, y: 5 } }); // foco fuera de los campos
+  await page.keyboard.press('Control+a');
+  assert.match(await page.textContent('.sel-note'), new RegExp(`${n} objetos seleccionados`));
+  await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.sel-note').count(), 0, 'sin selección ya no hay aviso');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

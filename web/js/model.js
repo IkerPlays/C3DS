@@ -121,6 +121,7 @@ export function validate(p) {
   const sceneIds = new Set(p.scenes.map((s) => s.id));
   for (const s of p.scenes) {
     if (s.worldW != null && !(s.worldW >= 400 && s.worldW <= 1600)) warn('error', `Escena "${s.name}": el ancho del mundo debe estar entre 400 y 1600.`);
+    if ((s.worldW || 400) > 400 && s.camera == null) warn('warn', `Escena "${s.name}": el mundo es más ancho que la pantalla pero la cámara no sigue a ningún objeto (no se verá lo que haya más allá de 400 px).`);
     if (s.camera != null && !s.objects.some((q) => q.id === s.camera)) warn('error', `Escena "${s.name}": la cámara sigue a un objeto que ya no existe.`);
     if (s.objects.length > LIMITS.objectsPerScene) warn('error', `Escena "${s.name}": máximo ${LIMITS.objectsPerScene} objetos.`);
     if (s.rules.length > LIMITS.rules) warn('error', `Escena "${s.name}": máximo ${LIMITS.rules} reglas.`);

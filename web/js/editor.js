@@ -161,6 +161,11 @@ function bindStage() {
 }
 
 /* ---------- Selección y mutaciones ---------- */
+function selectAllObjects() {
+  const objs = scene().objects; if (!objs.length) return;
+  extraSel.clear(); selectedId = objs[0].id; for (const o of objs.slice(1)) extraSel.add(o.id);
+  tab = 'object'; renderLeft(); renderRight(); drawStage();
+}
 function toggleSelect(id) {
   if (selectedId == null) return selectObject(id);
   if (id === selectedId) { const next = [...extraSel][0]; extraSel.delete(next); selectedId = next ?? null; }
@@ -637,7 +642,7 @@ function openProjects() {
 
 /* ---------- Ayuda ---------- */
 function showShortcuts() {
-  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+Intro', 'Probar / detener la vista previa'], ['Mayús + clic', 'Seleccionar varios objetos (mover, duplicar y borrar a la vez)'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
+  const rows = [['Ctrl+Z / Ctrl+Y', 'Deshacer / rehacer'], ['Ctrl+A / Esc', 'Seleccionar todos los objetos / quitar la selección'], ['Ctrl+Intro', 'Probar / detener la vista previa'], ['Mayús + clic', 'Seleccionar varios objetos (mover, duplicar y borrar a la vez)'], ['Ctrl+D', 'Duplicar el objeto seleccionado'], ['Ctrl+C / Ctrl+V', 'Copiar y pegar objetos (también entre escenas)'], ['Supr', 'Eliminar el objeto seleccionado'], ['Flechas', 'Mover 1 px (Mayús: 10 px)'], ['Arrastrar', 'Mover; el cuadro rojo redimensiona'], ['Esc', 'Detener la vista previa'], ['?', 'Esta ayuda'],
     ['Flechas', 'En la vista previa: D-Pad'], ['Z X S A', 'A B X Y'], ['Enter / Shift', 'Start / Select'], ['Ratón', 'Pantalla táctil (inferior)']];
   dialog('Atajos y controles', h('div', {}, h('dl', { class: 'shortcuts' }, rows.flatMap(([k, v]) => [h('dt', {}, h('span', { class: 'kbd' }, k)), h('dd', {}, v)])), h('p', {}, h('button', { class: 'btn small', id: 'btn-reference', onClick: showReference }, 'Ver todos los eventos y acciones'))));
 }
@@ -821,7 +826,9 @@ export function mountEditor(root) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { if (inField) return; e.preventDefault(); e.shiftKey ? redo() : undo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') { if (inField) return; e.preventDefault(); redo(); }
     else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); if (runner) stopPlay(); else startPlay(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a' && !inField && !runner) { e.preventDefault(); selectAllObjects(); }
     else if (e.key === 'Escape' && runner) stopPlay();
+    else if (e.key === 'Escape' && !inField && !runner && selectedId != null) selectObject(null);
     else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v' && !inField && !runner) { e.preventDefault(); pasteObject(); }
     else if (e.key === '?' && !inField) showShortcuts();
     else if (!runner && !inField && selected()) {

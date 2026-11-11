@@ -193,6 +193,7 @@ export const EN = {
   'Paralaje (0 fijo, 1 normal)': 'Parallax (0 fixed, 1 normal)',
   'Física y cámara': 'Physics and camera', 'Gravedad, objetos sólidos, enemigos que te siguen, mundos anchos con cámara y fondos con paralaje.': 'Gravity, solid objects, enemies that follow you, wide worlds with a camera and parallax backgrounds.',
   'Español e inglés': 'Spanish and English', 'Interfaz, plantillas y lecciones en los dos idiomas; cambia con el selector ES/EN.': 'Interface, templates and lessons in both languages; switch with the ES/EN selector.',
+  'Ctrl+A / Esc': 'Ctrl+A / Esc', 'Seleccionar todos los objetos / quitar la selección': 'Select all objects / clear the selection',
   'Duplicar regla': 'Duplicate rule', 'Ajustar': 'Fit', 'Alineación': 'Alignment', 'Izquierda': 'Left', 'Centrada (X es el centro)': 'Centered (X is the center)', 'Cambiar la opacidad de un objeto': 'Change an object’s opacity', 'Opacidad (0 a 1)': 'Opacity (0 to 1)', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
   'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',

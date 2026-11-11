@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Editor: **Ctrl+A** selecciona todos los objetos y **Esc** quita la selección. Aviso si el mundo es ancho pero la cámara no sigue a nadie.
 
 ## [0.6.0] - 2026-11-06
 - **Paralaje**: cada objeto de la pantalla superior puede desplazarse menos que la cámara (fondos de colinas, nubes…); 0 = fijo, 1 = normal. La plantilla Mundo ancho tiene colinas.
