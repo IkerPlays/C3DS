@@ -132,7 +132,8 @@ export function validate(p) {
       if (!isHex(o.color)) warn('error', `"${o.name}": color inválido.`);
       if (o.type === 'sprite' && !imgIds.has(o.image)) warn('error', `"${o.name}" (${s.name}): no tiene imagen.`);
       if (o.animGroup && !animFrames(p, o.animGroup).length) warn('error', `"${o.name}" (${s.name}): el grupo de animación "${o.animGroup}" no tiene imágenes.`);
-      if (o.type !== 'text' && (o.x < 0 || o.y < 0 || o.x + o.w > scr.w || o.y + o.h > scr.h)) warn('warn', `"${o.name}" (${s.name}) sale de la pantalla.`);
+      const maxX = o.screen === 'top' && !o.fixed && (o.parallax ?? 1) > 0 ? Math.max(scr.w, s.worldW || 400) : scr.w;
+      if (o.type !== 'text' && (o.x < 0 || o.y < 0 || o.x + o.w > maxX || o.y + o.h > scr.h)) warn('warn', `"${o.name}" (${s.name}) sale de la pantalla.`);
       if (o.follow != null && !s.objects.some((q) => q.id === o.follow)) warn('error', `"${o.name}" (${s.name}): sigue a un objeto que ya no existe.`);
       if (o.type === 'sprite' && ((o.tileCols || 1) < 1 || (o.tileRows || 1) < 1 || (o.tileCols || 1) > 100 || (o.tileRows || 1) > 32 || (o.tileCols || 1) * (o.tileRows || 1) > 256)) warn('error', `"${o.name}" (${s.name}): el mosaico admite como máximo 100 columnas, 32 filas y 256 piezas.`);
       if (o.parallax != null && !(o.parallax >= 0 && o.parallax <= 1)) warn('error', `"${o.name}" (${s.name}): el paralaje debe estar entre 0 y 1.`);

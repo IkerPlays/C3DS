@@ -234,3 +234,15 @@ test('aviso: mundo ancho sin cámara', async () => {
   sc.camera = sc.objects[0].id;
   assert.ok(!validate(p).some((x) => /cámara no sigue/.test(x.text)));
 });
+
+test('aviso de “sale de la pantalla” usa el ancho del mundo', async () => {
+  const { validate, makeObject } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  const far = makeObject(p, 'rect', { name: 'Lejos', x: 700, y: 50, w: 20, h: 20 });
+  sc.objects.push(far);
+  assert.ok(validate(p).some((x) => /Lejos/.test(x.text) && /sale de la pantalla/.test(x.text)), 'con mundo de 400 px sí avisa');
+  sc.worldW = 800; sc.camera = sc.objects[0].id;
+  assert.ok(!validate(p).some((x) => /Lejos/.test(x.text)), 'con mundo de 800 px ya no');
+  far.fixed = true;
+  assert.ok(validate(p).some((x) => /Lejos/.test(x.text)), 'un objeto fijo sí debe caber en la pantalla');
+});
