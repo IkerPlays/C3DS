@@ -30,7 +30,10 @@ jobs:
         with:
           node-version: 22
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - name: "Instalar Chromium (con reintentos, los espejos de apt fallan a veces)"
+        run: |
+          for i in 1 2 3; do npx playwright install --with-deps chromium && exit 0; echo "intento $i fallido"; sleep $((i * 15)); done
+          exit 1
       - run: npm run test:ui
 
   # Genera cada plantilla del editor y la compila de verdad a .3dsx y .cia con devkitARM + tex3ds + makerom + bannertool.
