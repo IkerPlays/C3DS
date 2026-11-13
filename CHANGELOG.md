@@ -4,6 +4,8 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- Lección nueva: **9 · Cámara y mundo ancho**.
+- CI: el paso de instalar Chromium se reintenta (fallaba a veces por los espejos de apt).
 - Arreglo: el aviso “sale de la pantalla” ya no salta para objetos dentro de un mundo ancho.
 - Editor: **Ctrl+A** selecciona todos los objetos y **Esc** quita la selección. Aviso si el mundo es ancho pero la cámara no sigue a nadie.
 

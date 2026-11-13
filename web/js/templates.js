@@ -384,6 +384,16 @@ export const lessonTitle = () => {
   return p;
 };
 
+export const lessonCamera = () => lesson('Lección 9 - Cámara', (p, sc) => {
+  sc.worldW = 800; sc.bg.top = '#29adff';
+  const hill = makeObject(p, 'rect', { name: 'Colina', x: 150, y: 150, w: 260, h: 90, color: '#008751', parallax: 0.5 });
+  const flag = makeObject(p, 'rect', { name: 'Bandera', x: 760, y: 100, w: 14, h: 40, color: '#ff004d' });
+  const player = makeObject(p, 'rect', { name: 'Jugador', x: 40, y: 110, w: 24, h: 24, color: '#ffffff', controls: true, speed: 3 });
+  const hud = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: '← → mueven. Llega a la bandera', color: '#ffffff', fixed: true });
+  sc.objects.push(hill, flag, player, hud); sc.camera = player.id;
+  note(p, sc, 'Escena → “Ancho del mundo” 800 y “La cámara sigue a” Jugador. El texto es “Fijo” y la colina tiene “Paralaje” 0,5.', 20);
+});
+
 export const LESSONS = [
   { id: 'l1', name: '1 · Mover un objeto', desc: 'D-Pad, Circle Pad y control solo horizontal/vertical.', icon: 'move', make: () => maybeLocalize(lessonMove()) },
   { id: 'l2', name: '2 · Colisiones', desc: 'Una regla “cuando chocan → sumar y recolocar”.', icon: 'burst', make: () => maybeLocalize(lessonCollide()) },
@@ -393,6 +403,7 @@ export const LESSONS = [
   { id: 'l6', name: '6 · Gravedad y sólidos', desc: 'Saltar, caer y no atravesar suelos ni escalones.', icon: 'runner', make: () => maybeLocalize(lessonPhysics()) },
   { id: 'l7', name: '7 · Perseguir', desc: 'La propiedad “Sigue a” para enemigos que te persiguen.', icon: 'comet', make: () => maybeLocalize(lessonChase()) },
   { id: 'l8', name: '8 · Pantalla de inicio', desc: 'Cualquier botón, temporizador “una vez” y texto parpadeante.', icon: 'clapper', make: () => maybeLocalize(lessonTitle()) },
+  { id: 'l9', name: '9 · Cámara y mundo ancho', desc: 'Un mundo de 800 px, cámara que sigue al jugador, texto fijo y paralaje.', icon: 'move', make: () => maybeLocalize(lessonCamera()) },
 ];
 
 export const TEMPLATES = [
