@@ -8,6 +8,7 @@ import { hydrateIcons } from './icons.js';
 import { checkForUpdate } from './update-check.js';
 import { decodeProject, tokenFromHash } from './share.js';
 import { startI18n, mountLangToggle, translate } from './i18n.js';
+import { maybeShowFarewell, showFarewell } from './farewell.js';
 
 mountLangToggle($('#lang-btn'));
 startI18n(); // inglés opcional: traduce lo que ya hay y lo que se añada
@@ -82,3 +83,7 @@ if ('serviceWorker' in navigator && !isNativeApp() && (location.protocol === 'ht
 }
 
 window.c3ds = { editor }; // útil para depurar y para los tests de interfaz
+
+// Despedida de la versión final: una sola vez (y nunca en navegadores automatizados, para no estorbar a las pruebas).
+document.getElementById('foot-farewell')?.addEventListener('click', (e) => { e.preventDefault(); showFarewell(); });
+if (!navigator.webdriver) setTimeout(() => maybeShowFarewell(), 1200);

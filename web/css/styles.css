@@ -265,3 +265,10 @@ details summary{cursor:pointer;font-weight:600}.notes h4{margin:12px 0 4px;color
 .icon-btn .svg-icon{line-height:0}
 .old-list{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}.old-list li{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.old-list .chip-link{padding:3px 10px;font-size:.82rem}
 .stage-wrap.drop-over{outline:2px dashed var(--acc);outline-offset:-4px;background:color-mix(in srgb,var(--acc) 8%,var(--panel))}
+.farewell-card{display:flex;align-items:center;gap:16px;background:linear-gradient(120deg,color-mix(in srgb,var(--acc) 18%,var(--panel)),var(--panel));border:1px solid color-mix(in srgb,var(--acc) 40%,var(--line));border-radius:var(--r);padding:16px 20px;margin:8px 0 26px;flex-wrap:wrap}
+.farewell-card>div{flex:1;min-width:220px}.farewell-card p{margin:2px 0 0}
+.farewell .fw-lead{font-size:1.25rem;font-weight:800}
+.fw-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.fw-stat{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.fw-stat b{display:block;font-size:1.6rem;color:var(--acc)}
+.fw-list,.fw-credits{padding-left:18px;display:grid;gap:6px}.fw-sign{font-weight:800;margin-top:14px}
+@media(max-width:520px){.fw-stats{grid-template-columns:repeat(2,1fr)}}

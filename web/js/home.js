@@ -3,6 +3,7 @@ import { h, $, toast } from './ui.js';
 import { icon } from './icons.js';
 import { Game, render } from './runtime.js';
 import { newProject } from './model.js';
+import { farewellCard } from './farewell.js';
 import { TEMPLATES, LESSONS } from './templates.js';
 import { fetchReleases, detectOS, primaryAsset, humanSize, renderNotes, OS_INFO, REPO } from './downloads.js';
 
@@ -141,6 +142,7 @@ function renderDownloadsPage(root, data, os, error) {
 }
 
 export async function mountHome(root, { openTemplate }) {
+  $('#farewell-slot', root)?.append(farewellCard());
   mountTemplates(root, openTemplate);
   mountLessons(root, openTemplate);
   mountDemo(root, () => !$('#tab-home', document)?.hidden);

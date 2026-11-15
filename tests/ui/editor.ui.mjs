@@ -812,3 +812,31 @@ test('Ctrl+A selecciona todos los objetos de la escena y Esc quita la selección
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('despedida: tarjeta en el Inicio, diálogo con números reales, pie de página y “solo una vez”', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url, { hash: '#home' });
+  assert.equal(await page.locator('.dlg').count(), 0, 'en navegadores automatizados no salta sola');
+  await page.click('#btn-farewell');
+  const text = await page.textContent('.dlg');
+  assert.match(text, /Esta es la última versión de C3DS/);
+  const nums = await page.locator('.fw-stat b').allTextContents();
+  const real = await page.evaluate(async () => { const f = await import('/js/farewell.js'); const s = f.farewellStats(); return [s.templates, s.lessons, s.events, s.actions].map(String); });
+  assert.deepEqual(nums, real, 'los números salen del código');
+  await page.evaluate(() => document.querySelectorAll('dialog').forEach((d) => d.close()));
+  await page.click('#foot-farewell');
+  assert.ok(await page.locator('.dlg .farewell').count());
+  await page.evaluate(() => document.querySelectorAll('dialog').forEach((d) => { d.close(); d.remove(); }));
+  const first = await page.evaluate(async () => { localStorage.removeItem('c3ds:farewell:1.0.0'); const f = await import('/js/farewell.js'); return [f.maybeShowFarewell(), (document.querySelectorAll('dialog'), f.maybeShowFarewell())]; });
+  assert.deepEqual(first, [true, false], 'se enseña una vez');
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});
+
+test('despedida en inglés', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url + '/?lang=en', { hash: '#home' });
+  await page.click('#btn-farewell');
+  assert.match(await page.textContent('.dlg'), /This is the last version of C3DS/);
+  assert.match(await page.textContent('.fw-stats'), /templates/);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

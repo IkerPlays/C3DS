@@ -4,6 +4,8 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- **Despedida**: C3DS 1.0.0 es la última versión. Tarjeta en el Inicio, diálogo “Gracias por todo” (una sola vez y desde el pie de la web) con números reales y créditos.
+- Acción **“Pausar / reanudar el juego”**: congela el movimiento y las reglas que no sean de entrada (simulador y C). START pausa en Plataformas y Mundo ancho.
 - Lección nueva: **9 · Cámara y mundo ancho**.
 - CI: el paso de instalar Chromium se reintenta (fallaba a veces por los espejos de apt).
 - Arreglo: el aviso “sale de la pantalla” ya no salta para objetos dentro de un mundo ancho.
