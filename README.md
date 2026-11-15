@@ -2,7 +2,7 @@
 
 Importa/analiza proyectos (Unity, Godot, Unreal, .exe) para **Nintendo 3DS homebrew** y crea juegos/apps desde cero con un editor visual que exporta un proyecto compilable a `.3dsx` y `.cia`.
 
-> Estado: **alfa 0.1**. Empezamos por lo sencillo; ver "Qué hace hoy" y "Qué NO hace (todavía)".
+> Estado: **versión final 1.0.0**. Esta es la última actualización de C3DS: sigue funcionando y el código es libre. Lee [la despedida](docs/DESPEDIDA.md).
 
 ## Empezar
 [Tu primer juego en 10 minutos](docs/GUIA.md) · [Your first game in 10 minutes](docs/GUIDE.en.md)
