@@ -251,9 +251,9 @@ test('volumen por sonido: en el C (ndsp) y validación', async () => {
   const { generateMainC } = await import('../../web/js/codegen.js');
   const { validate } = await import('../../web/js/model.js');
   const p = newProject();
-  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 1\.00f \}/); assert.match(generateMainC(p), /mix\[0\] = mix\[1\] = sound_vol\[i\];/);
+  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 1\.000f \}/); assert.match(generateMainC(p), /mix\[0\] = mix\[1\] = sound_vol\[i\];/);
   p.assets.sounds[0].volume = 0.4;
-  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 0\.40f \}/);
+  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 0\.400f \}/);
   p.assets.sounds[0].volume = 3;
   assert.ok(validate(p).some((x) => /volumen/.test(x.text)));
 });
