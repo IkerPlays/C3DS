@@ -4,6 +4,9 @@ Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-15
+- Versión final: despedida, pausa, volumen por sonido, recetas de reglas, plantilla Despedida y lección de cámara.
+
 ## [0.6.0] - 2026-11-06
 - Mismas mejoras que la web (mundo ancho con cámara y paralaje, nuevos eventos y acciones, escenas reordenables, zoom recordado, lección 8).
 
