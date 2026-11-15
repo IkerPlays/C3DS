@@ -84,4 +84,5 @@ En textos y botones, `{nombre}` se sustituye por el valor de la variable. Las va
 - **Persecución (enemigo que te sigue)**: La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.
 - **Plataformas (saltar y recoger)**: Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.
 - **Mundo ancho (cámara que te sigue)**: Un mundo de 1200 px con cámara que sigue al jugador, marcador fijo y una bandera al final.
+- **Despedida (créditos)**: Créditos que aparecen línea a línea sobre estrellas que caen: el mensaje de despedida de C3DS.
 - **En blanco**: Una escena vacía.

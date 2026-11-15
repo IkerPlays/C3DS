@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject, platformerProject, scrollerProject } from '../../web/js/templates.js';
+import { TEMPLATES, LESSONS, pongProject, dodgeProject, blankProject, arcadeProject, runnerProject, toposProject, mazeProject, chaseProject, platformerProject, scrollerProject, creditsProject } from '../../web/js/templates.js';
 import { validate } from '../../web/js/model.js';
 import { Game } from '../../web/js/runtime.js';
 import { newProject } from '../../web/js/model.js';
@@ -350,4 +350,18 @@ test('Mundo ancho: la cámara sigue al jugador hasta la bandera, el marcador es 
   assert.equal(g.scene.name, 'Meta');
   const c = generateMainC(p);
   assert.match(c, /scene_world\[NUM_SCENES\] = \{ 1200\.0f, 400\.0f \}/); assert.match(c, /scene_cam\[NUM_SCENES\] = \{ \d+, -1 \}/);
+});
+
+test('Despedida (créditos): las líneas aparecen una a una, las estrellas dan la vuelta y START sale', () => {
+  const p = creditsProject();
+  assert.deepEqual(validate(p).filter((x) => x.level === 'error'), []);
+  const g = new Game(p, { rng: () => 0.5 });
+  const step = (down = []) => g.step({ down: new Set(down), held: new Set(), touch: null, touchDown: false });
+  const vis = () => g.objs.filter((o) => o.name.startsWith('Línea') && o.visible).length;
+  step(); assert.equal(vis(), 1);
+  for (let i = 0; i < 100; i++) step(); assert.equal(vis(), 2, 'a los ~1,6 s sale la segunda línea');
+  for (let i = 0; i < 400; i++) step(); assert.equal(vis(), 5, 'al final están las cinco');
+  assert.ok(g.objs.filter((o) => o.name.startsWith('Estrella')).every((o) => o.y < 238), 'las estrellas vuelven arriba al llegar abajo');
+  step(['START']); assert.equal(g.quit, true);
+  assert.match(generateMainC(p), /scene_frames == 96/);
 });

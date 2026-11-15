@@ -285,6 +285,28 @@ export function scrollerProject() {
   return p;
 }
 
+/** Despedida: créditos que aparecen línea a línea sobre un cielo de estrellas que caen. */
+export function creditsProject() {
+  const p = empty('Despedida'); p.transition = 'fade';
+  p.variables = [];
+  const chime = addBeep(p, 'campana', 988);
+  const sc = makeScene(p, 'Créditos');
+  sc.bg.top = '#0e1020'; sc.bg.bottom = '#1d2b53';
+  const lines = [
+    ['C3DS', 3, '#ffec27'], ['Gracias por crear juegos de 3DS', 1.2, '#ffffff'], ['Hecho con devkitPro, citro2d y Tauri', 1, '#c2c3c7'],
+    ['Tus juegos son tuyos', 1, '#ffffff'], ['Hasta siempre', 1.6, '#ff77a8'],
+  ];
+  const texts = lines.map(([text, size, color], i) => makeObject(p, 'text', { name: `Línea ${i + 1}`, x: 200, y: 40 + i * 34, align: 'center', size, text, color, visible: i === 0 }));
+  const stars = Array.from({ length: 8 }, (_, i) => makeObject(p, 'rect', { name: `Estrella ${i + 1}`, x: 24 + i * 48, y: (i * 37) % 200, w: 3, h: 3, color: i % 2 ? '#ffffff' : '#29adff', vy: 0.4 + (i % 3) * 0.3 }));
+  const hint = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 160, y: 110, align: 'center', text: 'START: salir', color: '#c2c3c7' });
+  sc.objects.push(...stars, ...texts, hint);
+  texts.slice(1).forEach((t, i) => sc.rules.push({ id: nextId(p), when: { type: 'after', seconds: (i + 1) * 1.6 }, then: [{ type: 'show', obj: t.id }, { type: 'sound', sound: chime }] }));
+  for (const s of stars) sc.rules.push({ id: nextId(p), when: { type: 'edge', obj: s.id, edge: 'bottom' }, then: [{ type: 'setPos', obj: s.id, x: s.x, y: 0 }] });
+  sc.rules.push({ id: nextId(p), when: { type: 'key', key: 'START' }, then: [{ type: 'quit' }] });
+  p.scenes.push(sc); p.startScene = sc.id;
+  return p;
+}
+
 /* ===================== Lecciones (proyectos mínimos para aprender un concepto) ===================== */
 function lesson(name, build) {
   const p = empty(name);
@@ -421,5 +443,6 @@ export const TEMPLATES = [
   { id: 'chase', name: 'Persecución (enemigo que te sigue)', desc: 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.', icon: 'comet', make: () => maybeLocalize(chaseProject()) },
   { id: 'platformer', name: 'Plataformas (saltar y recoger)', desc: 'Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.', icon: 'runner', make: () => maybeLocalize(platformerProject()) },
   { id: 'scroller', name: 'Mundo ancho (cámara que te sigue)', desc: 'Un mundo de 1200 px con cámara que sigue al jugador, marcador fijo y una bandera al final.', icon: 'runner', make: () => maybeLocalize(scrollerProject()) },
+  { id: 'credits', name: 'Despedida (créditos)', desc: 'Créditos que aparecen línea a línea sobre estrellas que caen: el mensaje de despedida de C3DS.', icon: 'comet', make: () => maybeLocalize(creditsProject()) },
   { id: 'blank', name: 'En blanco', desc: 'Una escena vacía.', icon: 'blocks', make: () => maybeLocalize(blankProject()) },
 ];

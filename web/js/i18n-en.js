@@ -56,6 +56,7 @@ export const EN = {
   'Persecución (enemigo que te sigue)': 'Chase (an enemy follows you)', 'La propiedad “Sigue a” hace que un enemigo te persiga; recoge monedas sin que te alcance.': 'The “Follows” property makes an enemy chase you; collect coins without getting caught.',
   'Plataformas (saltar y recoger)': 'Platformer (jump and collect)', 'Plataformas sólidas, gravedad, salto desde cualquier superficie y tres monedas que recoger.': 'Solid platforms, gravity, jumping from any surface and three coins to collect.',
   'Mundo ancho (cámara que te sigue)': 'Wide world (a camera that follows you)', 'Un mundo de 1200 px con cámara que sigue al jugador, marcador fijo y una bandera al final.': 'A 1200 px world with a camera that follows the player, a fixed scoreboard and a flag at the end.',
+  'Despedida (créditos)': 'Farewell (credits)', 'Créditos que aparecen línea a línea sobre estrellas que caen: el mensaje de despedida de C3DS.': 'Credits that appear line by line over falling stars: the C3DS farewell message.',
   'En blanco': 'Blank', 'Una escena vacía.': 'An empty scene.',
   '1 · Mover un objeto': '1 · Move an object', '2 · Colisiones': '2 · Collisions', '3 · Variables y marcador': '3 · Variables and scoreboard', '4 · Varias escenas': '4 · Several scenes', '5 · Sonido y música': '5 · Sound and music',
   'D-Pad, Circle Pad y control solo horizontal/vertical.': 'D-Pad, Circle Pad and horizontal-only / vertical-only control.',
