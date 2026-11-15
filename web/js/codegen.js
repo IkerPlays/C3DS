@@ -120,13 +120,15 @@ export function generateMainC(p) {
       case 'setColor': return `objs[${o}].color = ${col(a.color)};`;
       case 'show': return `objs[${o}].visible = 1;`;
       case 'hide': return `objs[${o}].visible = 0;`;
+      case 'pause': return a.mode === 'on' ? 'paused = 1;' : a.mode === 'off' ? 'paused = 0;' : 'paused = !paused;';
       case 'toggle': return `objs[${o}].visible = !objs[${o}].visible;`;
       case 'quit': return 'quit = 1;';
       default: return ';';
     }
   };
   const sceneRules = p.scenes.map((s, i) => {
-    const body = s.rules.filter((r) => r.enabled !== false).map((r) => `\t\tif (${cond(r.when)}${r.also ? ` && ${cond(r.also)}` : ''}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
+    const isInput = (e) => ['key', 'keyUp', 'keyHeld', 'anyKey', 'touch', 'touchAny'].includes(e.type);
+    const body = s.rules.filter((r) => r.enabled !== false).map((r) => `\t\tif (${isInput(r.when) && (!r.also || isInput(r.also)) ? '' : '!paused && '}${cond(r.when)}${r.also ? ` && ${cond(r.also)}` : ''}) {\n${r.then.map((a) => `\t\t\t${act(a)}`).join('\n')}\n\t\t}`).join('\n');
     return `\tcase ${i}: // ${s.name.replace(/[^\w ]/g, '_')}\n${body}\n\t\tbreak;`;
   }).join('\n');
 
@@ -174,6 +176,7 @@ ${objInit.join('\n') || '\t{ 0 }'}
 static Obj objs[${NO}];
 static int vars[NUM_VARS] = { ${p.variables.map((v) => int(v.value)).join(', ') || '0'} };
 static u32 keys_up = 0;
+static int paused = 0; /* acción “Pausar”: congela movimiento y reglas que no sean de entrada */
 #define FADE_ON ${p.transition === 'fade' ? 1 : 0}
 static int fade_frames = FADE_ON ? 18 : 0;
 static int cur_scene = START_SCENE, next_scene = -1, scene_frames = 0, quit = 0;
@@ -285,6 +288,7 @@ static void enter_scene(int s) {
 	save_vars();
 	cur_scene = s;
 	scene_frames = 0;
+	paused = 0;
 	fade_frames = FADE_ON ? 18 : 0;
 	for (int i = 0; i < NUM_OBJS; i++) if (init_objs[i].scene == s) objs[i] = init_objs[i];
 }
@@ -357,7 +361,7 @@ static void free_sounds(void) {}
 
 /* ---------- Lógica ---------- */
 static void update(u32 down, u32 held, int touched, int tx, int ty, float cx, float cy) {
-	for (int i = 0; i < NUM_OBJS; i++) {
+	if (!paused) for (int i = 0; i < NUM_OBJS; i++) {
 		Obj* o = &objs[i];
 		if (o->scene != cur_scene || !o->visible) continue;
 		float ox = o->x, oy = o->y;
@@ -406,8 +410,7 @@ ${sceneRules}
 	default: break;
 	}
 	update_camera();
-	scene_frames++;
-	if (fade_frames > 0) fade_frames--;
+	if (!paused) { scene_frames++; if (fade_frames > 0) fade_frames--; }
 }
 
 /* ---------- Dibujo ---------- */

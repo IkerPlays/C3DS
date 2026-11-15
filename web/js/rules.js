@@ -4,6 +4,9 @@ import { tr } from './i18n.js';
 
 export const EDGES = { left: 'Izquierdo', right: 'Derecho', top: 'Superior', bottom: 'Inferior' };
 export const AXES = { x: 'Horizontal (X)', y: 'Vertical (Y)' };
+export const PAUSE_MODES = { toggle: 'Alternar pausa', on: 'Pausar', off: 'Reanudar' };
+/** Eventos de entrada: siguen funcionando con el juego en pausa (para poder reanudar). */
+export const INPUT_EVENTS = new Set(['key', 'keyUp', 'keyHeld', 'anyKey', 'touch', 'touchAny']);
 export const FLIPS = { false: 'Normal', true: 'Espejo (volteado)' };
 export const RAND_AXES = { xy: 'Cualquier posición', x: 'Solo en X', y: 'Solo en Y' };
 export const OPS = ['==', '!=', '>', '>=', '<', '<='];
@@ -44,6 +47,7 @@ export const ACTIONS = {
   setOpacity: { label: 'Cambiar la opacidad de un objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }, { k: 'value', t: 'number', label: 'Opacidad (0 a 1)', step: 0.1, min: 0, max: 1 }] },
   setFlip: { label: 'Voltear un sprite (espejo horizontal)', fields: [{ k: 'obj', t: 'object', label: 'Sprite' }, { k: 'flip', t: 'flip', label: 'Espejo' }] },
   toggle: { label: 'Alternar visible / oculto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
+  pause: { label: 'Pausar / reanudar el juego', fields: [{ k: 'mode', t: 'pauseMode', label: 'Modo' }] },
   show: { label: 'Mostrar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   hide: { label: 'Ocultar objeto', fields: [{ k: 'obj', t: 'object', label: 'Objeto' }] },
   quit: { label: 'Salir del juego', fields: [] },
@@ -63,6 +67,7 @@ export function defaultFor(field, ctx) {
     case 'sound': return p.assets.sounds[0]?.id ?? null;
     case 'color': return '#ff004d';
     case 'flip': return true;
+    case 'pauseMode': return 'toggle';
     case 'group': return p.assets.images.find((a) => a.group)?.group ?? '';
     case 'edge': return 'left';
     case 'axis': return 'x';
@@ -119,6 +124,7 @@ function describeBase(r, p, scene) {
     setOpacity: () => T(`opacidad de ${obj(a.obj)} = ${a.value}`, `opacity of ${obj(a.obj)} = ${a.value}`),
     setFlip: () => T(`${a.flip ? 'voltear' : 'enderezar'} ${obj(a.obj)}`, `${a.flip ? 'flip' : 'unflip'} ${obj(a.obj)}`),
     toggle: () => T(`alternar ${obj(a.obj)}`, `toggle ${obj(a.obj)}`),
+    pause: () => T(`${{ on: 'pausar', off: 'reanudar' }[a.mode] || 'alternar pausa'}`, `${{ on: 'pause', off: 'resume' }[a.mode] || 'toggle pause'}`),
     show: () => T(`mostrar ${obj(a.obj)}`, `show ${obj(a.obj)}`), hide: () => T(`ocultar ${obj(a.obj)}`, `hide ${obj(a.obj)}`), quit: () => T('salir', 'quit'),
   }[a.type]?.() ?? '…');
   return `${when.charAt(0).toUpperCase()}${when.slice(1)} → ${r.then.map(act).join(', ') || T('nada', 'nothing')}`;

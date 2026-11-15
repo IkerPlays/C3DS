@@ -58,6 +58,7 @@ Cualquier regla puede llevar una segunda condición (“Y además…”) y se pu
 | `setOpacity` | Cambiar la opacidad de un objeto | Objeto (objeto), Opacidad (0 a 1) (número) |
 | `setFlip` | Voltear un sprite (espejo horizontal) | Sprite (objeto), Espejo (normal o espejo) |
 | `toggle` | Alternar visible / oculto | Objeto (objeto) |
+| `pause` | Pausar / reanudar el juego | Modo (alternar, pausar o reanudar) |
 | `show` | Mostrar objeto | Objeto (objeto) |
 | `hide` | Ocultar objeto | Objeto (objeto) |
 | `quit` | Salir del juego | — |

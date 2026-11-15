@@ -3,6 +3,8 @@
 import { SCREENS } from './model.js';
 
 export const FADE_FRAMES = 18;
+/** Eventos de entrada: siguen funcionando con el juego en pausa (para poder reanudarlo). */
+export const INPUT_EVENTS = new Set(['key', 'keyUp', 'keyHeld', 'anyKey', 'touch', 'touchAny']);
 /** Cuánto se desplaza un objeto con la cámara: 0 = fijo (interfaz), 1 = normal, entre medias = fondo con paralaje. */
 export const camFactor = (o) => (o.fixed ? 0 : o.parallax == null ? 1 : Math.max(0, Math.min(1, Number(o.parallax) || 0)));
 export const formatText = (tpl, vars) => String(tpl).replace(/\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (m, n) => (n in vars ? String(vars[n]) : m));
@@ -42,7 +44,7 @@ export class Game {
     this.frames = 0;
     this.fade = this.p.transition === 'fade' ? FADE_FRAMES : 0;
     this.objs = this.scene.objects.map((o) => ({ ...o, tpl: o.text }));
-    this.camX = 0; this.updateCamera();
+    this.camX = 0; this.paused = false; this.updateCamera();
   }
 
   obj(id) { return this.objs.find((o) => o.id === id); }
@@ -68,7 +70,7 @@ export class Game {
     const { down = new Set(), held = new Set(), touch = null, touchDown = false, circle = { x: 0, y: 0 } } = input;
     this.up = input.up || new Set();
     const touched = touchDown && touch;
-    for (const o of this.objs) {
+    if (!this.paused) for (const o of this.objs) {
       if (!o.visible) continue;
       const s = SCREENS[o.screen];
       let mx = 0; let my = 0;
@@ -99,6 +101,7 @@ export class Game {
     let next = null;
     for (const r of this.scene.rules) {
       if (r.enabled === false) continue;
+      if (this.paused && !(INPUT_EVENTS.has(r.when.type) && (!r.also || INPUT_EVENTS.has(r.also.type)))) continue;
       if (!this.test(r.when, down, held, touched, touch)) continue;
       if (r.also && !this.test(r.also, down, held, touched, touch)) continue;
       for (const a of r.then) {
@@ -107,8 +110,7 @@ export class Game {
       }
     }
     this.updateCamera();
-    this.frames++;
-    if (this.fade > 0) this.fade--;
+    if (!this.paused) { this.frames++; if (this.fade > 0) this.fade--; }
     if (next != null) this.enter(next);
   }
 
@@ -169,6 +171,7 @@ export class Game {
       case 'show': if (o) o.visible = true; break;
       case 'hide': if (o) o.visible = false; break;
       case 'toggle': if (o) o.visible = !o.visible; break;
+      case 'pause': this.paused = a.mode === 'on' ? true : a.mode === 'off' ? false : !this.paused; break;
       case 'quit': this.quit = true; this.persist(); break;
       default: break;
     }

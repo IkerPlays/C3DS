@@ -8,7 +8,7 @@ import {
 import { History } from './history.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases, camFactor } from './runtime.js';
-import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, FLIPS, defaultWhen, defaultAction, describeRule } from './rules.js';
+import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, FLIPS, PAUSE_MODES, defaultWhen, defaultAction, describeRule } from './rules.js';
 import { imageToAsset, audioToWav, sliceSheet, iconToDataURL } from './images.js';
 import { exportFiles } from './codegen.js';
 import { createZip } from './zip.js';
@@ -496,6 +496,7 @@ function fieldEditor(f, obj, ctx) {
     case 'sound': return selectInput(project.assets.sounds.map((s) => [s.id, s.name]), obj[f.k], (v) => set(Number(v)));
     case 'color': return h('input', { type: 'color', value: /^#[0-9a-f]{6}$/i.test(obj[f.k]) ? obj[f.k] : '#ffffff', onInput: (e) => { obj[f.k] = e.target.value; live(); } });
     case 'group': return selectInput([['', '(ninguna)'], ...[...new Set(project.assets.images.map((i) => i.group).filter(Boolean))].map((g) => [g, g])], obj[f.k] || '', set);
+    case 'pauseMode': return selectInput(Object.entries(PAUSE_MODES), obj[f.k] || 'toggle', set);
     case 'flip': return selectInput(Object.entries(FLIPS), String(obj[f.k] === true), (v) => set(v === 'true'));
     case 'edge': return selectInput(Object.entries(EDGES), obj[f.k], set);
     case 'axis': return selectInput(Object.entries(AXES), obj[f.k], set);

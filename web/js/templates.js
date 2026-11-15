@@ -234,8 +234,10 @@ export function platformerProject() {
   const c1 = coin('Moneda 1', 118, 150); const c2 = coin('Moneda 2', 218, 110); const c3 = coin('Moneda 3', 328, 70);
   const player = makeObject(p, 'rect', { name: 'Jugador', x: 20, y: 150, w: 22, h: 30, color: '#ff004d', controls: 'h', speed: 3, gravity: 0.6 });
   const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {puntos} / 3', color: '#ffffff' });
+  const pauseTxt = makeObject(p, 'text', { name: 'Pausa', x: 200, y: 100, align: 'center', size: 2, text: 'PAUSA', color: '#ffec27', visible: false });
   const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 100, text: '← → mover   A saltar', color: '#c2c3c7' });
-  game.objects.push(ground, p1, p2, p3, c1, c2, c3, player, score, help);
+  game.objects.push(ground, p1, p2, p3, c1, c2, c3, player, score, pauseTxt, help);
+  game.rules.push({ id: nextId(p), when: { type: 'key', key: 'START' }, then: [{ type: 'pause', mode: 'toggle' }, { type: 'toggle', obj: pauseTxt.id }] });
   for (const on of [ground, p1, p2, p3]) game.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9.2 }, { type: 'sound', sound: jump }] });
   for (const c of [c1, c2, c3]) game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: c.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'hide', obj: c.id }] });
   game.rules.push({ id: nextId(p), when: { type: 'var', var: 'puntos', op: '>=', value: 3 }, then: [{ type: 'goto', scene: win.id }] });
@@ -266,10 +268,12 @@ export function scrollerProject() {
   const flag = makeObject(p, 'rect', { name: 'Bandera', x: 1150, y: 176, w: 16, h: 40, color: '#ff004d' });
   const player = makeObject(p, 'rect', { name: 'Jugador', x: 20, y: 150, w: 22, h: 30, color: '#ffffff', controls: 'h', speed: 3, gravity: 0.6 });
   const score = makeObject(p, 'text', { name: 'Marcador', x: 10, y: 8, text: 'Monedas: {puntos}', color: '#ffffff', fixed: true });
+  const pauseTxt = makeObject(p, 'text', { name: 'Pausa', x: 200, y: 100, align: 'center', size: 2, text: 'PAUSA', color: '#ffec27', fixed: true, visible: false });
   const help = makeObject(p, 'text', { name: 'Ayuda', screen: 'bottom', x: 20, y: 100, text: '← → mover   A saltar   Llega a la bandera', color: '#c2c3c7' });
   const hill = (name, x, w, h) => makeObject(p, 'rect', { name, x, y: 216 - h, w, h, color: '#008751', parallax: 0.5 });
   const hills = [hill('Colina 1', 60, 160, 70), hill('Colina 2', 380, 220, 100), hill('Colina 3', 700, 180, 80)]; // fondo con paralaje
-  game.objects.push(...hills, ground, ...blocks, ...coins, flag, player, score, help); game.camera = player.id;
+  game.objects.push(...hills, ground, ...blocks, ...coins, flag, player, score, pauseTxt, help); game.camera = player.id;
+  game.rules.push({ id: nextId(p), when: { type: 'key', key: 'START' }, then: [{ type: 'pause', mode: 'toggle' }, { type: 'toggle', obj: pauseTxt.id }] });
   for (const on of [ground, ...blocks]) game.rules.push({ id: nextId(p), when: { type: 'key', key: 'A' }, also: { type: 'standing', obj: player.id, on: on.id }, then: [{ type: 'setVel', obj: player.id, axis: 'y', value: -9.2 }, { type: 'sound', sound: jump }] });
   for (const c of coins) game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: c.id }, then: [{ type: 'addVar', var: 'puntos', value: 1 }, { type: 'sound', sound: coinSnd }, { type: 'hide', obj: c.id }] });
   game.rules.push({ id: nextId(p), when: { type: 'collide', a: player.id, b: flag.id }, then: [{ type: 'goto', scene: win.id }] });

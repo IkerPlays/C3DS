@@ -198,7 +198,7 @@ test('mundo ancho y cámara en el C generado', async () => {
   const c = generateMainC(p);
   assert.match(c, /static const float scene_world\[NUM_SCENES\] = \{ 400\.0f, 800\.0f \};/);
   assert.match(c, /static const int scene_cam\[NUM_SCENES\] = \{ -1, 2 \};/);
-  assert.match(c, /static float max_w\(const Obj\* o\)/); assert.match(c, /update_camera\(\);\n\tscene_frames\+\+;/);
+  assert.match(c, /static float max_w\(const Obj\* o\)/); assert.match(c, /update_camera\(\);\n\tif \(!paused\) \{ scene_frames\+\+;/);
   assert.match(c, /float ox = \(screen == 0\) \? o->x - cam_x \* cam_f\(o\) : o->x;/);
   assert.match(c, /int align, cols, rows, flip, fixed;\n\tfloat par;/);
   assert.match(c, /if \(nx > max_w\(o\) - o->w\) nx = max_w\(o\) - o->w;/);

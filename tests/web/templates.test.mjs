@@ -173,7 +173,7 @@ test('regla con condición adicional (Y además): solo se cumple si ambas son ci
   g.step({ down: new Set(['A']), held: new Set() }); assert.equal(g.vars.puntos, 99);
   assert.match(describeRule(sc.rules[0], p, sc), /Al pulsar A y además si puntos es mayor o igual que 3 → puntos = 99/);
   const c = generateMainC(p);
-  assert.match(c, /if \(\(down & KEY_A\) && vars\[0\] >= 3\)/);
+  assert.match(c, /if \(!paused && \(down & KEY_A\) && vars\[0\] >= 3\)/);
 });
 
 test('C generado: gravedad, apoyar y aterrizar', () => {

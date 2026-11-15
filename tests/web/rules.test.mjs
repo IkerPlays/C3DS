@@ -181,3 +181,32 @@ test('anyKey, after (una vez) y toggle: simulador y C', async () => {
   assert.match(c, /\(down & ~KEY_TOUCH\)/); assert.match(c, /scene_frames == 60/); assert.match(c, /\.visible = !objs\[\d+\]\.visible;/);
   assert.match(describeRule(sc.rules[1], p, sc), /[Aa] los 1 s de empezar/);
 });
+
+test('pausa: congela movimiento y reglas salvo las de entrada; START reanuda (simulador y C)', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { makeObject } = await import('../../web/js/model.js');
+  const p = newProject(); const sc = p.scenes[1];
+  sc.objects.length = 0; sc.rules.length = 0;
+  const mover = makeObject(p, 'rect', { name: 'Mover', x: 10, y: 10, w: 10, h: 10, vx: 2 });
+  sc.objects.push(mover);
+  sc.rules.push(
+    { id: 1, when: { type: 'key', key: 'START' }, then: [{ type: 'pause', mode: 'toggle' }] },
+    { id: 2, when: { type: 'timer', seconds: 0.1 }, then: [{ type: 'addVar', var: 'puntos', value: 1 }] },
+  );
+  const g = new Game(p); g.enter(sc.id);
+  const step = (down = []) => g.step({ down: new Set(down), held: new Set(), touch: null, touchDown: false });
+  const m = g.objs.find((o) => o.id === mover.id);
+  for (let i = 0; i < 12; i++) step();
+  assert.ok(m.x > 10 && g.vars.puntos >= 1);
+  step(['START']); assert.equal(g.paused, true);
+  const x0 = m.x; const pts0 = g.vars.puntos;
+  for (let i = 0; i < 30; i++) step();
+  assert.equal(m.x, x0 + 0, 'no se mueve en pausa'); assert.equal(g.vars.puntos, pts0, 'los temporizadores no corren');
+  step(['START']); assert.equal(g.paused, false, 'START reanuda');
+  for (let i = 0; i < 12; i++) step();
+  assert.ok(m.x > x0 && g.vars.puntos > pts0, 'todo sigue después de reanudar');
+  const c = generateMainC(p);
+  assert.match(c, /static int paused = 0;/); assert.match(c, /if \(!paused\) for \(int i = 0; i < NUM_OBJS; i\+\+\)/);
+  assert.match(c, /if \(\(down & KEY_START\)\) \{\n\t\t\tpaused = !paused;/); assert.match(c, /if \(!paused && \(scene_frames > 0/);
+  assert.match(describeRule(sc.rules[0], p, sc), /alternar pausa/);
+});
