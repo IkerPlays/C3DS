@@ -6,6 +6,7 @@ import {
   findScene, slug, isVarName, animFrames, estimateMemory, VRAM_BYTES,
 } from './model.js';
 import { History } from './history.js';
+import { RECIPES, defaultValues, applyRecipe } from './recipes.js';
 import { listProjects, saveProject, loadProject, deleteProject, lastProjectId, newLocalId } from './storage.js';
 import { Game, render, runInCanvases, camFactor } from './runtime.js';
 import { EVENTS, ACTIONS, OPS, OP_LABEL, EDGES, AXES, RAND_AXES, FLIPS, PAUSE_MODES, defaultWhen, defaultAction, describeRule } from './rules.js';
@@ -541,7 +542,29 @@ function renderLogic(body) {
   body.append(h('button', { class: 'btn primary', onClick: () => {
     if (sc.rules.length >= LIMITS.rules) return toast(`Máximo ${LIMITS.rules} reglas por escena.`, 'error');
     sc.rules.push({ id: nextId(project), when: defaultWhen('key', ctx), then: [defaultAction('goto', ctx)] }); changed({ structure: true });
-  } }, '+ Nueva regla'));
+  } }, '+ Nueva regla'), ' ', h('button', { class: 'btn', id: 'btn-recipes', title: 'Reglas ya hechas para lo más habitual', onClick: openRecipes }, 'Recetas…'));
+}
+
+/** Diálogo de recetas: eliges una, rellenas los objetos y se añaden las reglas. */
+function openRecipes() {
+  const sc = scene(); const ctx = { p: project, scene: sc };
+  let recipe = RECIPES[0]; let vals = defaultValues(recipe, project, sc);
+  const box = h('div', { id: 'recipe-box' });
+  const paint = () => {
+    const opts = (t) => (t === 'object' ? sc.objects.map((o) => [o.id, o.name]) : t === 'var' ? project.variables.map((v) => [v.name, v.name]) : project.scenes.map((s) => [s.id, s.name]));
+    box.replaceChildren(...recipe.params.map((prm) => field(prm.label, selectInput(opts(prm.t), vals[prm.k], (v) => { vals[prm.k] = prm.t === 'var' ? v : Number(v); }))));
+  };
+  const pick = selectInput(RECIPES.map((r) => [r.id, r.label]), recipe.id, (id) => { recipe = RECIPES.find((r) => r.id === id); vals = defaultValues(recipe, project, sc); paint(); });
+  pick.id = 'recipe-pick'; paint();
+  dialog('Recetas de reglas', h('div', {}, h('p', { class: 'muted small' }, 'Elige una receta y los objetos que intervienen: se añadirán las reglas a esta escena y podrás editarlas.'), field('Receta', pick), box), [
+    { label: 'Añadir las reglas', kind: 'primary', onClick: () => {
+      if (recipe.params.some((q) => (q.t === 'object' && vals[q.k] == null) || (q.t === 'var' && !vals[q.k]))) { toast('Faltan objetos o variables para esta receta.', 'error'); return false; }
+      try { applyRecipe(recipe, vals, project, sc, LIMITS.rules); } catch (e) { toast(e.message, 'error'); return false; }
+      changed({ structure: true }); toast('Reglas añadidas.', 'ok');
+    } },
+    { label: 'Cancelar' },
+  ]);
+  void ctx;
 }
 
 /* ---------- Barra superior, estado y avisos ---------- */

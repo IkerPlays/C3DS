@@ -840,3 +840,15 @@ test('despedida en inglés', async () => {
   assert.deepEqual(errors, []);
   await ctx.close();
 });
+
+test('recetas: el diálogo añade las reglas de la receta elegida', async () => {
+  const { page, ctx, errors } = await openPage(browser, server.url);
+  await page.click('.tabs.small button:has-text("Lógica")');
+  const n = await page.locator('.rule').count();
+  await page.click('#btn-recipes');
+  await page.selectOption('#recipe-pick', 'pause');
+  await page.click('dialog button:has-text("Añadir las reglas")');
+  await page.waitForFunction((n0) => document.querySelectorAll('.rule').length > n0, n);
+  assert.deepEqual(errors, []);
+  await ctx.close();
+});

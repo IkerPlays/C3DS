@@ -4,6 +4,7 @@ Notas de las releases **globales** (todas las plataformas a la vez). Cada plataf
 Formato: [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/). Versionado: [SemVer](https://semver.org/lang/es/).
 
 ## [Unreleased]
+- **Recetas de reglas** (pestaña Lógica → «Recetas…»): recoger, saltar, fin de juego, botón táctil, pausa y reiniciar con SELECT; eliges los objetos y se añaden las reglas ya hechas.
 - **Volumen por sonido** (control en la lista de sonidos; simulador y C con `ndsp`). Plantilla **Despedida (créditos)**.
 - **Despedida**: C3DS 1.0.0 es la última versión. Tarjeta en el Inicio, diálogo “Gracias por todo” (una sola vez y desde el pie de la web) con números reales y créditos.
 - Acción **“Pausar / reanudar el juego”**: congela el movimiento y las reglas que no sean de entrada (simulador y C). START pausa en Plataformas y Mundo ancho.
