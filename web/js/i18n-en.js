@@ -198,6 +198,7 @@ export const EN = {
   '9 · Cámara y mundo ancho': '9 · Camera and wide world', 'Un mundo de 800 px, cámara que sigue al jugador, texto fijo y paralaje.': 'An 800 px world, a camera that follows the player, fixed text and parallax.',
   'Pausar / reanudar el juego': 'Pause / resume the game', 'Alternar pausa': 'Toggle pause', 'Pausar': 'Pause', 'Reanudar': 'Resume', 'Modo': 'Mode',
   'Despedida': 'Farewell',
+  'Volumen': 'Volume',
   'Duplicar regla': 'Duplicate rule', 'Ajustar': 'Fit', 'Alineación': 'Alignment', 'Izquierda': 'Left', 'Centrada (X es el centro)': 'Centered (X is the center)', 'Cambiar la opacidad de un objeto': 'Change an object’s opacity', 'Opacidad (0 a 1)': 'Opacity (0 to 1)', 'Sigue a': 'Follows', '(nadie)': '(nobody)', 'Vel. al seguir': 'Follow speed', 'Opacidad': 'Opacity',
   'Prueba': 'Test', 'y': 'and', 'o': 'or', 'Un': 'An', 'El': 'The', 'no': 'cannot be', 'Unity, Godot y Unreal': 'Unity, Godot and Unreal',
   '), un HTML5 o un .exe de Windows.': '), an HTML5 build or a Windows .exe.', '), un HTML5 o un .exe de Windows': '), an HTML5 build or a Windows .exe',

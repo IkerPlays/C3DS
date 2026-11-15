@@ -139,6 +139,7 @@ export function generateMainC(p) {
 
   const bg = p.scenes.map((s) => `\t{ ${col(s.bg.top)}, ${col(s.bg.bottom)} },`).join('\n');
   const soundLoops = p.assets.sounds.map((x) => (x.loop ? 1 : 0)).join(', ');
+  const soundVols = p.assets.sounds.map((x) => flt(Math.max(0, Math.min(1, x.volume ?? 1)), 2)).join(', ');
   const soundFiles = p.assets.sounds.map((s) => `\t${cString(`romfs:/sounds/${slug(s.name)}-${s.id}.wav`)},`).join('\n');
 
   return `// Generado por C3DS - ${p.name.replace(/[^\w ]/g, '_')}
@@ -303,6 +304,7 @@ static const char* sound_files[NUM_SOUNDS] = {
 ${soundFiles}
 };
 static const int sound_loop[NUM_SOUNDS] = { ${soundLoops} };
+static const float sound_vol[NUM_SOUNDS] = { ${soundVols} };
 
 static void load_sounds(void) {
 	audio_ok = R_SUCCEEDED(ndspInit());
@@ -329,7 +331,7 @@ static void load_sounds(void) {
 static void play_sound(int i) {
 	if (!audio_ok || i < 0 || i >= NUM_SOUNDS || !sounds[i].ok) return;
 	float mix[12] = { 0 };
-	mix[0] = mix[1] = 1.0f;
+	mix[0] = mix[1] = sound_vol[i];
 	ndspChnReset(i);
 	ndspChnSetInterp(i, NDSP_INTERP_LINEAR);
 	ndspChnSetRate(i, (float)sounds[i].rate);

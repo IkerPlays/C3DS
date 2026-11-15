@@ -245,7 +245,7 @@ export function runInCanvases(project, canvases, images, sounds, opts = {}) {
   const storage = { load() { try { return JSON.parse(localStorage.getItem(saveKey) || '{}'); } catch { return {}; } }, save(o) { try { localStorage.setItem(saveKey, JSON.stringify(o)); } catch { /* sin almacenamiento */ } } };
   const mkGame = () => new Game(project, {
     storage,
-    onSound: (id) => { try { const a = sounds.get(id); if (a) { a.loop = !!project.assets.sounds.find((x) => x.id === id)?.loop; a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } },
+    onSound: (id) => { try { const a = sounds.get(id); if (a) { const def = project.assets.sounds.find((x) => x.id === id); a.loop = !!def?.loop; a.volume = Math.max(0, Math.min(1, def?.volume ?? 1)); a.currentTime = 0; a.play().catch(() => {}); } } catch { /* sin audio */ } },
     onStopSound: (id) => { try { const a = sounds.get(id); if (a) { a.pause(); a.currentTime = 0; } } catch { /* sin audio */ } },
   });
   let game = mkGame();

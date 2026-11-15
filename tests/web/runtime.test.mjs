@@ -246,3 +246,14 @@ test('aviso de “sale de la pantalla” usa el ancho del mundo', async () => {
   far.fixed = true;
   assert.ok(validate(p).some((x) => /Lejos/.test(x.text)), 'un objeto fijo sí debe caber en la pantalla');
 });
+
+test('volumen por sonido: en el C (ndsp) y validación', async () => {
+  const { generateMainC } = await import('../../web/js/codegen.js');
+  const { validate } = await import('../../web/js/model.js');
+  const p = newProject();
+  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 1\.00f \}/); assert.match(generateMainC(p), /mix\[0\] = mix\[1\] = sound_vol\[i\];/);
+  p.assets.sounds[0].volume = 0.4;
+  assert.match(generateMainC(p), /sound_vol\[NUM_SOUNDS\] = \{ 0\.40f \}/);
+  p.assets.sounds[0].volume = 3;
+  assert.ok(validate(p).some((x) => /volumen/.test(x.text)));
+});

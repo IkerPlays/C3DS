@@ -117,6 +117,7 @@ export function validate(p) {
   const imgIds = new Set(p.assets.images.map((a) => a.id));
   if (p.icon && !/^data:image\/png;base64,/.test(p.icon)) warn('error', 'El icono del juego debe ser un PNG.');
   if (p.icon && p.icon.length > 90000) warn('error', 'El icono del juego es demasiado grande (máximo 48×48).');
+  for (const a of p.assets.sounds) if (a.volume != null && !(a.volume >= 0 && a.volume <= 1)) warn('error', `Sonido "${a.name}": el volumen debe estar entre 0 y 1.`);
   const sndIds = new Set(p.assets.sounds.map((a) => a.id));
   const sceneIds = new Set(p.scenes.map((s) => s.id));
   for (const s of p.scenes) {

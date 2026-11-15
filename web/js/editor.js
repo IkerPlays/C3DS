@@ -380,6 +380,7 @@ function renderLeft() {
     h('ul', { class: 'list' }, project.assets.sounds.length ? project.assets.sounds.map((a) => h('li', {},
       h('button', { class: 'mini ghost', title: 'Escuchar', onClick: () => { const au = sounds.get(a.id); if (au) { au.currentTime = 0; au.play().catch(() => {}); } } }, '▶'),
       h('span', { class: 'grow' }, a.name, h('small', {}, `${a.seconds}s`)),
+      h('input', { type: 'range', class: 'vol', min: 0, max: 1, step: 0.05, value: a.volume ?? 1, title: 'Volumen', 'aria-label': `Volumen de ${a.name}`, onInput: (e) => { a.volume = Number(e.target.value); const au = sounds.get(a.id); if (au) au.volume = a.volume; live(); } }),
       h('label', { class: 'mini ghost', title: 'Repetir en bucle (música)' }, h('input', { type: 'checkbox', checked: !!a.loop, 'aria-label': 'Bucle', onChange: (e) => { a.loop = e.target.checked; changed(); } }), icon('repeat', 16)),
       h('button', { class: 'mini ghost', title: `Eliminar sonido ${a.name}`, onClick: () => deleteAsset('sound', a.id) }, icon('trash', 16)))) : h('li', { class: 'empty' }, 'Sin sonidos. Se convierten a WAV mono 22 kHz.'))));
   // Variables
